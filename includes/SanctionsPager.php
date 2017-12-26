@@ -167,7 +167,7 @@ class SanctionsPager extends IndexPager {
 			) .
 			Html::hidden(
 				'token',
-				$this->getUser()->getEditToken( array( 'sanctions' ) )
+				$this->getUser()->getEditToken( 'sanctions' )
 			) .
 			Html::hidden(
 				'sanctionId',
@@ -198,7 +198,7 @@ class SanctionsPager extends IndexPager {
 			) .
 			Html::hidden(
 				'token',
-				$this->getUser()->getEditToken( array( 'sanctions' ) )
+				$this->getUser()->getEditToken( 'sanctions' )
 			) .
 			Html::hidden(
 				'sanctionId',

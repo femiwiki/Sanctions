@@ -43,12 +43,15 @@ class SpacialSanctions extends SpecialPage {
 		$pager->doQuery();
 		$output->addHTML($pager->getBody());
 
-		if(SanctionsUtils::hasVoteRight($this->getUser()))
+		$reason = array();
+		if(SanctionsUtils::hasVoteRight($this->getUser(), $reason))
 			$output->addHTML($this->makeForm());
 		else if( $this->getUser()->isAnon () )
 			$output->addWikiText('제재 절차 참여를 위한 몇 가지 조건이 있습니다. [[페미위키:제재 정책]]을 참고해 주세요.');
-		else
+		else {
 			$output->addWikiText('현재 '.$this->getUser()->getName().' 님께는 제재 절차에 잠여할 수 있는 권한이 없습니다. [[페미위키:제재 정책]]을 참고해 주세요.');
+			if( count($reason) > 0 ) $output->addWikiText('* '.implode(PHP_EOL.'* ',$reason));
+		}
 	}
 
 	function setParameter( $subpage ) {
@@ -75,10 +78,13 @@ class SpacialSanctions extends SpecialPage {
 		$this->mdb = wfGetDB( DB_MASTER );
 
 		$result = $request->getVal( 'result' );
-		switch($result) {
+
+		if( !$this->getUser()->matchEditToken( $request->getVal( 'token' ), 'sanctions' ) ) {
+			$output->addWikiText( '토큰이 올바르지 않아 실패하였습니다.' );
+		} else switch($result) {
 			//제재안 올리기
 			case 'write':
-		$targetName = $request->getVal( 'target' );
+				$targetName = $request->getVal( 'target' );
 				if(!$targetName) {
 					$output->addWikiText('사용자명이 입력되지 않았습니다.' );
 					break;
@@ -403,7 +409,7 @@ class SpacialSanctions extends SpecialPage {
 			) .
 			Html::hidden(
 				'token',
-				$this->getUser()->getEditToken( array( 'sanctions' ) )
+				$this->getUser()->getEditToken( 'sanctions' )
 			) .
 			Html::hidden(
 				'result',
