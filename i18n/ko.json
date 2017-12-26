@@ -8,7 +8,7 @@
 	"sanctions-sactions-form-header": "새 제재안 올리기",
 	"sanctions-content-placeholder": "제재안의 내용을 적어 주세요",
 	"sanctions-voting-period": "3",
-	"sanctions-voting-right-verification-period": "0",
-	"sanctions-voting-right-verification-edits": "0",
+	"sanctions-voting-right-verification-period": "20",
+	"sanctions-voting-right-verification-edits": "3",
 	"sanctions-submit": "올리기"
 }
