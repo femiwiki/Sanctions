@@ -1,0 +1,54 @@
+{
+	"name": "Sanctions",
+	"version": "0.0.0",
+	"author": [
+		"Lens"
+	],
+	"descriptionmsg": "sanctions-desc",
+	"license-name": "GPL-2.0+",
+	"type": "specialpage",
+	"requires": {
+		"extensions": {
+			"Sanctions": "*",
+			"Flow": "*"
+		}
+	},
+	"AvailableRights": [
+		"sanctions-execute"
+	],
+	"AutoloadClasses": {
+		"SpacialSanctions": "specials/SpacialSanctions.php",
+		"SanctionsPager": "includes/SanctionsPager.php",
+		"SanctionsHooks": "Sanctions.hooks.php",
+		"SanctionsUtils": "includes/SanctionsUtils.php"
+	},
+	"ResourceModules": {
+		"ext.sanctions": {
+			"position": "top",
+			"styles": "ext.sanctions.css"
+		}
+	},
+	"ResourceFileModulePaths": {
+		"localBasePath": "modules",
+		"remoteExtPath": "Sanctions/modules"
+	},
+	"Hooks": {
+		"LoadExtensionSchemaUpdates": "SanctionsHooks::onLoadExtensionSchemaUpdates",
+		"BeforePageDisplay": "SanctionsHooks::onBeforePageDisplay",
+		"UserToolLinksEdit": "SanctionsHooks::onUserToolLinksEdit",
+		"ContributionsToolLinks": "SanctionsHooks::onContributionsToolLinks"
+	},
+	"SpecialPages": {
+		"Sanctions": "SpacialSanctions"
+	},
+	"MessagesDirs": {
+		"Sanctions": [
+			"i18n"
+		]
+	},
+	"ExtensionMessagesFiles": {
+		"SanctionsAlias": "Sanctions.alias.php",
+		"SanctionsMagic": "Sanctions.i18n.magic.php"
+	},
+	"manifest_version": 1
+}
