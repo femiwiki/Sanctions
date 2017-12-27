@@ -246,7 +246,8 @@ class SpacialSanctions extends SpecialPage {
 					['st_target', 'st_topic','st_emergency', 'st_original_name', 'st_expiry'],
 					[ 'st_id' => $sanctionId ]
 				);
-				$target = $row->st_target;
+				$targetId = $row->st_target;
+				$target = User::newFromId($targetId);
 				$emergency = $row->st_emergency;
 				$sanctionExpiry = $row->st_expiry;
 				$insultingName = $row->st_original_name != null;
@@ -261,7 +262,7 @@ class SpacialSanctions extends SpecialPage {
 							$rename = new RenameuserSQL(
 								$target->getName(),
 								'임시사용자명'.wfTimestamp(TS_MW),
-								$target->getId(),
+								$targetId,
 								$this->getUser(),
 								[ 'reason' => '긴급 절차 전환' ]
 							);
@@ -278,7 +279,7 @@ class SpacialSanctions extends SpecialPage {
 							
 							$blockOptions = [
 				                'address' => $target->getName(),
-				                'user' => $target->getId(),
+				                'user' => $targetId,
 				                'reason' => '[[주제:'.UUID::create($row->st_topic)->getAlphadecimal().']]',
 				                'expiry' => wfTimestamp(TS_MW, time()+(60*60*24*$passed)),
 				                'byText' => '제재안 의결'
@@ -298,7 +299,7 @@ class SpacialSanctions extends SpecialPage {
 							$rename = new RenameuserSQL(
 								$target->getName(),
 								$originalName,
-								$target->getId(),
+								$targetId,
 								$this->getUser(),
 								[ 'reason' => '일반 절차 전환' ]
 							);
@@ -325,7 +326,7 @@ class SpacialSanctions extends SpecialPage {
 							$rename = new RenameuserSQL(
 								$target->getName(),
 								'임시사용자명'.wfTimestamp(TS_MW),
-								$target->getId(),
+								$targetId,
 								$this->getUser(),
 								[ 'reason' => '긴급 절차 전환' ]
 							);
@@ -342,7 +343,7 @@ class SpacialSanctions extends SpecialPage {
 
 						$blockOptions = [
 					                'address' => $target->getName(),
-					                'user' => $target->getId(),
+					                'user' => $targetId,
 					                'reason' => '[[주제:'.UUID::create($row->st_topic)->getAlphadecimal().']]',
 					                'expiry' => wfTimestamp(TS_MW, time()+(60*60*24*$passed)),
 					                'byText' => '제재안 의결'
