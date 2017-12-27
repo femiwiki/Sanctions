@@ -1,6 +1,7 @@
 <?php
 
 use Flow\Api\ApiFlowNewTopic;
+use Flow\Api\ApiFlowEditTopicSummary;
 use Flow\Container;
 use Flow\Model\UUID;
 
@@ -98,37 +99,64 @@ class SpacialSanctions extends SpecialPage {
 				}
 
 				//제재안 주제를 만듭니다.
+				$newTopic = new WebRequest();
 				$content = '<small>[['.$this->getTitle()->getFullText().'|제재안 목록]]</small>'.PHP_EOL.PHP_EOL;
 				$content .= $request->getVal( 'content' )?:'내용이 작성되지 않았습니다.';
 
-				$request->setVal('action','flow');
-				$request->setVal('submodule','new-topic');
-				$request->setVal('nttopic','[[사용자:'.$targetName.']]');
-				$request->setVal('ntcontent',$content);
+				$newTopic->setVal('action','flow');
+				$newTopic->setVal('token', $this->getUser()->getEditToken());
+				$newTopic->setVal('submodule','new-topic');
+				$newTopic->setVal('nttopic','[[사용자:'.$targetName.']]');
+				$newTopic->setVal('ntcontent',$content);
 
-				$main = new ApiMain($request, true);
+				$main = new ApiMain($newTopic, true);
 				$api = new ApiFlowNewTopic($main, 'new-topic');
 				$api->setPage(Title::newFromText("페미위키토론:제재안에 대한 의결"));
 				$api->execute();
 
-				//DB를 씁니다.
-				$topicPage = $api->getResultData()['main']['new-topic']['committed']['topiclist']['topic-page'];
+				$topicTitleText = $api->getResultData()['main']['new-topic']['committed']['topiclist']['topic-page'];
 				$topicId = $api->getResultData()['main']['new-topic']['committed']['topiclist']['topic-id'];
 
 				if($topicId == null) {
 					$output->addWikiText( '제재안 작성에 실패하였습니다.' );
 					break;
 				}
-				
+
+				//DB를 씁니다.				
+				$uuid = UUID::create($topicId)->getBinary();
 				$data = array(
 					'st_target'=> $targetId,
-					'st_topic'=> UUID::create($topicId)->getBinary(),
+					'st_topic'=> $uuid,
 					'st_expiry'=> wfTimestamp(TS_MW, time() + (60 * 60 * 24 * (float)$this->msg( 'sanctions-voting-period' )->text())),
 					'st_original_name'=> $request->getBool( 'hasInsultingName' )?$targetName:''
 				);
 
 				$this->mdb->insert( 'sanctions', $data, __METHOD__ );
-				$output->addWikiText( '[[사용자:'.$request->getVal( 'target' ).']] 님에 대한 [['.$topicPage.']]가 생성되었습니다.' );
+				$output->addWikiText( '[[사용자:'.$request->getVal( 'target' ).']] 님에 대한 [['.$topicTitleText.']]가 생성되었습니다.' );
+
+				//주제 요약을 작성합니다.
+				$sanctionId = $this->mdb->selectField( 'sanctions', 'st_id', [ 'st_topic' => $uuid ] );
+				if( $sanctionId === false )
+					$output->addWikiText( '제재안 작성에 실패하였습니다.' );
+
+				$EditTopicSummary = new WebRequest();
+				$EditTopicSummary->setVal('token',$this->getUser()->getEditToken());
+				$EditTopicSummary->setVal('action','flow');
+				$EditTopicSummary->setVal('submodule','edit-topic-summary');
+				$EditTopicSummary->setVal('etsprev_revision','');
+				$EditTopicSummary->setVal('etssummary','{{특수:제재안목록/'.$sanctionId.'}}');
+				$EditTopicSummary->setVal('etsformat','wikitext');
+
+				$main = new ApiMain($EditTopicSummary, true);
+				$api = new ApiFlowEditTopicSummary($main, 'edit-topic-summary');
+				$api->setPage(Title::newFromText($topicTitleText));
+				$api->execute();
+
+				$committed = $api->getResultData()['main']['edit-topic-summary']['status']
+					&& $api->getResultData()['main']['edit-topic-summary']['committed'];
+				if ( !$committed ) {
+					$output->addWikiText('주제 요약을 갱신하지 못 하였습니다.');
+				}
 			break;
 
 			//제재안 절차 변경( 일반 <-> 긴급 )
@@ -456,14 +484,13 @@ class SpacialSanctions extends SpecialPage {
 				$agree++;
 			$period += $row->stv_period;
 		}
-
 		if($count == 0)
 			return false;
 		
 		$period = ceil($period/$count);
 		if(
 			( $count >= 3 && $agree >= $count )
-			|| ( $count > 0 && $count < 3 && $agree == $count)
+			|| ( $count > 0 && $count < 3 && $agree == $count )
 		)
 			return $period;
 		return false;
