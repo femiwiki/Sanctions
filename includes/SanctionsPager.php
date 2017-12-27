@@ -52,13 +52,13 @@ class SanctionsPager extends IndexPager {
 			$query['conds'][] = 'st_target = '.User::newFromName($this->targetName)->getId();
 
 		if($this->getUserHasVoteRight()) {
-			$query['tables']['sub'] = '('.$subquery.') AS'; //AS를 따로 써야 작동하길래 이렇게 썼는데 당최 이게 맞는지??
+			$query['tables']['sub'] = '('.$subquery.') AS'; // AS를 따로 써야 작동하길래 이렇게 썼는데 당최 이게 맞는지??
 			$query['fields']['voted_from'] = 'stv_id';
-			//처리된 제재안은 보지 않습니다.
+			// 처리된 제재안은 보지 않습니다.
 			$query['conds']['st_handled'] = 0;
 			$query['join_conds'] = ['sub' => ['LEFT JOIN', 'st_topic = sub.stv_topic']];
 		} else {
-			//제재 절차 참가 권한이 없을 때는 만료된 제재안은 보지 않습니다.		
+			// 제재 절차 참가 권한이 없을 때는 만료된 제재안은 보지 않습니다.		
 			$query['conds'][] = 'st_expiry > '.wfTimestamp(TS_MW);
 		}
 		
@@ -74,8 +74,8 @@ class SanctionsPager extends IndexPager {
 	}
 
 	function formatRow( $row ) {
-		//foreach($row as $key => $value) echo $key.'-'.$value.'<br/>';
-		//echo '<div style="clear:both;">------------------------------------------------</div>';
+		// foreach($row as $key => $value) echo $key.'-'.$value.'<br/>';
+		// echo '<div style="clear:both;">------------------------------------------------</div>';
 		$expired = !$row->not_expired;
 		if($this->getUserHasVoteRight())
 			$isVoted = $row->voted_from != null;

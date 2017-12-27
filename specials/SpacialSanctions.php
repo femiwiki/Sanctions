@@ -2,7 +2,6 @@
 
 use Flow\Api\ApiFlowNewTopic;
 use Flow\Api\ApiFlowEditTopicSummary;
-use Flow\Container;
 use Flow\Model\UUID;
 
 class SpacialSanctions extends SpecialPage {
@@ -461,9 +460,6 @@ class SpacialSanctions extends SpecialPage {
 	}
 
 	/**
-	 * 다음 경우 제재 기간을 반환합니다. 
-	 * - 3인 이상이 의견을 내고 2/3 이상이 찬성한 경우
-	 * - 1인 이상, 3인 미만이 의견을 내고 반대가 없는 경우.
 	 * 부결되었을 경우 false를 반환합니다.
 	 * 즉시 부결은 이 함수에서 처리하지 않습니다.
 	 * @param $id 제재안의 id
