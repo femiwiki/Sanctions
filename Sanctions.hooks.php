@@ -61,18 +61,16 @@ class SanctionsHooks {
 			// post에 의견이 담겨있는지 검사합니다.
 			// 각 의견의 구분은 위키의 틀 안에 적어둔 태그를 사용합니다.
 			// @todo 좀 더 괜찮은 방법으로 찾기.
-			if ( preg_match( '/class="vote-agree-days">(\d+)/', $post, $period ) )
+			if ( preg_match( '/class="vote-agree-period">(\d+)/', $post, $period ) ){
 				$period = $period[1];
-			// 찬성만 하고 날짜를 적지 않았다면 1일로 처리합니다.
-			else if ( preg_match( '/class="vote-agree">/', $post) )
+			} elseif ( preg_match( '/class="vote-agree"/', $post) ) {
+				// 찬성만 하고 날짜를 적지 않았다면 1일로 처리합니다.
 				$period = 1;
-			
-			// 찬성하지 않았다면 반대하였는지 확인합니다.
-			if ( !$period ) {
-				if ( strpos( $post, 'vote-disagree' ) !== false )
-					$period = 0;
-				else
-					continue;
+			} elseif ( strpos( $post, '"vote-disagree"' ) !== false ) {
+				$period = 0;
+			}
+			else {
+				continue;
 			}
 
 			// 의견을 남긴 사용자 이름을 찾습니다.

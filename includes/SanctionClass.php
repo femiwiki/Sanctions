@@ -58,19 +58,22 @@ class Sanction {
 			'sanctions',
 			'*',
 			[
-				'st_original_name' => $targetName
+				'st_original_name' => $targetName,
+				'st_handled' => 0
 			]
 		) > 0 )
 			return false;
 
 		// 제재안 주제를 만듭니다.
+		$topicTitle = '[[사용자:'.$targetName.']] 님에 대한 ';
+		$topicTitle .= $forInsultingName ? '부적절한 사용자명 변경 건의' : '편집 차단 건의';
 		$newTopic = new WebRequest();
 
 		$newTopic->setVal( 'page', '페미위키토론:제재안에 대한 의결');
 		$newTopic->setVal( 'token', $user->getEditToken() );
 		$newTopic->setVal( 'action', 'flow' );
 		$newTopic->setVal( 'submodule', 'new-topic' );
-		$newTopic->setVal( 'nttopic', '[[특수:넘겨주기/user/'.$targetId.'|'.$targetName.']]' );
+		$newTopic->setVal( 'nttopic', $topicTitle );
 		$newTopic->setVal( 'ntcontent', $content );
 
 		$main = new ApiMain( $newTopic, true );
@@ -164,7 +167,7 @@ class Sanction {
 
 		if ( $dbIsTouched ) {
 			$sanction->immediateRejectionIfNeeded();
-			//$sanction->updateTopicSummary();
+			$sanction->updateTopicSummary();
 		}
 	}
 
@@ -197,10 +200,10 @@ class Sanction {
 		// 제재안이 처리되었음을 데이터베이스에 표시합니다.
 		$db = wfGetDB( DB_MASTER );
 
-		$res = $db->replace(
+		$res = $db->update(
 			'sanctions',
-			[ 'st_handled' => 1 ],
-			[ 'st_id' => $this->mid ]
+			[ 'st_expiry' => wfTimestamp( TS_MW ) ],
+			[ 'st_id' => $this->mId ]
 		);
 		
 		$this->updateTopicSummary();
@@ -380,7 +383,7 @@ class Sanction {
 	                'user' => $target->getId(),
 	                'reason' => $reason,
 	                'expiry' => $expiry,
-	                'by' => $this->getUser()->getId(),
+	                'by' => $this->getBot()->getId(),
 	                'allowUsertalk' => true,
 	                'enableAutoblock' => true
 	            ];
@@ -419,7 +422,7 @@ class Sanction {
 			// @todo 긴급 절차로 인해 다른 짧은 차단이 덮어 씌였다면 짧은 차단을 복구합니다.
 			// 즉 차단 기록을 살펴 이 제재안과 무관한 차단 기록이 있다면 기간을 비교하여 
 			// 이 제재안의 의결 종료 기간이 차단 해제 시간보다 뒤라면 차단 기간을 줄입니다.
-			if( $target->isBlocked() && $target->getBlock()->getExpiry() == $sanctionExpiry )
+			if( $target->isBlocked() && $target->getBlock()->getExpiry() == $this->mExpiry )
 				$target->getBlock()->delete();
 			return true;
 		}
@@ -470,25 +473,29 @@ class Sanction {
 
 	// @todo 이미 작성된 주제 요약이 있을 때 (etsprev_revision을 비웠기 때문에)제대로 작동하지 않습니다. 
 	public function updateTopicSummary() {
-		$topicTitleText = $this->getTopic()->getFullText();
-		$topicTitle = Title::newFromText( $topicTitleText );
+		try {
+			$topicTitleText = $this->getTopic()->getFullText();
+			$topicTitle = Title::newFromText( $topicTitleText );
 
-		$EditTopicSummary = new WebRequest();
-		$EditTopicSummary->setVal( 'page', '$topicTitleText');
-		$EditTopicSummary->setVal( 'token', User::newFromName( 'Admin' )->getEditToken() );
-		$EditTopicSummary->setVal( 'action','flow' );
-		$EditTopicSummary->setVal( 'submodule','edit-topic-summary' );
-		$EditTopicSummary->setVal( 'etsprev_revision', '' );
-		$EditTopicSummary->setVal( 'etssummary', $this->getSanctionSummary() );
-		$EditTopicSummary->setVal( 'etsformat','wikitext' );
+			$EditTopicSummary = new WebRequest();
+			$EditTopicSummary->setVal( 'page', '$topicTitleText');
+			$EditTopicSummary->setVal( 'token', User::newFromName( 'Admin' )->getEditToken() );
+			$EditTopicSummary->setVal( 'action','flow' );
+			$EditTopicSummary->setVal( 'submodule','edit-topic-summary' );
+			$EditTopicSummary->setVal( 'etsprev_revision', '' );
+			$EditTopicSummary->setVal( 'etssummary', $this->getSanctionSummary() );
+			$EditTopicSummary->setVal( 'etsformat','wikitext' );
 
-		$main = new ApiMain( $EditTopicSummary, true );
-		$api = new ApiFlowEditTopicSummary( $main, 'edit-topic-summary' );
-		$api->setPage( $topicTitle );
-		$api->execute();
+			$main = new ApiMain( $EditTopicSummary, true );
+			$api = new ApiFlowEditTopicSummary( $main, 'edit-topic-summary' );
+			$api->setPage( $topicTitle );
+			$api->execute();
 
-		return $api->getResultData()['main']['edit-topic-summary']['status']
-			&& $api->getResultData()['main']['edit-topic-summary']['committed'];
+			return $api->getResultData()['main']['edit-topic-summary']['status']
+				&& $api->getResultData()['main']['edit-topic-summary']['committed'];
+		} catch ( Exception $e ) {
+			return false;
+		}
 	}
 
 	/**
@@ -497,14 +504,14 @@ class Sanction {
 	public function getSanctionSummary() {
 		$summary = Self::getSanctionSummaryHeader();
 
-		$summary .= '* 의결 종료 시간: ';
+		$summary .= '* 의결 종료: '.MWTimestamp::getLocalInstance( $this->mExpiry )->getTimestamp( TS_ISO_8601 );
 		// @todo
 	
 		return $summary;
 	}
 
 	public static function getSanctionSummaryHeader() {
-		return '<small>[[특수:제재안목록|전체 제재안 목록보기]]</small>'.PHP_EOL; // @todo 뭐라그래
+		return '<small>< [[특수:제재안목록|전체 제재안 목록보기]]</small>'.PHP_EOL; // @todo 뭐라그래
 	}
 
 	public static function newFromId( string $id ) {

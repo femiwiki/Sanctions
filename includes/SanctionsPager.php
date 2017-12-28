@@ -29,7 +29,7 @@ class SanctionsPager extends IndexPager {
 	function getQueryInfo () {
 		$subquery = $this->mDb->selectSQLText(
 				 		'sanctions_vote',
-				 		['stv_id','stv_topic'],
+				 		[ 'stv_id', 'stv_topic' ],
 				 		[ 'stv_user' => $this->getUser()->getId() ]
 				 );
 		$query = [
@@ -57,20 +57,6 @@ class SanctionsPager extends IndexPager {
 		}
 		
 		return $query;
-	}
-
-	function getEmptyBody () {
-		$text = '제재안이 없습니다.';
-
-		if ( $this->targetName == null )
-			$text = '현재 의결 중인 제재안이 없습니다.';
-		else 
-			$text = '현재 의결 중인 '.$this->targetName.'님에 대한 제재안이 없습니다.';
-		return Html::rawelement(
-            'div',
-            ['class' => 'sanction-empty'],
-            $text
-        );
 	}
 
 	function formatRow( $row ) {
@@ -130,7 +116,7 @@ class SanctionsPager extends IndexPager {
 			$out .= Html::rawelement(
                 'div',
                 [ 'class' => 'sanction-expired' ],
-                '기간 종료'
+                '집행 대기중'
             );
 			$out .= Html::rawelement(
                 'div',
@@ -167,6 +153,20 @@ class SanctionsPager extends IndexPager {
                     );
 
 		return $out.Html::closeElement('div');
+	}
+
+	function getEmptyBody () {
+		$text = '제재안이 없습니다.';
+
+		if ( $this->targetName == null )
+			$text = '현재 의결 중인 제재안이 없습니다.';
+		else 
+			$text = '현재 의결 중인 '.$this->targetName.'님에 대한 제재안이 없습니다.';
+		return Html::rawelement(
+            'div',
+            ['class' => 'sanction-empty'],
+            $text
+        );
 	}
 
 	protected function processToggleButton( $sanctionId ) {

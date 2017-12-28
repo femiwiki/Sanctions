@@ -149,7 +149,7 @@ class SpacialSanctions extends SpecialPage {
 			break;
 		}
 
-		$output->addWikiText( '[[특수:제재안목록]] 문서로 돌아갑니다.' );
+		$output->addWikiText( '[['.$this->getTitle().']] 문서로 돌아갑니다.' );
 		return true;
 	}
 
@@ -157,9 +157,14 @@ class SpacialSanctions extends SpecialPage {
 		$content = '';
 		if( $this->mRevisionId != null ) {
 			$revision = Revision::newFromId( $this->mRevisionId );
+			
+			if ( $revision->getPrevious() == null ) {
+				$previousRevId = $revision->getId();
+				$link = '* [[특수:넘겨주기/revision/'.$this->mRevisionId.'|'.$revision->getTitle()->getFullText().']]';
+			} else
+				$link = '* [[특수:차이/'.$revision->getPrevious()->getId().'/'.$this->mRevisionId.'|'.$revision->getTitle()->getFullText().']]';
 
-			$content .= '* [[특수:차이/'.$revision->getPrevious()->getId().'/'.$this->mRevisionId.'|'.$revision->getTitle()->getFullText().']]'
-						. PHP_EOL.PHP_EOL.'('.$this->msg( 'sanctions-content-placeholder' )->text().')';
+			$content .= $link . PHP_EOL.PHP_EOL . '('.$this->msg( 'sanctions-content-placeholder' )->text().')';
 		}
 
 		$out = '';
