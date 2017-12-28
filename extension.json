@@ -19,6 +19,7 @@
 	"AutoloadClasses": {
 		"SpacialSanctions": "specials/SpacialSanctions.php",
 		"SanctionsPager": "includes/SanctionsPager.php",
+		"Sanction": "includes/SanctionClass.php",
 		"SanctionsHooks": "Sanctions.hooks.php",
 		"SanctionsUtils": "includes/SanctionsUtils.php"
 	},
