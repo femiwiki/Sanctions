@@ -36,7 +36,7 @@ class SanctionsHooks {
 
 		// UUID가 적절하지 않은 경우에 검사하지 않습니다.
 		try {
-			$uuid = UUID::create( strtolower( $title->getText() ) )->getBinary();
+			$uuid = UUID::create( strtolower( $title->getText() ) );
 		} catch ( InvalidInputException $e ) {
 			return true;
 		}
@@ -55,7 +55,7 @@ class SanctionsHooks {
 		// 0번 원소는 포스트가 시작하기 전이므로 제합니다.
 		unset( $posts[0] );
 		
-		// 유효표(제재 절차 잠여 요건을 만족하는 사람의 표)와 무효표를 따지지 않고 우선 세어 배열에 담습니다.
+		// 유효표(제재 절차 잠여 요건을 만족하는 사람의 표)와 무효표를 따지지 않고 우선 세어서 배열에 담습니다.
 		$votes = array();
 		foreach ( $posts as $post ) {
 			// post에 의견이 담겨있는지 검사합니다.
@@ -68,11 +68,11 @@ class SanctionsHooks {
 				$period = 1;
 			
 			// 찬성하지 않았다면 반대하였는지 확인합니다.
-			if ( !$period && strpos( $post, 'vote-disagree' ) !== false )
-				$period = 0;
-			else {
-				// 찬성도 반대도 하지 않았다면 아무것도 없는 의견이므로 세지 않습니다.
-				continue;
+			if ( !$period ) {
+				if ( strpos( $post, 'vote-disagree' ) !== false )
+					$period = 0;
+				else
+					continue;
 			}
 
 			// 의견을 남긴 사용자 이름을 찾습니다.
@@ -100,7 +100,7 @@ class SanctionsHooks {
 
 		// 무효표를 버립니다
 		foreach ( $votes as $name => $vote ) {
-			if( !SanctionsUtils::hasVoteRight( $name ) )
+			if( !SanctionsUtils::hasVoteRight( User::newFromName( $name ) ) )
 				unset( $votes[$name] );
 		}
 
@@ -111,10 +111,10 @@ class SanctionsHooks {
 		$voteData = [];
 		foreach ( $votes as $name => $vote )
 			$voteData[] = [
-				'stv_user' => User::newFromName( $name )->getId(),
-				'stv_period' => $vote['period']
+				'user' => User::newFromName( $name )->getId(),
+				'period' => $vote['period']
 			];
-		$sanction->countVotes( $voteData );
+		$sanction->countVotes( $sanction, $voteData );
 
 		return true;
 	}

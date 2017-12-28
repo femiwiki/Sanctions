@@ -9,6 +9,7 @@
 }
 
 .sanction .sanction-expired,
+.sanction .sanction-pass-status,
 .sanction .sanction-vote-status,
 .sanction .sanction-timeLeft
  {
