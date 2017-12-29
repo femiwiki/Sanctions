@@ -158,8 +158,6 @@ class SpacialSanctions extends SpecialPage {
 
 		$content .= $this->makeDiffLink();
 
-		$content .= '('.$this->msg( 'sanctions-content-placeholder' )->text().')';
-
 		$out = '';
 		$out .= Xml::element(
              'h2',
@@ -219,7 +217,7 @@ class SpacialSanctions extends SpecialPage {
 			$rt = '* [[특수:넘겨주기/revision/'.$revisionId.'|'.$revision->getTitle()->getFullText().']]';
 		}
 
-		return $rt . PHP_EOL . PHP_EOL;
+		return $rt;
 	}
 
 	protected function getGroupName() {
