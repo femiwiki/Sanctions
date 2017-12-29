@@ -8,7 +8,8 @@ class SpacialSanctions extends SpecialPage {
 	protected $mDb;
 	protected $mTargetName = null;
 	protected $mTargetId = null;
-	protected $mRevisionId = null;
+	protected $mOldRevisionId = null;
+	protected $mNewRevisionId = null;
 
 	public function __construct() {
 		parent::__construct( 'Sanctions' );
@@ -51,22 +52,65 @@ class SpacialSanctions extends SpecialPage {
 	}
 
 	function setParameter( $subpage ) {
-		$parts = explode( '/', $subpage, 2 );
+		$parts = explode( '/', $subpage, 3 );
 
-		$targetName = count( $parts ) > 0 ? $parts[0] : null;
+		$targetName = null;
+		$oldRevisionId = null;
+		$newRevisionId = null;
 
-		if ( $targetName == null ) return;
-		
+		switch ( count( $parts ) ) {
+			case 0:
+				return;
+			case 1:
+				$targetName = $parts[0];
+				break;
+			case 2:
+				$targetName = $parts[0];
+				$newRevisionId = $parts[1];
+				break;
+			case 3:
+				list( $targetName, $oldRevisionId, $newRevisionId ) = $parts;
+				break;
+		}
+
 		$target = User::newFromName( $targetName );
-		if( $target == false ) return;
+		if ( !$target ) return;
+		$targetId = $target->getId();
+		if ( !$targetId ) return;
 
-		$targetId = User::newFromName( $targetName )->getId();
-
-		if ( $targetId == null ) return;
-
-		$this->mTargetName = str_replace( "_", " ", $targetName );
+		$this->mTargetName = $targetName;
 		$this->mTargetId = $targetId;
-		$this->mRevisionId = count( $parts ) > 1 ? $parts[1] : null;
+
+		if ( count( $parts ) == 1 ) return;
+
+		//newRivisionId 구하기
+		$newRevisionId = $parts[ count( $parts ) - 1 ];
+
+		$newRevision = Revision::newFromId( $newRevisionId );
+		if ( !$newRevision ) {
+			$newRevisionId = null;
+			return;
+		}
+
+		//oldRivisionId 구하기
+		if ( count( $parts ) == 3 ) {
+			$oldRevisionId = $parts[1];
+			$oldRevision = Revision::newFromId( $oldRevisionId );
+			if ( !$oldRevision ) {
+				if ( $newRevision->getPrevious() )
+					$oldRevisionId = $newRevision->getPrevious()->getId();
+				else
+					$oldRevisionId = null;
+			}
+		} else {
+			if ( $newRevision->getPrevious() )
+				$oldRevisionId = $newRevision->getPrevious()->getId();
+			else
+				$oldRevisionId = null;
+		}
+
+		$this->mOldRevisionId = $oldRevisionId;
+		$this->mNewRevisionId = $newRevisionId;
 	}
 
 	function HandleRequestsIfExist($output) {
@@ -176,7 +220,7 @@ class SpacialSanctions extends SpecialPage {
 				'target', 10, $this->mTargetName, [ 'class' => 'mw-ui-input-inline' ] ) .
 			' '.
 			Xml::checkLabel(
-				'부적절한 사용자명', 'forInsultingName', 'forInsultingName', $this->mRevisionId == null && $this->mTargetName != null, [] )			. 
+				'부적절한 사용자명', 'forInsultingName', 'forInsultingName', $this->mNewRevisionId == null && $this->mTargetName != null, [] )			. 
 			Xml::textarea( 'content', $content, 40, 7, ['placeholder' => $this->msg( 'sanctions-content-placeholder' )->text()] ).
 			
 			Html::submitButton(
@@ -197,24 +241,18 @@ class SpacialSanctions extends SpecialPage {
 	}
 
 	protected function makeDiffLink() {
-		$revisionId = $this->mRevisionId;
+		$newRevisionId = $this->mNewRevisionId;
 
-		if ( $revisionId == null ) return '';
+		if ( $newRevisionId == null ) return '';
 
-		$revision = Revision::newFromId( $this->mRevisionId );
-
-		if ( $revision == null ) return '';
-
-		$previous = $revision->getPrevious();
+		$newRevision = Revision::newFromId( $newRevisionId );
+		$oldRevisionId = $this->mOldRevisionId;
 
 		$rt = '';
-		if ( $previous != null ) {
-			$previousId = $previous->getId();
-			
-			$rt = '* [[특수:차이/'.$previousId.'/'.$revisionId.'|'.$revision->getTitle()->getFullText().']]';
+		if ( $oldRevisionId != null ) {			
+			$rt = '* [[특수:차이/'.$oldRevisionId.'/'.$newRevisionId.'|'.$newRevision->getTitle()->getFullText().']]';
 		} else {
-
-			$rt = '* [[특수:넘겨주기/revision/'.$revisionId.'|'.$revision->getTitle()->getFullText().']]';
+			$rt = '* [[특수:넘겨주기/revision/'.$newRevisionId.'|'.$newRevision->getTitle()->getFullText().']]';
 		}
 
 		return $rt;

@@ -154,7 +154,12 @@ class SanctionsHooks {
 		if ( $wgUser == null || !SanctionsUtils::hasVoteRight( $wgUser ) )
 			return true;
 
-		$titleText = Title::newFromText( '특수:제재안목록/'.$newRev->getUserText().'/'.$newRev->getId() );
+		$ids = '';
+		if ( $oldRev != null )
+			$ids .= $oldRev->getId().'/';
+		$ids .= $newRev->getId();
+
+		$titleText = Title::newFromText( '특수:제재안목록/'.$newRev->getUserText().'/'.$ids );
 		$links[] = Linker::link( $titleText , '이 편집을 근거로 제재 건의' );
 
 		return true;

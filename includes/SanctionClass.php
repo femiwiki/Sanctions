@@ -454,7 +454,7 @@ class Sanction {
 
 			$EditTopicSummary = new WebRequest();
 			$EditTopicSummary->setVal( 'page', '$topicTitleText');
-			$EditTopicSummary->setVal( 'token', User::newFromName( 'Admin' )->getEditToken() );
+			$EditTopicSummary->setVal( 'token', self::getBot()->getEditToken() );
 			$EditTopicSummary->setVal( 'action','flow' );
 			$EditTopicSummary->setVal( 'submodule','edit-topic-summary' );
 			$EditTopicSummary->setVal( 'etsprev_revision', '' );
