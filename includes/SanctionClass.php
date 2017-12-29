@@ -112,7 +112,7 @@ class Sanction {
 		if ( $sanctionId === false )
 			return false;
 
-		$sanction = Self::newFromId( $sanctionId );
+		$sanction = self::newFromId( $sanctionId );
 
 		if ( $sanction === false )
 			return false;
@@ -297,54 +297,37 @@ class Sanction {
 			return true;
 		} else {
 			$period = $this->getPeriod();
+			$blockExpiry = $wfTimestamp( TS_MW, time() + ( 60*60*24 * $period ) );
 			if ( $target->isBlocked() ) {
 				// 이 제재안에 따라 결정된 차단 종료 시간이 기존 차단 해제 시간보다 뒤라면 제거합니다.
-				if ( $target->getBlock()->getExpiry() < $this->mExpiry )
-					$target->getBlock()->delete();
+				if ( $target->getBlock()->getExpiry() < $blockExpiry )
+					self::unblock( $target, false );
 				else
 					return true;
 			}
 			
-			//차단합니다.
-			$blockOptions = [
-                'address' => $target->getName(),
-                'user' => $targetId,
-                'expiry' => wfTimestamp( TS_MW, time() + ( 60*60*24 * $period ) ),
-                'reason' => $reason,
-                'by' => $this->getBot()->getId()
-            ];
-            $block = new Block( $blockOptions );
-  	        $block->insert();
+			self::doBlock( $target, $blockExpiry, $reason, true );
   	    }
   	}
 
 	public function replaceTemporaryMeasure() {
 		$target = $this->mTarget;
 		$isForInsultingName = $this->isForInsultingName();
+		$reason = '[[주제:'.$this->mTopic->getAlphadecimal().'|제재안]]의 가결';
 
 		if ( $isForInsultingName ) {
 			return true;
 		} else {
-			$expiry = wfTimestamp( TS_MW, time() + ( 60*60*24 * $this->getPeriod() ) );
+			$blockExpiry = wfTimestamp( TS_MW, time() + ( 60*60*24 * $this->getPeriod() ) );
 			if ( $target->isBlocked() ) {
 				// 이 제재안에 따라 결정된 차단 종료 시간이 기존 차단 해제 시간보다 뒤라면 제거합니다.
-				if ( $target->getBlock()->getExpiry() < $expiry )
-					$target->getBlock()->delete();
+				if ( $target->getBlock()->getExpiry() < $blockExpiry )
+					unblock( $target, false );
 				else
 					return true;
 			}
-			
-			//차단합니다.
-			$reason = '[[주제:'.$this->mTopic->getAlphadecimal().'|제재안]]의 가결';
-			$blockOptions = [
-                'address' => $target->getName(),
-                'user' => $targetId,
-                'expiry' => wfTimestamp( TS_MW, time() + ( $expiry ) ),
-                'reason' => $reason,
-                'by' => $this->getBot()->getId()
-            ];
-            $block = new Block( $blockOptions );
-  	        $block->insert();
+
+			self::doBlock( $target, $blockExpiry, $reason, true );
 		}
 	}
 
@@ -376,19 +359,10 @@ class Sanction {
 			//이 제재안의 의결 종료 시간이 차단 해제 시간보다 뒤라면 늘려 차단합니다.
 			if( !$target->isBlocked() || $target->getBlock()->getExpiry() < $expiry ) {
 				if($target->isBlocked())
-					$target->getBlock()->delete();
-				
-				$blockOptions = [
-	                'address' => $target->getName(),
-	                'user' => $target->getId(),
-	                'reason' => $reason,
-	                'expiry' => $expiry,
-	                'by' => $this->getBot()->getId(),
-	                'allowUsertalk' => true,
-	                'enableAutoblock' => true
-	            ];
-	            $block = new Block( $blockOptions );
-	  	        $block->insert();
+					self::unblock( $target, false );
+
+				$blockExpiry = $expiry;
+				self::doBlock( $target, $blockExpiry, $reason, false );
 			}
 		}
 	}
@@ -411,9 +385,8 @@ class Sanction {
 					$this->getBot(),
 					[ 'reason' => $reason ]
 				);
-				if ( !$rename->rename() ) {
+				if ( !$rename->rename() )
 					return false;
-				}
 				return true;
 			}
 		}
@@ -423,7 +396,7 @@ class Sanction {
 			// 즉 차단 기록을 살펴 이 제재안과 무관한 차단 기록이 있다면 기간을 비교하여 
 			// 이 제재안의 의결 종료 기간이 차단 해제 시간보다 뒤라면 차단 기간을 줄입니다.
 			if( $target->isBlocked() && $target->getBlock()->getExpiry() == $this->mExpiry )
-				$target->getBlock()->delete();
+				self::unblock( $target, true, $reason );
 			return true;
 		}
 	}
@@ -502,7 +475,7 @@ class Sanction {
 	 * @todo 제재안이 만료되었다면 만료되었다는 사실을 추가합니다.
 	 */
 	public function getSanctionSummary() {
-		$summary = Self::getSanctionSummaryHeader();
+		$summary = self::getSanctionSummaryHeader();
 
 		$summary .= '* 의결 종료: '.MWTimestamp::getLocalInstance( $this->mExpiry )->getTimestamp( TS_ISO_8601 );
 		// @todo
@@ -515,7 +488,7 @@ class Sanction {
 	}
 
 	public static function newFromId( string $id ) {
-		$rt = new Self();
+		$rt = new self();
 		if ( $rt->loadFrom( 'st_id', $id ) )
 			return $rt;
 		return false;
@@ -525,7 +498,7 @@ class Sanction {
 		if ( $UUID instanceof UUID )
 			$UUID = $UUID->getBinary();
 
-		$rt = new Self();
+		$rt = new self();
 		if ( $rt->loadFrom( 'st_topic', $UUID ) )
 			return $rt;
 		return false;
@@ -540,7 +513,7 @@ class Sanction {
 			[ 'stv_id' => $vote ]
 		);
 
-		return Self::newFromId( $sanctionId );
+		return self::newFromId( $sanctionId );
 	}
 
 	// @todo $value는 $res의 값으로 갱신하지 않기
@@ -570,6 +543,72 @@ class Sanction {
 		} catch ( InvalidInputException $e ) {
 			return false;
 		}
+	}
+
+	protected static function doBlock( $target, $expiry, $reason, $preventEditOwnUserTalk = true ) {
+		$bot = self::getBot();
+
+		$block = new Block();
+		$block->setTarget( $target );
+		$block->setBlocker( $bot );
+		$block->mReason = $reason;
+		$block->isHardblock( true );
+		$block->isAutoblocking( true );
+		$block->prevents( 'createaccount', true );
+		$block->prevents( 'editownusertalk', $preventEditOwnUserTalk );
+		$block->mExpiry = $expiry;
+
+		$success = $block->insert();
+
+		if ( !$success ) return false;
+
+		$logParams = array();
+		$logParams['5::duration'] = $expiry;
+		$flags = array( 'nocreate' );
+		if ( !$block->isAutoblocking() && !IP::isIPAddress( $target ) ) {
+			// Conditionally added same as SpecialBlock
+			$flags[] = 'noautoblock';
+		}
+		$logParams['6::flags'] = implode( ',', $flags );
+
+		$logEntry = new ManualLogEntry( 'block', 'block' );
+		$logEntry->setTarget( Title::makeTitle( NS_USER, $target ) );
+		$logEntry->setComment( $reason );
+		$logEntry->setPerformer( $bot );
+		$logEntry->setParameters( $logParams );
+		$blockIds = array_merge( array( $success['id'] ), $success['autoIds'] );
+		$logEntry->setRelations( array( 'ipb_id' => $blockIds ) );
+        $logId = $logEntry->insert();
+        $logEntry->publish( $logId );
+
+		return true;
+	}
+
+	protected static function unblock( $target, $withLog = false, $reason = null ) {
+		$block = $target->getBlock();
+
+		if ( $block == null || !$block->delete() )
+			return false;
+
+		// SpecialUnblock.php에 있던 것과 같은 내용입니다.
+		if ( $block->getType() == Block::TYPE_AUTO ) {
+    		$page = Title::makeTitle( NS_USER, '#' . $block->getId() );
+    	} else {
+    		$page = $block->getTarget() instanceof User
+    			? $block->getTarget()->getUserPage()
+    			: Title::makeTitle( NS_USER, $block->getTarget() );
+    	}
+
+		if ( $withLog ) {
+			$bot = self::getBot();
+
+	        $logEntry = new ManualLogEntry( 'block', 'unblock' );
+	        $logEntry->setTarget( $page );
+	        $logEntry->setComment( $reason );
+	        $logEntry->setPerformer( $bot );
+	        $logId = $logEntry->insert();
+	        $logEntry->publish( $logId );
+	    }
 	}
 
 	public function isVotable() {
@@ -644,13 +683,10 @@ class Sanction {
 		return $this->mTopic;
 	}
 
-	protected function getBot() {
-		$botName = '제재안'; // @todo 만약 같은 이름의 무관한 사용자가 있으면 어떡하지?
-		$bot = User::newFromName( $botName );
-
-		if ( $bot->getId() == 0 ) {
-			$bot = User::createNew ( $botName );
-		}
+	protected static function getBot() {
+		$botName = '제재안';
+		$bot = User::newSystemUser( $botName, [ 'steal' => true ] );
+		$bot->addGroup( 'sysop' );
 
 		return $bot;
 	}
