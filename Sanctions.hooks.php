@@ -123,12 +123,50 @@ class SanctionsHooks {
 	}
 
 	public static function onContributionsToolLinks( $id, $title, &$tools ) {
-		$user = User::newFromId( $id );
-		if ( $id && SanctionsUtils::hasVoteRight( $user ) )
-			$tools[] = Linker::link( Title::newFromText( '특수:제재안목록/'.$user->getName() ),'제재안' );
+		global $wgUser;
+
+		if ( $wgUser == null || !SanctionsUtils::hasVoteRight( $wgUser ) )
+			return true;
+
+		$targetName = User::newFromId($id)->getName();
+		$tools[] = Linker::link( Title::newFromText( '특수:제재안목록/'.$targetName ),'제재안' );
 
 		return true;
 	}
+
+	/**
+	 * $newRev: Revision object of the "new" revision
+	 * &$links: Array of HTML links
+	 * $oldRev: Revision object of the "old" revision (may be null)
+	 */
+	public static function onDiffRevisionTools( Revision $newRev, &$links, $oldRev ) {
+		global $wgUser;
+
+		if ( $wgUser == null || !SanctionsUtils::hasVoteRight( $wgUser ) )
+			return true;
+
+		$titleText = Title::newFromText( '특수:제재안목록/'.$newRev->getUserText().'/'.$newRev->getId() );
+		$links[] = Linker::link( $titleText , '이 편집을 근거로 제재 건의' );
+
+		return true;
+	}
+
+	/**
+	 * $rev: Revision object
+	 * &$links: Array of HTML links
+	 */
+	public static function onHistoryRevisionTools( $rev, &$links ) {
+		global $wgUser;
+
+		if ( $wgUser == null || !SanctionsUtils::hasVoteRight( $wgUser ) )
+			return true;
+
+		$titleText = Title::newFromText( '특수:제재안목록/'.$rev->getUserText().'/'.$rev->getId() );
+		$links[] = Linker::link( $titleText , '이 편집을 근거로 제재 건의' );
+
+		return true;
+	}
+
 
 	/**
 	 * @todo [[특:제재안목록]]이 아닌 다른 곳에서 새 주제들 쓸 수 없게 하기

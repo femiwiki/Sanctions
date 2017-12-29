@@ -37,7 +37,9 @@
 		"LoadExtensionSchemaUpdates": "SanctionsHooks::onLoadExtensionSchemaUpdates",
 		"BeforePageDisplay": "SanctionsHooks::onBeforePageDisplay",
 		"UserToolLinksEdit": "SanctionsHooks::onUserToolLinksEdit",
-		"ContributionsToolLinks": "SanctionsHooks::onContributionsToolLinks"
+		"ContributionsToolLinks": "SanctionsHooks::onContributionsToolLinks",
+		"DiffRevisionTools": "SanctionsHooks::onDiffRevisionTools",
+		"HistoryRevisionTools": "SanctionsHooks::onHistoryRevisionTools"
 	},
 	"SpecialPages": {
 		"Sanctions": "SpacialSanctions"

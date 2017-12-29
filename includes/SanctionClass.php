@@ -645,6 +645,13 @@ class Sanction {
 	}
 
 	protected function getBot() {
-		return User::newFromName( 'Admin' ); // @todo 전담 봇으로 교체
+		$botName = '제재안'; // @todo 만약 같은 이름의 무관한 사용자가 있으면 어떡하지?
+		$bot = User::newFromName( $botName );
+
+		if ( $bot->getId() == 0 ) {
+			$bot = User::createNew ( $botName );
+		}
+
+		return $bot;
 	}
 }

@@ -153,19 +153,12 @@ class SpacialSanctions extends SpecialPage {
 		return true;
 	}
 
-	function makeForm() {
+	protected function makeForm() {
 		$content = '';
-		if( $this->mRevisionId != null ) {
-			$revision = Revision::newFromId( $this->mRevisionId );
-			
-			if ( $revision->getPrevious() == null ) {
-				$previousRevId = $revision->getId();
-				$link = '* [[특수:넘겨주기/revision/'.$this->mRevisionId.'|'.$revision->getTitle()->getFullText().']]';
-			} else
-				$link = '* [[특수:차이/'.$revision->getPrevious()->getId().'/'.$this->mRevisionId.'|'.$revision->getTitle()->getFullText().']]';
 
-			$content .= $link . PHP_EOL.PHP_EOL . '('.$this->msg( 'sanctions-content-placeholder' )->text().')';
-		}
+		$content .= $this->makeDiffLink();
+
+		$content .= '('.$this->msg( 'sanctions-content-placeholder' )->text().')';
 
 		$out = '';
 		$out .= Xml::element(
@@ -203,6 +196,30 @@ class SpacialSanctions extends SpecialPage {
 		);
 
 		return $out;
+	}
+
+	protected function makeDiffLink() {
+		$revisionId = $this->mRevisionId;
+
+		if ( $revisionId == null ) return '';
+
+		$revision = Revision::newFromId( $this->mRevisionId );
+
+		if ( $revision == null ) return '';
+
+		$previous = $revision->getPrevious();
+
+		$rt = '';
+		if ( $previous != null ) {
+			$previousId = $previous->getId();
+			
+			$rt = '* [[특수:차이/'.$previousId.'/'.$revisionId.'|'.$revision->getTitle()->getFullText().']]';
+		} else {
+
+			$rt = '* [[특수:넘겨주기/revision/'.$revisionId.'|'.$revision->getTitle()->getFullText().']]';
+		}
+
+		return $rt . PHP_EOL . PHP_EOL;
 	}
 
 	protected function getGroupName() {
