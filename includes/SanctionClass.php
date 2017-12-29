@@ -486,7 +486,7 @@ class Sanction {
 	}
 
 	public static function getSanctionSummaryHeader() {
-		return '<small>< [[특수:제재안목록|전체 제재안 목록보기]]</small>'.PHP_EOL; // @todo 뭐라그래
+		return '';
 	}
 
 	public static function newFromId( string $id ) {

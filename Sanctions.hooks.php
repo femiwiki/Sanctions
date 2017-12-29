@@ -32,6 +32,7 @@ class SanctionsHooks {
 	public static function onBeforePageDisplay( OutputPage &$out, Skin &$skin ) {
 		// 주제 이름공간이 아니면 검사하지 않습니다.
 		$title = $out->getTitle();
+
 		if ( $title->getNamespace() != NS_TOPIC ) return true;
 
 		// UUID가 적절하지 않은 경우에 검사하지 않습니다.
@@ -42,8 +43,13 @@ class SanctionsHooks {
 		}
 
 		$sanction = Sanction::newFromUUID( $uuid );
-		// 제재안을 가져오는데 실패하거나 제재안에 의견을 내는 것이 불가할 경우 검사하지 않습니다.
-		if ( $sanction === false || !$sanction->isVotable() )
+		if ( $sanction === false )
+			return true;
+
+		$subTitle = '<' . Linker::link( Title::newFromText( '특수:제재안목록' ), '전체 제재안 목록보기' );
+		$out->setSubTitle( $subTitle );
+
+		if ( !$sanction->isVotable() )
 			return true;
 
 		// html을 가져와 각 포스트를 대강 구합니다.
