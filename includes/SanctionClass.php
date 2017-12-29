@@ -223,7 +223,7 @@ class Sanction {
 		if ( $passed && !$emergency )
 			$this->justTakeMeasure();
 		elseif ( !$passed && $emergency )
-			$this->removeTemporaryMeasure('제재안 부결에 따른 임시 조치 해제');
+			$this->removeTemporaryMeasure( '제재안 부결에 따른 임시 조치 해제' );
 		else if ( $passed && $emergency )
 			$this->replaceTemporaryMeasure();
 
@@ -256,8 +256,10 @@ class Sanction {
 
 		if( $toEmergency )
 			$this->takeTemporaryMeasure();
-		else
-			$this->removeTemporaryMeasure('제재안 일반 절차 전환에 따른 임시 조치 해제');
+		else {
+			$reason = '[[주제:'.$this->mTopic->getAlphadecimal().'|제재안]] 일반 절차 전환에 따른 임시 조치 해제';
+			$this->removeTemporaryMeasure( $reason );
+		}
 
 		$this->mIsEmergency = !$emergency;
 
