@@ -33,6 +33,9 @@ class SanctionsHooks {
 		// 주제 이름공간이 아니면 검사하지 않습니다.
 		$title = $out->getTitle();
 
+		if ( $title->getFullText() == '페미위키토론:제재안에 대한 의결' )
+			$out->addModuleStyles( 'ext.flow-default-board' );
+
 		if ( $title->getNamespace() != NS_TOPIC ) return true;
 
 		// UUID가 적절하지 않은 경우에 검사하지 않습니다.

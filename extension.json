@@ -27,6 +27,10 @@
 		"ext.sanctions": {
 			"position": "top",
 			"styles": "ext.sanctions.css"
+		},
+		"ext.flow-default-board": {
+			"position": "top",
+			"styles": "ext.flow-default-board.css"
 		}
 	},
 	"ResourceFileModulePaths": {
