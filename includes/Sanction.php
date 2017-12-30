@@ -44,23 +44,28 @@ class Sanction {
 	 */
 	protected $mVotes = null;
 
-	public static function write( $user, $target, $forInsultingName, $content ) {
-		$targetId = $target->getId();
-		$targetName = $target->getName();
-
-		if ( $targetId === 0 )
-			return false;
-
-		//만일 동일 사용자명에 대한 부적절한 사용자명 변경 건의안이 이미 있다면 중복 작성을 막습니다.
+	public static function existingSanctionForInsultingNameOf( $user ) {
 		$db = wfGetDB ( DB_MASTER );
-		if ( $forInsultingName && $db->selectRowCount(
+		$targetName = $user->getName();
+
+		$row = $db->selectRow(
 			'sanctions',
 			'*',
 			[
 				'st_original_name' => $targetName,
 				'st_handled' => 0
 			]
-		) > 0 )
+		);
+		if ( $row !== false )
+			return self::newFromId( $row->st_id) ;
+		return null;
+	}
+
+	public static function write( $user, $target, $forInsultingName, $content ) {
+		$targetId = $target->getId();
+		$targetName = $target->getName();
+
+		if ( $targetId === 0 )
 			return false;
 
 		// 제재안 주제를 만듭니다.

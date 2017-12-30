@@ -22,7 +22,7 @@ class SpacialSanctions extends SpecialPage {
 		$this->setHeaders();
 		$this->outputHeader();
 
-		// Request가 있었다면 처리합니다. (리다이렉트됩니다)
+		// Request가 있었다면 처리합니다. (리다이렉트할 경우 true를 반환합니다)
 		if ( $this->HandleRequestsIfExist( $output ) ) return;
 
 		$output->addModuleStyles( 'ext.sanctions' );
@@ -188,6 +188,15 @@ class SpacialSanctions extends SpecialPage {
 					// '"'.$targetName.'"라는 이름의 사용자가 존재하지 않습니다.'
 					break;
 				}
+
+				//만일 동일 사용자명에 대한 부적절한 사용자명 변경 건의안이 이미 있다면 중복 작성을 막습니다.
+				if ( $forInsultingName ) {
+					$existingSanction = Sanction::existingSanctionForInsultingNameOf( $target );
+					if ( $existingSanction != null ) {
+						list( $query['showResult'], $query['errorCode'], $query['targetName'], $query['uuid'] ) = [ true, 102, $targetName, $existingSanction->getTopicUUID()->getAlphaDecimal() ];
+						break;
+					}
+				}
 				
 				$sanction = Sanction::write( $this->getUser(), $target, $forInsultingName, $content );
 
@@ -257,6 +266,7 @@ class SpacialSanctions extends SpecialPage {
 	}
 
 	protected static function makeErrorMessage( $errorCode, $uuid, $targetName ) {
+		$link = $uuid ? Linker::link( Sanction::newFromUUID( $uuid )->getTopic() ) : '';
 		switch ( $errorCode ) {
 		case 0:
 			return '토큰에 문제가 있습니다.';
@@ -273,7 +283,7 @@ class SpacialSanctions extends SpecialPage {
 		case 101:
 			return $targetName.'이라는 이름의 사용자가 존재하지 않습니다.';
 		case 102:
-			return $targetName.' 님에 대한 부적절한 사용자명 변경 건의안이 이미 존재합니다.';
+			return $targetName.' 님에 대한 부적절한 사용자명 변경 건의('.$link.')가 이미 존재합니다.';
 		}
 	}
 
