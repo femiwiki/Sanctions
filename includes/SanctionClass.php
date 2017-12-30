@@ -1,7 +1,6 @@
 <?php
 
-use Flow\Api\ApiFlowNewTopic;
-use Flow\Api\ApiFlowEditTopicSummary;
+use Flow\Container;
 use Flow\Model\UUID;
 
 class Sanction {
@@ -67,22 +66,36 @@ class Sanction {
 		// 제재안 주제를 만듭니다.
 		$topicTitle = '[[사용자:'.$targetName.']] 님에 대한 ';
 		$topicTitle .= $forInsultingName ? '부적절한 사용자명 변경 건의' : '편집 차단 건의';
-		$newTopic = new WebRequest();
+		// 진짜 주제 만들기
+		$factory = Container::get( 'factory.loader.workflow' );
+		$page = Title::newFromText( "페미위키토론:제재안에 대한 의결" );
+		$loader = $factory->createWorkflowLoader( $page );
+		$blocks = $loader->getBlocks();
+		$action = 'new-topic';
+		$params = [
+			'topiclist' => [
+				'page' => '페미위키토론:제재안에 대한 의결',
+				'token' => $user->getEditToken(),
+				'action' => 'flow',
+				'submodule' => 'new-topic',
+				'topic' => $topicTitle,
+				'content' => $content
+			]
+		];
+		$context = RequestContext::getMain();
+		$blocksToCommit = $loader->handleSubmit(
+			$context,
+			$action,
+			$params
+		);
+		if ( !count( $blocksToCommit ) ) {
+			return false;
+		}
 
-		$newTopic->setVal( 'page', '페미위키토론:제재안에 대한 의결');
-		$newTopic->setVal( 'token', $user->getEditToken() );
-		$newTopic->setVal( 'action', 'flow' );
-		$newTopic->setVal( 'submodule', 'new-topic' );
-		$newTopic->setVal( 'nttopic', $topicTitle );
-		$newTopic->setVal( 'ntcontent', $content );
+		$commitMetadata = $loader->commit( $blocksToCommit );
 
-		$main = new ApiMain( $newTopic, true );
-		$api = new ApiFlowNewTopic( $main, 'new-topic' );
-		$api->setPage( Title::newFromText( "페미위키토론:제재안에 대한 의결" ) );
-		$api->execute();
-
-		$topicTitleText = $api->getResultData()['main']['new-topic']['committed']['topiclist']['topic-page'];
-		$topicId = $api->getResultData()['main']['new-topic']['committed']['topiclist']['topic-id'];
+		// $topicTitleText = $commitMetadata['topiclist']['topic-page'];
+		$topicId = $commitMetadata['topiclist']['topic-id'];
 
 		if ( $topicId == null ) {
 			return false;
@@ -449,28 +462,42 @@ class Sanction {
 	// @todo 이미 작성된 주제 요약이 있을 때 (etsprev_revision을 비웠기 때문에)제대로 작동하지 않습니다. 
 	public function updateTopicSummary() {
 		try {
+			$factory = Container::get( 'factory.loader.workflow' );
+
 			$topicTitleText = $this->getTopic()->getFullText();
 			$topicTitle = Title::newFromText( $topicTitleText );
+			$topicId = $this->mTopic;
+			$loader = $factory->createWorkflowLoader( $topicTitle, $topicId );
+			$blocks = $loader->getBlocks();
+			$action = 'edit-topic-summary';
+			$params = [
+				'topicsummary' => [
+					'page' => $topicTitleText,
+					'token' => self::getBot()->getEditToken(),
+					'action' => 'flow',
+					'submodule' => 'edit-topic-summary',
+					'etsprev_revision' => '',
+					'summary' => $this->getSanctionSummary(),
+					'format' => 'wikitext'
+				], 
+				'topic' => []
+			];
+			$context = RequestContext::getMain();
+			$blocksToCommit = $loader->handleSubmit(
+				$context,
+				$action,
+				$params
+			);
+			if ( !count( $blocksToCommit ) ) {
+				return false;
+			}
 
-			$EditTopicSummary = new WebRequest();
-			$EditTopicSummary->setVal( 'page', '$topicTitleText');
-			$EditTopicSummary->setVal( 'token', self::getBot()->getEditToken() );
-			$EditTopicSummary->setVal( 'action','flow' );
-			$EditTopicSummary->setVal( 'submodule','edit-topic-summary' );
-			$EditTopicSummary->setVal( 'etsprev_revision', '' );
-			$EditTopicSummary->setVal( 'etssummary', $this->getSanctionSummary() );
-			$EditTopicSummary->setVal( 'etsformat','wikitext' );
-
-			$main = new ApiMain( $EditTopicSummary, true );
-			$api = new ApiFlowEditTopicSummary( $main, 'edit-topic-summary' );
-			$api->setPage( $topicTitle );
-			$api->execute();
-
-			return $api->getResultData()['main']['edit-topic-summary']['status']
-				&& $api->getResultData()['main']['edit-topic-summary']['committed'];
+			$commitMetadata = $loader->commit( $blocksToCommit );
 		} catch ( Exception $e ) {
 			return false;
 		}
+
+		return count( $commitMetadata ) > 0;
 	}
 
 	/**
