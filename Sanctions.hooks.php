@@ -39,6 +39,7 @@ class SanctionsHooks {
 		if ( $title->getNamespace() != NS_TOPIC ) return true;
 
 		// UUID가 적절하지 않은 경우에 검사하지 않습니다.
+		$uuid = null;
 		try {
 			$uuid = UUID::create( strtolower( $title->getText() ) );
 		} catch ( InvalidInputException $e ) {
@@ -55,60 +56,68 @@ class SanctionsHooks {
 		if ( !$sanction->isVotable() )
 			return true;
 
-		// html을 가져와 각 포스트를 대강 구합니다.
-		// @todo 좀 더 괜찮은 방법으로 찾기.
-		$html = $out->getHTML();
+		$db = wfGetDB( DB_MASTER );
+		$res = $db->select(
+			[
+				'flow_workflow',
+				'flow_tree_node',
+				'flow_tree_revision',
+				'flow_revision'
+			],
+			[
+				'rev_id',
+				'rev_user_id',
+				'rev_content'
+			],
+			[
+				'workflow_id' => $uuid->getBinary()
+			],
+			__METHOD__,
+			[ 'DISTINCT' ],
+			[
+				[ 'flow_tree_node' => [ 'INNER JOIN', 'workflow_id = tree_ancestor_id' ] ],
+				[ 'flow_tree_revision' => [ 'INNER JOIN', 'tree_descendant_id = tree_rev_descendant_id' ] ],
+				[ 'flow_revision' => [ 'INNER JOIN', 'tree_rev_id = rev_id' ] ],
+			]
+		);
 
-		// 포스트 머리에 있는 문자열을 기준으로 HTML을 대강 자릅니다.
-		$posts = preg_split( '/class\s*=\s*"[^-]*flow-post[^-"]*"/', $html );
-		// 0번 원소는 포스트가 시작하기 전이므로 제합니다.
-		unset( $posts[0] );
-		
 		// 유효표(제재 절차 잠여 요건을 만족하는 사람의 표)와 무효표를 따지지 않고 우선 세어서 배열에 담습니다.
-		$votes = array();
-		foreach ( $posts as $post ) {
+		$votes = [];
+		foreach($res as $row) {
+			$timestamp = UUID::create( $row->rev_id )->getTimestamp();
+			$userId = $row->rev_user_id;
+			$content = $row->rev_content;
+
 			// post에 의견이 담겨있는지 검사합니다.
 			// 각 의견의 구분은 위키의 틀 안에 적어둔 태그를 사용합니다.
-			// @todo 좀 더 괜찮은 방법으로 찾기.
-			if ( preg_match( '/class="vote-agree-period">(\d+)/', $post, $period ) ){
+			$period = 0;
+			if ( preg_match( '/<span class="sanction-vote-agree-period">(\d+)<\/span>/', $content, $period ) ) {
 				$period = $period[1];
-			} elseif ( preg_match( '/class="vote-agree"/', $post) ) {
+			} elseif ( strpos( $content, '"sanction-vote-agree"' ) !== false ) {
 				// 찬성만 하고 날짜를 적지 않았다면 1일로 처리합니다.
 				$period = 1;
-			} elseif ( strpos( $post, '"vote-disagree"' ) !== false ) {
+			} elseif ( strpos( $content, '"sanction-vote-disagree"' ) !== false ) {
 				$period = 0;
 			}
 			else {
 				continue;
 			}
 
-			// 의견을 남긴 사용자 이름을 찾습니다.
-			// @todo 좀 더 괜찮은 방법으로 찾기.
-			if( !preg_match( '/new mw-userlink">\s*<bdi>(.+)<\/bdi>/', $post, $name ) )
-				continue;
-			$name = $name[1];
-
-			// 작성 시간을 찾습니다.
-			// @todo 좀 더 괜찮은 방법으로 찾기.
-			if( !preg_match( '/datetime="(\d+)"\s*class="flow-timestamp/', $post, $timestamp ) )
-				continue;
-			$timestamp = $timestamp[1];
-
 			// 이 의견이 해당 사용자가 남긴 가장 마지막 의견이 아니라면 무시합니다.
-			if( isset( $votes[$name] ) && $votes[$name]['timestamp'] > $timestamp )
+			if( isset( $votes[$userId] ) && $votes[$userId]['timestamp'] > $timestamp )
 				continue;
 
 			//배열에 저장합니다.
-			$votes[$name] = [
+			$votes[$userId] = [
 				'timestamp' => $timestamp,
 				'period' => $period
 			];
 		}
 
 		// 무효표를 버립니다
-		foreach ( $votes as $name => $vote ) {
-			if( !SanctionsUtils::hasVoteRight( User::newFromName( $name ) ) )
-				unset( $votes[$name] );
+		foreach ( $votes as $userId => $vote ) {
+			if( !SanctionsUtils::hasVoteRight( User::newFromId( $userId ) ) )
+				unset( $votes[$userId] );
 		}
 
 		// 유효표가 하나도 없을 경우 아무것도 하지 않습니다.
@@ -116,9 +125,9 @@ class SanctionsHooks {
 
 		// 표를 데이터베이스에 반영합니다
 		$voteData = [];
-		foreach ( $votes as $name => $vote )
+		foreach ( $votes as $userId => $vote )
 			$voteData[] = [
-				'user' => User::newFromName( $name )->getId(),
+				'user' => $userId,
 				'period' => $vote['period']
 			];
 		$sanction->countVotes( $sanction, $voteData );

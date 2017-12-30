@@ -146,10 +146,10 @@ class Sanction {
 		foreach ( $votes as $vote ) {
 			$period = $db->selectField(
 				'sanctions_vote',
-				['stv_period'],
+				[ 'stv_period' ],
 				[
 					'stv_topic' => $sanction->getTopicUUID()->getBinary(),
-					'stv_user'=> $vote['user']
+					'stv_user' => $vote['user']
 				]
 			);
 			if( $period === false ) {
@@ -163,7 +163,7 @@ class Sanction {
 				);
 				$dbIsTouched = true;
 			}
-			else if ( $period == $vote['period'] ) {
+			else if ( $period != $vote['period'] ) {
 				$db->update(
 					'sanctions_vote',
 					[

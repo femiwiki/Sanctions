@@ -5,7 +5,6 @@ use Flow\Api\ApiFlowEditTopicSummary;
 use Flow\Model\UUID;
 
 class SpacialSanctions extends SpecialPage {
-	protected $mDb;
 	protected $mTargetName = null;
 	protected $mTargetId = null;
 	protected $mOldRevisionId = null;
@@ -16,23 +15,6 @@ class SpacialSanctions extends SpecialPage {
 	}
 
 	public function execute( $subpage ) {
-		/*
-		$factory = Flow\Container::get( 'factory.loader.workflow' );
-		$page = Title::newFromText( "주제:U4qonbunys9azfj8" );
-		$loader = $factory->createWorkflowLoader( $page );
-		$workflow = $loader->getWorkflow();
-		$blocks = $loader->getBlocks();
-		echo '주제 이름: U4qonbunys9azfj8';
-		echo '<br/>';
-		echo '워크플로 아이디: '.UUID::create( $workflow->getId()->getAlphaDecimal() );
-		echo '<br/>';
-		echo count( $blocks );
-		echo '<br/>';
-		foreach( $blocks as $block ) {
-			echo $block->getName();
-			echo '<br/>';
-		}
-*/
 		$output = $this->getOutput();
 
 		$this->setParameter( $subpage );
