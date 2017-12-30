@@ -146,37 +146,37 @@ class Sanction {
 	 */
 	public static function countVotes( $sanction, array $votes = null ) {
 		$db = wfGetDB( DB_MASTER );
+		$uuid = $sanction->getTopicUUID()->getBinary();
 
 		$dbIsTouched = false;
-		foreach ( $votes as $vote ) {
+		foreach ( $votes as $userId => $vote ) {
 			$period = $db->selectField(
 				'sanctions_vote',
 				[ 'stv_period' ],
 				[
-					'stv_topic' => $sanction->getTopicUUID()->getBinary(),
-					'stv_user' => $vote['user']
+					'stv_topic' => $uuid,
+					'stv_user' => $userId
 				]
 			);
-			if( $period === false ) {
+			if ( $period === false ) {
 				$db->insert(
 					'sanctions_vote',
 					[
-						'stv_topic' => $sanction->getTopicUUID()->getBinary(),
-						'stv_user' => $vote['user'],
-						'stv_period' => $vote['period']
+						'stv_topic' => $uuid,
+						'stv_user' => $userId,
+						'stv_period' => $vote
 					]
 				);
 				$dbIsTouched = true;
-			}
-			else if ( $period != $vote['period'] ) {
+			} else if ( $period != $vote ) {
 				$db->update(
 					'sanctions_vote',
 					[
-						'stv_period' => $vote['period']
+						'stv_period' => $vote
 					],
 					[
-						'stv_topic' => $sanction->getTopicUUID()->getBinary(),
-						'stv_user' => $vote['user']
+						'stv_topic' => $uuid,
+						'stv_user' => $userId
 					]
 				);
 				$dbIsTouched = true;
@@ -198,14 +198,12 @@ class Sanction {
 	public function NeedToImmediateRejection() {
 		$votes = $this->getVotes();
 
-		$period = 0;
-		$agree = 0;
-		foreach( $votes as $vote ) {
-			$period += $vote['period'];
-			if( $period > 0 ) $agree++;
+		$sumPeriod = 0;
+		foreach( $votes as $userId => $period ) {
+			$sumPeriod += $period;
 		}
 
-		if( count( $votes ) >= 3 && $period === 0 )
+		if( count( $votes ) >= 3 && $sumPeriod === 0 )
 			return true;
 		return false;
 	}
@@ -224,6 +222,10 @@ class Sanction {
 			'sanctions',
 			[ 'st_expiry' => wfTimestamp( TS_MW ) ],
 			[ 'st_id' => $this->mId ]
+		);
+		$db->delete(
+			'sanctions_vote',
+			[ 'stv_topic' => $this->mTopic->getBinary() ]
 		);
 		
 		$this->updateTopicSummary();
@@ -321,7 +323,7 @@ class Sanction {
 			return true;
 		} else {
 			$period = $this->getPeriod();
-			$blockExpiry = $wfTimestamp( TS_MW, time() + ( 60*60*24 * $period ) );
+			$blockExpiry = wfTimestamp( TS_MW, time() + ( 60*60*24 * $period ) );
 			if ( $target->isBlocked() ) {
 				// 이 제재안에 따라 결정된 차단 종료 시간이 기존 차단 해제 시간보다 뒤라면 제거합니다.
 				if ( $target->getBlock()->getExpiry() < $blockExpiry )
@@ -432,13 +434,13 @@ class Sanction {
 		$votes = $this->getvotes();
 		$count = count( $votes );
 
-		//표가 하나도 없다면 0일입니다.
+		// 표가 하나도 없다면 0일입니다.
 		if ( $count === 0 ) return 0;
 
-		$period = 0;
+		$sumPeriod = 0;
 		$agree = 0;
-		foreach ( $votes as $vote ) {
-			$period += $vote['period'];
+		foreach ( $votes as $userId => $period ) {
+			$sumPeriod += $period;
 			if ( $period > 0 ) $agree++;
 		}
 
@@ -449,7 +451,7 @@ class Sanction {
 			|| ( /* $count > 0 && 위에서 검사하여 생략 */ $count < 3 && $agree == $count );
 		
 		if ( $passed || $getAnyway )
-			return ceil( $period/$count );
+			return ceil( $sumPeriod/$count );
 		return 0;
 	}
 
@@ -460,8 +462,8 @@ class Sanction {
 		if ( $count === 0 ) return false;
 
 		$agree = 0;
-		foreach ( $votes as $vote ) {
-			if ( $vote['period'] > 0 ) $agree++;
+		foreach ( $votes as $userId => $period ) {
+			if ( $period > 0 ) $agree++;
 		}
 
 		return ( $count >= 3 && $agree >= $count*2/3 )
@@ -604,7 +606,7 @@ class Sanction {
 		if ( !$success ) return false;
 
 		$logParams = array();
-		$logParams['5::duration'] = $expiry;
+		$logParams['5::duration'] = MWTimestamp::getInstance( $expiry )->getTimestamp( TS_ISO_8601 ); // 뭐가 있는지 그냥 이러면 현지 시각으로 잘 나옵니다
 		$flags = array( 'nocreate' );
 		if ( !$block->isAutoblocking() && !IP::isIPAddress( $target ) ) {
 			// Conditionally added same as SpecialBlock
@@ -694,10 +696,7 @@ class Sanction {
 			);
 			// ResultWrapper를 array로 바꾸기 @todo 제대로 된 방법으로 고치기
 			foreach ( $res as $row )
-				$this->mVotes[] = [
-					'user' => $row->stv_user,
-					'period' => $row->stv_period
-				];
+				$this->mVotes[$row->stv_user] = $row->stv_period;
 		}
 
 		return $this->mVotes;

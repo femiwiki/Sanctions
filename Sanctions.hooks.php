@@ -46,6 +46,9 @@ class SanctionsHooks {
 			return true;
 		}
 
+		if ( $uuid == null )
+			return true;
+
 		$sanction = Sanction::newFromUUID( $uuid );
 		if ( $sanction === false )
 			return true;
@@ -75,9 +78,9 @@ class SanctionsHooks {
 			__METHOD__,
 			[ 'DISTINCT' ],
 			[
-				[ 'flow_tree_node' => [ 'INNER JOIN', 'workflow_id = tree_ancestor_id' ] ],
-				[ 'flow_tree_revision' => [ 'INNER JOIN', 'tree_descendant_id = tree_rev_descendant_id' ] ],
-				[ 'flow_revision' => [ 'INNER JOIN', 'tree_rev_id = rev_id' ] ],
+				'flow_tree_node' => [ 'INNER JOIN', 'workflow_id = tree_ancestor_id' ],
+				'flow_tree_revision' => [ 'INNER JOIN', 'tree_descendant_id = tree_rev_descendant_id' ],
+				'flow_revision' => [ 'INNER JOIN', 'tree_rev_id = rev_id' ],
 			]
 		);
 
@@ -91,8 +94,8 @@ class SanctionsHooks {
 			// post에 의견이 담겨있는지 검사합니다.
 			// 각 의견의 구분은 위키의 틀 안에 적어둔 태그를 사용합니다.
 			$period = 0;
-			if ( preg_match( '/<span class="sanction-vote-agree-period">(\d+)<\/span>/', $content, $period ) ) {
-				$period = $period[1];
+			if ( preg_match( '/<span class="sanction-vote-agree-period">(\d+)<\/span>/', $content, $matches ) != 0 && count( $matches ) > 0 ) {
+				$period = (int)$matches[1];
 			} elseif ( strpos( $content, '"sanction-vote-agree"' ) !== false ) {
 				// 찬성만 하고 날짜를 적지 않았다면 1일로 처리합니다.
 				$period = 1;
@@ -104,13 +107,13 @@ class SanctionsHooks {
 			}
 
 			// 이 의견이 해당 사용자가 남긴 가장 마지막 의견이 아니라면 무시합니다.
-			if( isset( $votes[$userId] ) && $votes[$userId]['timestamp'] > $timestamp )
+			if( isset( $votes[$userId] ) && $votes[$userId][1] > $timestamp )
 				continue;
 
 			//배열에 저장합니다.
 			$votes[$userId] = [
-				'timestamp' => $timestamp,
-				'period' => $period
+				$period,
+				$timestamp
 			];
 		}
 
@@ -124,13 +127,11 @@ class SanctionsHooks {
 		if ( !count( $votes ) ) return true;
 
 		// 표를 데이터베이스에 반영합니다
-		$voteData = [];
+		
 		foreach ( $votes as $userId => $vote )
-			$voteData[] = [
-				'user' => $userId,
-				'period' => $vote['period']
-			];
-		$sanction->countVotes( $sanction, $voteData );
+			$votes[$userId] = $vote[0];
+
+		$sanction->countVotes( $sanction, $votes );
 
 		return true;
 	}
@@ -189,17 +190,6 @@ class SanctionsHooks {
 
 		return true;
 	}
-
-	public static function onRevisionInsertComplete( &$revision, $data, $flags ){ 
-		EchoEvent::create( array(
-			'type' => 'welcome',
-			'agent' => User::newFromName('Admin'),
-			'extra' => array(
-				'notifyAgent' => true
-			)
-		) );
-	}
-
 
 	/**
 	 * @todo [[특:제재안목록]]이 아닌 다른 곳에서 새 주제들 쓸 수 없게 하기
