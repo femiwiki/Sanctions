@@ -207,8 +207,10 @@ class Sanction {
 
 	public function immediateRejection() {
 		// 긴급 절차였다면 임시 조치를 해제합니다.
-		if ( $this->mIsEmergency )
-			$this->removeTemporaryMeasure('제재안 부결에 따른 임시 조치 해제');
+		if ( $this->mIsEmergency ) {
+			$reason = '[[주제:'.$this->mTopic->getAlphadecimal().'|제재안]] 부결에 따른 임시 조치 해제';
+			$this->removeTemporaryMeasure( $reason );
+		}
 
 		// 제재안이 처리되었음을 데이터베이스에 표시합니다.
 		$db = wfGetDB( DB_MASTER );
@@ -235,8 +237,10 @@ class Sanction {
 
 		if ( $passed && !$emergency )
 			$this->justTakeMeasure();
-		elseif ( !$passed && $emergency )
-			$this->removeTemporaryMeasure( '제재안 부결에 따른 임시 조치 해제' );
+		elseif ( !$passed && $emergency ) {
+			$reason = '[[주제:'.$this->mTopic->getAlphadecimal().'|제재안]] 부결에 따른 임시 조치 해제';
+			$this->removeTemporaryMeasure( $reason );
+		}
 		else if ( $passed && $emergency )
 			$this->replaceTemporaryMeasure();
 
@@ -322,6 +326,7 @@ class Sanction {
 			}
 			
 			self::doBlock( $target, $blockExpiry, $reason, true );
+			return true;
   	    }
   	}
 
@@ -343,6 +348,7 @@ class Sanction {
 			}
 
 			self::doBlock( $target, $blockExpiry, $reason, true );
+			return true;
 		}
 	}
 
@@ -370,15 +376,13 @@ class Sanction {
 		else {
 			$expiry = $this->mExpiry;
 			//의결 만료 기간까지 차단하기
-			//차단되어 있을 않을 경우, 혹은 이미 차단되어 있다면 기간을 비교하여
+			//이미 차단되어 있다면 기간을 비교하여
 			//이 제재안의 의결 종료 시간이 차단 해제 시간보다 뒤라면 늘려 차단합니다.
-			if( !$target->isBlocked() || $target->getBlock()->getExpiry() < $expiry ) {
-				if($target->isBlocked())
-					self::unblock( $target, false );
+			if( $target->isBlocked() && $target->getBlock()->getExpiry() < $expiry )
+				self::unblock( $target, false );
 
-				$blockExpiry = $expiry;
-				self::doBlock( $target, $blockExpiry, $reason, false );
-			}
+			$blockExpiry = $expiry;
+			self::doBlock( $target, $blockExpiry, $reason, false );
 		}
 	}
 
@@ -526,6 +530,9 @@ class Sanction {
 	public static function newFromUUID( $UUID ) {
 		if ( $UUID instanceof UUID )
 			$UUID = $UUID->getBinary();
+		else if ( is_string( $UUID ) ) {
+			$UUID = UUID::create( strtolower($UUID) )->getBinary();
+		}
 
 		$rt = new self();
 		if ( $rt->loadFrom( 'st_topic', $UUID ) )

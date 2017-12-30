@@ -3,6 +3,10 @@
 	color: gray;
 }
 
+.sanction-execute-result {
+	text-align: center;
+}
+
 .sanction {
 	padding: 1em;
 	border-bottom: 1px solid #b9b5d9;

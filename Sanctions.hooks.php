@@ -22,7 +22,7 @@ class SanctionsHooks {
 
 	/**
 	 * 제재안 게시물(topic)을 방문하였을 때 HTML을 검사하여 sanctions_vote 테이블에 반영합니다.
-	 * 이것 말고 onEditFilter이나 onArticleSaveComplete를 쓰고 싶었지만 workflow에 포스트를 추가할 때는 작동하지 않아 불가했습니다.
+	 * 이것 말고 onEditFilter이나 onArticleSaveComplete이나 onRevisionInsertComplete를 쓰고 싶었지만 flow 게시글을 작성할 때는 작동하지 않아 불가했습니다.
 	 * @todo 좀 더 제대로 된 방법 사용하기.
 	 * 
 	 * @param $out - The OutputPage object.
@@ -179,6 +179,16 @@ class SanctionsHooks {
 		$links[] = Linker::link( $titleText , '이 편집을 근거로 제재 건의' );
 
 		return true;
+	}
+
+	public static function onRevisionInsertComplete( &$revision, $data, $flags ){ 
+		EchoEvent::create( array(
+			'type' => 'welcome',
+			'agent' => User::newFromName('Admin'),
+			'extra' => array(
+				'notifyAgent' => true
+			)
+		) );
 	}
 
 

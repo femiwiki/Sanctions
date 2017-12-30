@@ -19,7 +19,7 @@
 	"AutoloadClasses": {
 		"SpacialSanctions": "specials/SpacialSanctions.php",
 		"SanctionsPager": "includes/SanctionsPager.php",
-		"Sanction": "includes/SanctionClass.php",
+		"Sanction": "includes/Sanction.php",
 		"SanctionsHooks": "Sanctions.hooks.php",
 		"SanctionsUtils": "includes/SanctionsUtils.php"
 	},
@@ -44,6 +44,7 @@
 		"ContributionsToolLinks": "SanctionsHooks::onContributionsToolLinks",
 		"DiffRevisionTools": "SanctionsHooks::onDiffRevisionTools",
 		"HistoryRevisionTools": "SanctionsHooks::onHistoryRevisionTools"
+			
 	},
 	"SpecialPages": {
 		"Sanctions": "SpacialSanctions"

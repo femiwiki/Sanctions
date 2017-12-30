@@ -116,7 +116,7 @@ class SanctionsPager extends IndexPager {
 			$out .= Html::rawelement(
                 'div',
                 [ 'class' => 'sanction-expired' ],
-                '집행 대기중'
+                '처리 대기중'
             );
 			$out .= Html::rawelement(
                 'div',
@@ -176,7 +176,7 @@ class SanctionsPager extends IndexPager {
 			'form',
 			[
 				'method' => 'post',
-				'action' => $this->getContext()->getTitle(),
+				'action' => $this->getContext()->getTitle()->getFullURL(),
 				'class'=>'sanction-process-toggle'
 			],
 			Html::submitButton(
@@ -193,7 +193,7 @@ class SanctionsPager extends IndexPager {
 				$sanctionId
 			).
 			Html::hidden(
-				'result',
+				'sanction-action',
 				'toggle-emergency'
 			)
 		);
@@ -208,11 +208,11 @@ class SanctionsPager extends IndexPager {
 			'form',
 			[
 				'method' => 'post',
-				'action' => $this->getContext()->getTitle(),
+				'action' => $this->getContext()->getTitle()->getFullURL(),
 				'class'=>'sanction-exectute-form'
 			],
 			Html::submitButton(
-				'집행',
+				'처리',
 				[ 'class'=>'sanction-exectute-button' ],
 				[ 'mw-ui-progressive' ]
 			) .
@@ -225,7 +225,7 @@ class SanctionsPager extends IndexPager {
 				$sanctionId
 			).
 			Html::hidden(
-				'result',
+				'sanction-action',
 				'execute'
 			)
 		); 

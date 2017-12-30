@@ -16,6 +16,23 @@ class SpacialSanctions extends SpecialPage {
 	}
 
 	public function execute( $subpage ) {
+		/*
+		$factory = Flow\Container::get( 'factory.loader.workflow' );
+		$page = Title::newFromText( "주제:U4qonbunys9azfj8" );
+		$loader = $factory->createWorkflowLoader( $page );
+		$workflow = $loader->getWorkflow();
+		$blocks = $loader->getBlocks();
+		echo '주제 이름: U4qonbunys9azfj8';
+		echo '<br/>';
+		echo '워크플로 아이디: '.UUID::create( $workflow->getId()->getAlphaDecimal() );
+		echo '<br/>';
+		echo count( $blocks );
+		echo '<br/>';
+		foreach( $blocks as $block ) {
+			echo $block->getName();
+			echo '<br/>';
+		}
+*/
 		$output = $this->getOutput();
 
 		$this->setParameter( $subpage );
@@ -23,8 +40,8 @@ class SpacialSanctions extends SpecialPage {
 		$this->setHeaders();
 		$this->outputHeader();
 
-		// Request가 있었다면 그것만을 처리하고 제재한 목록은 보여주지 않습니다.
-		if ( $this->HandleRequestsIfExist($output) ) return;
+		// Request가 있었다면 처리합니다. (리다이렉트됩니다)
+		if ( $this->HandleRequestsIfExist( $output ) ) return;
 
 		$output->addModuleStyles( 'ext.sanctions' );
 
@@ -113,16 +130,62 @@ class SpacialSanctions extends SpecialPage {
 		$this->mNewRevisionId = $newRevisionId;
 	}
 
-	function HandleRequestsIfExist($output) {
+	/**
+	 * @return true를 반환하면 다른 내용을 보여주지 않습니다.
+	 */
+	function HandleRequestsIfExist( $output ) {
 		$request = $this->getRequest();
+
+		if ( $request->getVal( 'showResult' ) == true ) {
+			$error = $request->getVal( 'errorCode' );
+			if ( $error !== null )
+				$output->addHTML( Html::rawelement(
+	                'div',
+	                [ 'class' => 'sanction-execute-result' ],
+	                self::makeErrorMessage(
+	                	$request->getVal( 'errorCode' ),
+	                	$request->getVal( 'uuid' ),
+	                	$request->getVal( 'targetName' )
+	                )
+	            ) );
+			else
+				$output->addHTML( Html::rawelement(
+	                'div',
+	                [ 'class' => 'sanction-execute-result' ],
+	                self::makeMessage(
+	                	$request->getVal( 'code' ),
+	                	$request->getVal( 'uuid' ),
+	                	$request->getVal( 'targetName' )
+	                )
+	            ) );
+			
+			return false;
+		}
 
 		if ( !$request->wasPosted() ) return false;
 
-		$result = $request->getVal( 'result' );
+		$action = $request->getVal( 'sanction-action' );
 
-		if( !$this->getUser()->matchEditToken( $request->getVal( 'token' ), 'sanctions' ) ) {
-			$output->addWikiText( '토큰이 올바르지 않아 실패하였습니다.' );
-		} else switch($result) {
+		$query = []; // showResult, code, errorCode, uuid, targetName
+		// code
+		// 	0	작성 성공
+		// 	1	긴급 절차 전환 성공
+		// 	2	일반 절차 전환 성공
+		// 	3	집행
+		// error code
+		//	 000	기타 문제
+		//		000	토큰
+		//		001 권한 오류
+		//		002 제재안 작성 실패
+		//		003	전환 실패
+		//	 100	입력 문제
+		//		100	사용자명 미입력
+		//		101 사용자 없음
+		//		102 중복된 부적절한 사용자명 변경 건의
+		if ( !$this->getUser()->matchEditToken( $request->getVal( 'token' ), 'sanctions' ) ) {
+			list( $query['showResult'], $query['errorCode'] ) = [ true, 0 ];
+			// '토큰이 일치하지 않습니다.'
+		} else switch( $action ) {
 			case 'write':
 				//제재안 올리기
 				$user = $this->getUser();
@@ -131,33 +194,38 @@ class SpacialSanctions extends SpecialPage {
 				$content = $request->getVal( 'content' )? : '내용이 입력되지 않았습니다.';
 		
 				if ( !$targetName ) {
-					$output->addWikiText('사용자명이 입력되지 않았습니다.' );
+					list( $query['showResult'], $query['errorCode'] ) = [ true, 100 ];
+					// '사용자명이 입력되지 않았습니다.'
 					break;
 				}
 
 				$target = User::newFromName( $targetName );
 				
 				if ( $target->getId() === 0 ) {
-					$output->addWikiText( '"'.$targetName.'"라는 이름의 사용자가 존재하지 않습니다.' );
+					list( $query['showResult'], $query['errorCode'], $query['targetName'] ) = [ true, 101, $targetName ];
+					// '"'.$targetName.'"라는 이름의 사용자가 존재하지 않습니다.'
 					break;
 				}
 				
 				$sanction = Sanction::write( $this->getUser(), $target, $forInsultingName, $content );
 
 				if ( $sanction === false ) {
-					$output->addWikiText( '제재안 작성에 실패하였습니다.' );
+					list( $query['showResult'], $query['errorCode'] ) = [ true, 2 ];
+					// '제재안 작성에 실패하였습니다.'
 					break;
 				}
 
 				$topicTitleText = $sanction->getTopic()->getFullText();
-				$output->addWikiText( '제재안 [['.$topicTitleText.']]가 작성되었습니다.' );
-				break;
+				list( $query['showResult'], $query['code'], $query['uuid'] ) = [ true, 0, $sanction->getTopicUUID()->getAlphaDecimal() ];
+				// '제재안 '.Linker::link( $sanction->getTopic() ).'가 작성되었습니다.'
 			break;
 			case 'toggle-emergency':
-				//제재안 절차 변경( 일반 <-> 긴급 )
-				//차단 권한이 없다면 절차를 변경할 수 없습니다.
+				// 제재안 절차 변경( 일반 <-> 긴급 )
+
+				// 차단 권한이 없다면 절차를 변경할 수 없습니다.
 				if ( !$this->getUser()->isAllowed( 'block' ) ) {
-					$output->addWikiText('잘못된 접근입니다.' );
+					list( $query['showResult'], $query['errorCode'] ) = [ true, 1 ];
+					// '권한이 없습니다.'
 					break;
 				}
 
@@ -165,20 +233,24 @@ class SpacialSanctions extends SpecialPage {
 				$sanction = Sanction::newFromId( $sanctionId );
 
 				if ( !$sanction || !$sanction->toggleEmergency() ) {
-					$output->addWikiText('절차 변경에 실패하였습니다.' );
+					list( $query['showResult'], $query['errorCode'], $query['uuid'] ) = [ true, 3, $sanction->getTopicUUID()->getAlphaDecimal() ];
+					// '절차 변경에 실패하였습니다.'
 					break;
 				}
 
 				if ( $sanction->isEmergency() )
-					$output->addWikiText( '절차를 긴급으로 바꾸었습니다.' );
+					list( $query['showResult'], $query['code'], $query['uuid'] ) = [ true, 1, $sanction->getTopicUUID()->getAlphaDecimal() ];
+					// '절차를 긴급으로 바꾸었습니다.'
 				else
-					$output->addWikiText( '절차를 일반으로 바꾸었습니다.' );
-			break;
+					list( $query['showResult'], $query['code'], $query['uuid'] ) = [ true, 2, $sanction->getTopicUUID()->getAlphaDecimal() ];
+					// '절차를 일반으로 바꾸었습니다.'
+				break;
 			case 'execute':
 				//결과에 따른 제재안 집행
 				$user = $this->getUser();
 				if ( !SanctionsUtils::hasVoteRight( $user ) ) {
-					$output->addWikiText('잘못된 접근입니다.' );
+					list( $query['showResult'], $query['errorCode'] ) = [ true, 1 ];
+					// '권한이 없습니다.'
 					break;
 				}
 
@@ -186,15 +258,55 @@ class SpacialSanctions extends SpecialPage {
 				$sanction = Sanction::newFromId( $sanctionId );
 
 				if ( !$sanction->execute() ) {
-					$output->addWikiText('제재안 집행에 실패하였습니다.' );
+					list( $query['showResult'], $query['errorCode'], $query['uuid'] ) = [ true, 4, $sanction->getTopicUUID()->getAlphaDecimal() ];
+					// '제재안 집행에 실패하였습니다.'
 					break;
 				}
-				$output->addWikiText( '제재안을 처리하였습니다.' );
+					list( $query['showResult'], $query['code'], $query['uuid'] ) = [ true, 3, $sanction->getTopicUUID()->getAlphaDecimal() ];
+					// '제재안을 처리하였습니다.'
 			break;
 		}
 
-		$output->addWikiText( '[['.$this->getTitle().']] 문서로 돌아갑니다.' );
+		$output->redirect(
+			$this->getTitle()->getLocalURL( $query )
+		);
+
 		return true;
+	}
+
+	protected static function makeErrorMessage( $errorCode, $uuid, $targetName ) {
+		switch ( $errorCode ) {
+		case 0:
+			return '토큰에 문제가 있습니다.';
+		case 1:
+			return '권한이 없습니다.';
+		case 2:
+			return '제재안 작성에 실패하였습니다.';
+		case 3:
+			return '절차 전환에 실패하였습니다.';
+		case 4:
+			return '제재안 집행에 실패하였습니다.';
+		case 100:
+			return '사용자명을 입력하지 않았습니다.';
+		case 101:
+			return $targetName.'이라는 이름의 사용자가 존재하지 않습니다.';
+		case 102:
+			return $targetName.' 님에 대한 부적절한 사용자명 변경 건의안이 이미 존재합니다.';
+		}
+	}
+
+	protected static function makeMessage( $code, $uuid, $targetName ) {
+		$link = $uuid ? Linker::link( Sanction::newFromUUID( $uuid )->getTopic() ) : '';
+		switch ( $code ) {
+		case 0:
+			return '제재안('.$link.')을 만들었습니다.';
+		case 1:
+			return '제재안('.$link.')을 긴급 절차로 바꾸었습니다.';
+		case 2:
+			return '제재안('.$link.')을 일반 절차로 바꾸었습니다.';
+		case 3:
+			return '제재안('.$link.')을 처리하였습니다.';
+		}
 	}
 
 	protected function makeForm() {
@@ -232,7 +344,7 @@ class SpacialSanctions extends SpecialPage {
 				$this->getUser()->getEditToken( 'sanctions' )
 			) .
 			Html::hidden(
-				'result',
+				'sanction-action',
 				'write'
 			)
 		);
