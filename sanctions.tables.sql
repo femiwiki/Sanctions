@@ -8,6 +8,7 @@ CREATE TABLE /*$wgDBprefix*/sanctions (
     st_expiry binary(14) NOT NULL,
     st_handled tinyint(1) NOT NULL DEFAULT 0,
     st_emergency tinyint(1) NOT NULL DEFAULT 0,
+    st_last_update_timestamp binary(14) NOT NULL,
 
     PRIMARY KEY (st_id),
     KEY (st_target),
@@ -19,6 +20,7 @@ CREATE TABLE /*$wgDBprefix*/sanctions_vote (
     stv_topic binary(11) not null,
     stv_user BIGINT unsigned NOT NULL,
     stv_period int unsigned,
+    stv_last_update_timestamp binary(14) NOT NULL,
 
     PRIMARY KEY (stv_id),
     KEY (stv_topic,stv_user),

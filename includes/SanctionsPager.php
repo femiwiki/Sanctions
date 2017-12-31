@@ -48,7 +48,7 @@ class SanctionsPager extends IndexPager {
 			$query['conds'][] = 'st_target = '.User::newFromName( $this->targetName )->getId();
 
 		if ( $this->getUserHasVoteRight() ) {
-			$query['tables']['sub'] = '('.$subquery.') AS'; // AS를 따로 써야 작동하길래 이렇게 썼는데 당최 이게 맞는지?? @todo 체크
+			$query['tables']['sub'] = '('.$subquery.') AS'; // AS를 따로 써야 작동하길래 이렇게 썼는데 당최 이게 맞는지??
 			$query['fields']['voted_from'] = 'stv_id';
 			$query['join_conds'] = ['sub' => ['LEFT JOIN', 'st_topic = sub.stv_topic']];
 		} else {
@@ -63,6 +63,7 @@ class SanctionsPager extends IndexPager {
 		 //foreach($row as $key => $value) echo $key.'-'.$value.'<br/>';
 		 //echo '<div style="clear:both;">------------------------------------------------</div>';
 		$sanction = Sanction::newFromId( $row->st_id );
+		$sanction->checkNewVotes();
 
 		if ( $this->getUserHasVoteRight() )
 			$isVoted = $row->voted_from != null;

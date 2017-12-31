@@ -200,7 +200,7 @@ class SpacialSanctions extends SpecialPage {
 				
 				$sanction = Sanction::write( $this->getUser(), $target, $forInsultingName, $content );
 
-				if ( $sanction === false ) {
+				if ( !$sanction ) {
 					list( $query['showResult'], $query['errorCode'] ) = [ true, 2 ];
 					// '제재안 작성에 실패하였습니다.'
 					break;
@@ -284,6 +284,8 @@ class SpacialSanctions extends SpecialPage {
 			return $targetName.'이라는 이름의 사용자가 존재하지 않습니다.';
 		case 102:
 			return $targetName.' 님에 대한 부적절한 사용자명 변경 건의('.$link.')가 이미 존재합니다.';
+		default:
+			return 'Error Code '.$errorCode;
 		}
 	}
 
@@ -298,6 +300,8 @@ class SpacialSanctions extends SpecialPage {
 			return '제재안('.$link.')을 일반 절차로 바꾸었습니다.';
 		case 3:
 			return '제재안('.$link.')을 처리하였습니다.';
+		default:
+			return 'Code '.$code;
 		}
 	}
 

@@ -16,29 +16,34 @@ class SanctionsHooks {
 		if ( $updater->getDB()->getType() == 'mysql' ) {
 			$updater->addExtensionUpdate( array( 'addTable', 'sanctions',
 				"$dir/sanctions.tables.sql", true ) );
-		}
+		} // @todo else
 		return true;
 	}
 
 	/**
-	 * 제재안 게시물(topic)을 방문하였을 때 HTML을 검사하여 sanctions_vote 테이블에 반영합니다.
-	 * 이것 말고 onEditFilter이나 onArticleSaveComplete이나 onRevisionInsertComplete를 쓰고 싶었지만 flow 게시글을 작성할 때는 작동하지 않아 불가했습니다.
-	 * @todo 좀 더 제대로 된 방법 사용하기.
-	 * 
-	 * @param $out - The OutputPage object.
-	 * @param &$skin - Skin object that will be used to generate the page.
-	 * @return bool true in all cases
+	 * 제재안 관련 workflow 페이지들에 여러 처리를 합니다.
+	 * @param $output: OutputPage object
 	 */
-	public static function onBeforePageDisplay( OutputPage &$out, Skin &$skin ) {
-		// 주제 이름공간이 아니면 검사하지 않습니다.
+	public static function onFlowAddModules( OutputPage $out ) {
 		$title = $out->getTitle();
+		$specialSanctionTitle =  SpecialPage::getTitleFor('Sanctions'); // 특수:제재안목록
+		$discussionPageName = wfMessage( 'sanctions-discussion-page-name' )->text(); //페미위키토론:제재안에 대한 의결
 
-		if ( $title->getFullText() == '페미위키토론:제재안에 대한 의결' )
+		// 제재안 목록 토론 페이지의 처리
+		if ( $title->getFullText() == $discussionPageName ) {
+			// url에 "redirect=no"가 붙어오지 않았다면 리다이렉트합니다. 근데 왜 이걸 따로 안 하면 무조건 리다이렉트가 되는 건지?
+			$request = RequestContext::getMain()->getRequest();
+			$redirect = $request->getVal( 'redirect' );
+			if ( !$redirect || $redirect == 'no ')
+				$out->redirect( $specialSanctionTitle->getLocalURL( $query ) );
+
+			// CSS를 적용합니다. 주로 입력 폼을 막습니다.
 			$out->addModuleStyles( 'ext.flow-default-board' );
 
-		if ( $title->getNamespace() != NS_TOPIC ) return true;
+			return true;
+		}
 
-		// UUID가 적절하지 않은 경우에 검사하지 않습니다.
+		// 제재안 topic의 처리
 		$uuid = null;
 		try {
 			$uuid = UUID::create( strtolower( $title->getText() ) );
@@ -46,121 +51,43 @@ class SanctionsHooks {
 			return true;
 		}
 
-		if ( $uuid == null )
+		// UUID가 적절하지 않은 경우에 종료합니다.
+		if ( !$uuid )
 			return true;
 
+		// 이 topic이 제재안과 관련된 것이 아니라면 종료합니다.
 		$sanction = Sanction::newFromUUID( $uuid );
 		if ( $sanction === false )
 			return true;
-
-		$subTitle = '<' . Linker::link( Title::newFromText( '특수:제재안목록' ), '전체 제재안 목록보기' );
-		$out->setSubTitle( $subTitle );
-
-		if ( !$sanction->isVotable() )
-			return true;
-
-		$db = wfGetDB( DB_MASTER );
-		$res = $db->select(
-			[
-				'flow_workflow',
-				'flow_tree_node',
-				'flow_tree_revision',
-				'flow_revision'
-			],
-			[
-				'rev_id',
-				'rev_user_id',
-				'rev_content'
-			],
-			[
-				'workflow_id' => $uuid->getBinary()
-			],
-			__METHOD__,
-			[ 'DISTINCT' ],
-			[
-				'flow_tree_node' => [ 'INNER JOIN', 'workflow_id = tree_ancestor_id' ],
-				'flow_tree_revision' => [ 'INNER JOIN', 'tree_descendant_id = tree_rev_descendant_id' ],
-				'flow_revision' => [ 'INNER JOIN', 'tree_rev_id = rev_id' ],
-			]
-		);
-
-		// 유효표(제재 절차 잠여 요건을 만족하는 사람의 표)와 무효표를 따지지 않고 우선 세어서 배열에 담습니다.
-		$votes = [];
-		foreach($res as $row) {
-			$timestamp = UUID::create( $row->rev_id )->getTimestamp();
-			$userId = $row->rev_user_id;
-			$content = $row->rev_content;
-
-			// post에 의견이 담겨있는지 검사합니다.
-			// 각 의견의 구분은 위키의 틀 안에 적어둔 태그를 사용합니다.
-			$period = 0;
-			if ( preg_match( '/<span class="sanction-vote-agree-period">(\d+)<\/span>/', $content, $matches ) != 0 && count( $matches ) > 0 ) {
-				$period = (int)$matches[1];
-			} elseif ( strpos( $content, '"sanction-vote-agree"' ) !== false ) {
-				// 찬성만 하고 날짜를 적지 않았다면 1일로 처리합니다.
-				$period = 1;
-			} elseif ( strpos( $content, '"sanction-vote-disagree"' ) !== false ) {
-				$period = 0;
-			}
-			else {
-				continue;
-			}
-
-			// 이 의견이 해당 사용자가 남긴 가장 마지막 의견이 아니라면 무시합니다.
-			if( isset( $votes[$userId] ) && $votes[$userId][1] > $timestamp )
-				continue;
-
-			//배열에 저장합니다.
-			$votes[$userId] = [
-				$period,
-				$timestamp
-			];
-		}
-
-		// 무효표를 버립니다
-		foreach ( $votes as $userId => $vote ) {
-			if( !SanctionsUtils::hasVoteRight( User::newFromId( $userId ) ) )
-				unset( $votes[$userId] );
-		}
-
-		// 유효표가 하나도 없을 경우 아무것도 하지 않습니다.
-		if ( !count( $votes ) ) return true;
-
-		// 표를 데이터베이스에 반영합니다
 		
-		foreach ( $votes as $userId => $vote )
-			$votes[$userId] = $vote[0];
-
-		$sanction->countVotes( $sanction, $votes );
+		// 만료되지 않은 제재안이라면 새 표가 있는지 체크합니다. 이는 주제 요약을 갱신하기 위함이며 원래는 이 hook 말고 ArticleSaveComplete나 RevisionInsertComplete에서 실행하고 싶었지만 flow 게시글을 작성할 때는 작동하지 않아 불가했습니다.
+		if ( !$sanction->isExpired() ){
+			$sanction->checkNewVotes();
+		}
+		//else @todo 만료 표시
 
 		return true;
 	}
 
+	// (토론|기여)
 	public static function onUserToolLinksEdit( $userId, $userText, &$items ) {
-		$items[] = Linker::link( Title::newFromText( '특수:제재안목록/'.$userText ),'제재안' );
-		return true;
-	}
-
-	public static function onContributionsToolLinks( $id, $title, &$tools ) {
 		global $wgUser;
-
 		if ( $wgUser == null || !SanctionsUtils::hasVoteRight( $wgUser ) )
 			return true;
 
-		$targetName = User::newFromId($id)->getName();
-		$tools[] = Linker::link( Title::newFromText( '특수:제재안목록/'.$targetName ),'제재안' );
-
+		$specialSanctionTitle =  SpecialPage::getTitleFor('Sanctions', $userText);
+		$items[] = Linker::link( $specialSanctionTitle, '제재안' );
 		return true;
 	}
 
 	/**
+	 * (편집) (편집 취소)
 	 * $newRev: Revision object of the "new" revision
 	 * &$links: Array of HTML links
 	 * $oldRev: Revision object of the "old" revision (may be null)
 	 */
 	public static function onDiffRevisionTools( Revision $newRev, &$links, $oldRev ) {
 		global $wgUser;
-
 		if ( $wgUser == null || !SanctionsUtils::hasVoteRight( $wgUser ) )
 			return true;
 
@@ -169,8 +96,8 @@ class SanctionsHooks {
 			$ids .= $oldRev->getId().'/';
 		$ids .= $newRev->getId();
 
-		$titleText = Title::newFromText( '특수:제재안목록/'.$newRev->getUserText().'/'.$ids );
-		$links[] = Linker::link( $titleText , '이 편집을 근거로 제재 건의' );
+		$specialSanctionTitle =  SpecialPage::getTitleFor('Sanctions', $newRev->getUserText().'/'.$ids );
+		$links[] = Linker::link( $specialSanctionTitle , '이 편집을 근거로 제재 건의' );
 
 		return true;
 	}
@@ -185,13 +112,9 @@ class SanctionsHooks {
 		if ( $wgUser == null || !SanctionsUtils::hasVoteRight( $wgUser ) )
 			return true;
 
-		$titleText = Title::newFromText( '특수:제재안목록/'.$rev->getUserText().'/'.$rev->getId() );
-		$links[] = Linker::link( $titleText , '이 편집을 근거로 제재 건의' );
+		$specialSanctionTitle =  SpecialPage::getTitleFor('Sanctions', $rev->getUserText().'/'.$rev->getId() );
+		$links[] = Linker::link( $specialSanctionTitle, '이 편집을 근거로 제재 건의' );
 
 		return true;
 	}
-
-	/**
-	 * @todo [[특:제재안목록]]이 아닌 다른 곳에서 새 주제들 쓸 수 없게 하기
-	*/
 }
