@@ -2,7 +2,7 @@
 
 CREATE TABLE /*$wgDBprefix*/sanctions (
     st_id INT unsigned NOT NULL AUTO_INCREMENT,
-    st_topic binary(11) not null,
+    st_topic binary(11) NOT null,
     st_target BIGINT unsigned NOT NULL,
     st_original_name varchar(255) binary DEFAULT '',
     st_expiry binary(14) NOT NULL,
@@ -17,7 +17,7 @@ CREATE TABLE /*$wgDBprefix*/sanctions (
 
 CREATE TABLE /*$wgDBprefix*/sanctions_vote (
     stv_id BIGINT unsigned NOT NULL AUTO_INCREMENT,
-    stv_topic binary(11) not null,
+    stv_topic binary(11) NOT null,
     stv_user BIGINT unsigned NOT NULL,
     stv_period int unsigned,
     stv_last_update_timestamp binary(14) NOT NULL,

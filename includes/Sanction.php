@@ -49,7 +49,16 @@ class Sanction {
 	 */
 	protected $mDb;
 
+	/**
+	 * Bool 이 값이 참일 때만 $mIsPassed, $mVoteNumber, $mAgreeVote의 값이 유효합니다.
+	 */
+	protected $mCounted;
+
 	protected $mIsPassed;
+
+	protected $mVoteNumber;
+
+	protected $mAgreeVote;
 
 	/**
 	 * 제재안을 새로 만들어 저장합니다.
@@ -317,7 +326,7 @@ class Sanction {
 	 * 이 제재안에 대한 투표가 있거나, 기존에 표를 쓴 사용자가 의견을 바꾸었을 때 호출됩니다.
 	 */
 	public function onVotesChanged() {
-		$this->mIsPassed = null;
+		$this->countVotes( true );
 		$this->immediateRejectionIfNeeded();
 		$this->updateTopicSummary();
 	}
@@ -408,58 +417,98 @@ class Sanction {
 			[ 'stv_topic' => $topic->getBinary() ]
 		);
 
+		// 주제 요약을 갱신합니다.
+		$this->updateTopicSummary();
+
 		return true;
 	}
 
 	// @todo 이미 작성된 주제 요약이 있을 때는 (etsprev_revision을 비웠기 때문에) 제대로 작동하지 않습니다. 
 	public function updateTopicSummary() {
-		try {
-			$factory = Container::get( 'factory.loader.workflow' );
+		$db = $this->getDb();
+		$row = $db->selectRow(
+			'flow_revision',
+			[
+				'*'
+			],
+			[
+				'rev_type_id' => $this->mTopic->getBinary(),
+				'rev_type' => 'post-summary'
+			],
+			__METHOD__,
+			[
+				'LIMIT' => 1,
+				'ORDER BY' => 'rev_id DESC'
+			]
+		);
+		$previousIdText = null;
+		if ( $row != null )
+			$previousIdText = UUID::create($row->rev_id)->getAlphadecimal();
 
-			$topicTitleText = $this->getTopic()->getFullText();
-			$topicTitle = Title::newFromText( $topicTitleText );
-			$topicId = $this->mTopic;
-			$loader = $factory->createWorkflowLoader( $topicTitle, $topicId );
-			$blocks = $loader->getBlocks();
-			$action = 'edit-topic-summary';
-			$params = [
-				'topicsummary' => [
-					'page' => $topicTitleText,
-					'token' => self::getBot()->getEditToken(),
-					'action' => 'flow',
-					'submodule' => 'edit-topic-summary',
-					'etsprev_revision' => '',
-					'summary' => $this->getSanctionSummary(),
-					'format' => 'wikitext'
-				], 
-				'topic' => []
-			];
-			$context = RequestContext::getMain();
-			$blocksToCommit = $loader->handleSubmit(
-				$context,
-				$action,
-				$params
-			);
-			if ( !count( $blocksToCommit ) ) {
-				return false;
-			}
+		$factory = Container::get( 'factory.loader.workflow' );
 
-			$commitMetadata = $loader->commit( $blocksToCommit );
-		} catch ( Exception $e ) {
+		$topicTitleText = $this->getTopic()->getFullText();
+		$topicTitle = Title::newFromText( $topicTitleText );
+		$topicId = $this->mTopic;
+		$loader = $factory->createWorkflowLoader( $topicTitle, $topicId );
+		$blocks = $loader->getBlocks();
+		$action = 'edit-topic-summary';
+		$params = [
+			'topicsummary' => [
+				'page' => $topicTitleText,
+				'token' => self::getBot()->getEditToken(),
+				'action' => 'flow',
+				'submodule' => 'edit-topic-summary',
+				'prev_revision' => $previousIdText ? $previousIdText : null,
+				'summary' => $this->getSanctionSummary(),
+				'format' => 'wikitext'
+			]
+		];
+		$context = RequestContext::getMain();
+		$blocksToCommit = $loader->handleSubmit(
+			$context,
+			$action,
+			$params
+		);
+		if ( !count( $blocksToCommit ) ) {
+			echo 'faild';
 			return false;
 		}
+		$commitMetadata = $loader->commit( $blocksToCommit );
 
 		return count( $commitMetadata ) > 0;
 	}
 
 	/**
-	 * @todo 표결 현황 추가
+	 * @todo 더 자세한 개표 현황 등 추가하기
 	 */
 	public function getSanctionSummary() {
+		$this->countVotes();
+		$agree = $this->mAgreeVote;
+		$count = $this->mVoteNumber;
 		$summary = self::getSanctionSummaryHeader();
-
-		$summary .= '* 의결 종료: '.MWTimestamp::getLocalInstance( $this->mExpiry )->getTimestamp( TS_ISO_8601 );
-		// @todo
+		if ( $this->isExpired() ) {
+			$summary .= '* 결과: ';
+			if ( $passed ) {
+				if ( !$this->isForInsultingName() )
+					$summary .= $this->getPeriod().'일 차단으로 가결'.PHP_EOL;
+				else
+					$summary .= '가결';	
+			} else {
+				$summary .= '부결'.PHP_EOL;
+			}
+		}
+		else {
+			$summary .= '* 의결 종료 예정 시각: '.MWTimestamp::getLocalInstance( $this->mExpiry )->getTimestamp( TS_ISO_8601 ).PHP_EOL;
+			$period = $this->getPeriod();
+			if ( !$this->isForInsultingName() ) {
+				$summary .= '* 가결시 제재 예상 기간: ';
+				if ( $period > 0 )
+					$summary .= $this->getPeriod().'일'.PHP_EOL;
+				else
+					$summary .= '없음'.PHP_EOL;
+			}
+		}
 	
 		return $summary;
 	}
@@ -508,7 +557,7 @@ class Sanction {
 		$sumPeriod = 0;
 		$agree = 0;
 		foreach ( $votes as $userId => $period ) {
-			$sumPeriod += $period;
+			$sumPeriod += $period>30?30:$period;
 			if ( $period > 0 ) $agree++;
 		}
 
@@ -526,8 +575,12 @@ class Sanction {
 		return 0;
 	}
 
-	public function isPassed() {
-		if ( $this->mIsPassed === null ) {
+	protected function countVotes( $reset = false ) {
+		if ( $reset )
+			$this->mCounted = false;
+
+		if ( !$this->mCounted ) {
+			$this->mCounted = true;
 			$votes = $this->getVotes();
 			$count = count( $votes );
 
@@ -540,9 +593,20 @@ class Sanction {
 
 			$this->mIsPassed = ( $count >= 3 && $agree >= $count*2/3 )
 			|| ( /* $count > 0 && 위에서 검사하여 생략 */ $count < 3 && $agree == $count );
-		}
 
-		return $this->mIsPassed;
+			$this->mAgreeVote = $agree;
+			$this->mVoteNumber = $count;
+		}
+	}
+
+	public function isPassed() {
+		$this->countVotes();
+
+		$agree = $this->mAgreeVote;
+		$count = $this->mVoteNumber;
+
+		return ( $count >= 3 && $agree >= $count*2/3 )
+			|| ( $count > 0 && $count < 3 && $agree == $count );
 	}
 
 	public function isExpired() {
@@ -624,7 +688,7 @@ class Sanction {
 			'*',
 			[
 				'st_target' => $targetId,
-				'st_original_name IS NOT NULL',
+				"st_original_name <> ''",
 				'st_expiry > '. wfTimestamp( TS_MW )
 			]
 		);
