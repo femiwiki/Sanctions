@@ -1,6 +1,4 @@
 <h1>Sanction 확장기능</h1>
-<iframe src="https://player.vimeo.com/video/248985297" width="640" height="480" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
-<p><a href="https://vimeo.com/248985297">개발 중 모습</a> from <a href="https://vimeo.com/user66040827">lens0021</a> on <a href="https://vimeo.com">Vimeo</a>.</p>
 <h2> 설치방법 </h2>
 <ol>
     <li>Sanctions 폴더를 <code>extensions/</code> 아래에 위치시킵니다.</li>
