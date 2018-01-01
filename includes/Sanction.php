@@ -54,11 +54,11 @@ class Sanction {
 	 */
 	protected $mCounted;
 
-	protected $mIsPassed;
+	protected $mIsPassed = false;
 
-	protected $mVoteNumber;
+	protected $mVoteNumber = 0;
 
-	protected $mAgreeVote;
+	protected $mAgreeVote = 0;
 
 	/**
 	 * 제재안을 새로 만들어 저장합니다.
@@ -465,13 +465,13 @@ class Sanction {
 			]
 		];
 		$context = RequestContext::getMain();
+		$context->setUser( self::getBot() );
 		$blocksToCommit = $loader->handleSubmit(
 			$context,
 			$action,
 			$params
 		);
 		if ( !count( $blocksToCommit ) ) {
-			echo 'faild';
 			return false;
 		}
 		$commitMetadata = $loader->commit( $blocksToCommit );
@@ -486,31 +486,53 @@ class Sanction {
 		$this->countVotes();
 		$agree = $this->mAgreeVote;
 		$count = $this->mVoteNumber;
-		$summary = self::getSanctionSummaryHeader();
-		if ( $this->isExpired() ) {
-			$summary .= '* 결과: ';
-			if ( $passed ) {
-				if ( !$this->isForInsultingName() )
-					$summary .= $this->getPeriod().'일 차단으로 가결'.PHP_EOL;
-				else
-					$summary .= '가결';	
-			} else {
-				$summary .= '부결'.PHP_EOL;
+		$expired = $this->isExpired();
+		$passed = $this->isPassed();
+	
+		echo $count;
+		if ( $count == 0 ) {
+			$statusText = '부결';
+			$reasonText = '참가자가 0명임';
+		}
+		elseif ( $count < 3 ) {
+			if ( $agree == $count ) {
+				$statusText = '가결';
+				$reasonText = '참가자가 3명 미만이고 반대가 없음';
+			}
+			else {
+				$statusText = '부결';
+				$reasonText = '참가자가 3명 미만이고 반대가 있음';
 			}
 		}
 		else {
-			$summary .= '* 의결 종료 예정 시각: '.MWTimestamp::getLocalInstance( $this->mExpiry )->getTimestamp( TS_ISO_8601 ).PHP_EOL;
-			$period = $this->getPeriod();
-			if ( !$this->isForInsultingName() ) {
-				$summary .= '* 가결시 제재 예상 기간: ';
-				if ( $period > 0 )
-					$summary .= $this->getPeriod().'일'.PHP_EOL;
-				else
-					$summary .= '없음'.PHP_EOL;
+			if ( $agree >= $count*2/3 ) {
+				$statusText = '가결';
+				$reasonText = '참가자가 3명 이상이고 ⅔ 이상인 '.$agree.'명이 찬성';
+			}
+			else {
+				$statusText = '부결';
+				$reasonText = '참가자가 3명 이상이고 ⅔ 미만인 '.$agree.'명이 찬성';
 			}
 		}
+
+		if ( !$this->isForInsultingName() ) {
+			$period = $this->getPeriod();
+			if ( $period > 0 )
+				$statusText = $period.'일 차단으로 '.$statusText;
+		}
+
+		$summary = array();
+		$summary[] = '상태: '.$statusText.
+			( $expired?'':' 가능' ).
+			( $reasonText?' ('.$reasonText.')':'' );
+		if ( !$expired ) {
+			$summary[] = '의결 종료 예정 시각: '.MWTimestamp::getLocalInstance( $this->mExpiry )->getTimestamp( TS_ISO_8601 );
+		}
+
+		$prefix = '* ';
+		$suffix = PHP_EOL;
 	
-		return $summary;
+		return $this->getSanctionSummaryHeader().$prefix.implode( $suffix.$prefix, $summary ).$suffix;
 	}
 
 	// @todo $value는 $row의 값으로 갱신하지 않기
@@ -568,7 +590,7 @@ class Sanction {
 	 	// - 3인 이상이 의견을 내고 2/3 이상이 찬성한 경우
 	 	// - 1인 이상, 3인 미만이 의견을 내고 반대가 없는 경우
 		$passed = ( $count >= 3 && $agree >= $count*2/3 )
-			|| ( /* $count > 0 && 위에서 검사하여 생략 */ $count < 3 && $agree == $count );
+			|| ( $count < 3 && $agree == $count );
 		
 		if ( $passed )
 			return ceil( $sumPeriod / $count );
@@ -576,27 +598,30 @@ class Sanction {
 	}
 
 	protected function countVotes( $reset = false ) {
-		if ( $reset )
-			$this->mCounted = false;
+		if ( $this->mCounted && !$reset )
+			return;
+		$this->mCounted = true;
 
-		if ( !$this->mCounted ) {
-			$this->mCounted = true;
-			$votes = $this->getVotes();
-			$count = count( $votes );
+		$votes = $this->getVotes();
+		$count = count( $votes );
 
-			if ( $count === 0 ) return false;
+		if ( $count === 0 ) {
+			$this->mAgreeVote = 0;
+			$this->mVoteNumber = 0;
 
-			$agree = 0;
-			foreach ( $votes as $userId => $period ) {
-				if ( $period > 0 ) $agree++;
-			}
-
-			$this->mIsPassed = ( $count >= 3 && $agree >= $count*2/3 )
-			|| ( /* $count > 0 && 위에서 검사하여 생략 */ $count < 3 && $agree == $count );
-
-			$this->mAgreeVote = $agree;
-			$this->mVoteNumber = $count;
+			return;
 		}
+
+		$agree = 0;
+		foreach ( $votes as $userId => $period ) {
+			if ( $period > 0 ) $agree++;
+		}
+
+		$this->mIsPassed = ( $count >= 3 && $agree >= $count*2/3 )
+		|| ( $count < 3 && $agree == $count );
+
+		$this->mAgreeVote = $agree;
+		$this->mVoteNumber = $count;
 	}
 
 	public function isPassed() {
@@ -763,7 +788,9 @@ class Sanction {
 			// post에 의견이 담겨있는지 검사합니다.
 			// 각 의견의 구분은 위키의 틀 안에 적어둔 태그를 사용합니다.
 			$period = 0;
-			if ( preg_match( '/<span class="sanction-vote-agree-period">(\d+)<\/span>/', $content, $matches ) != 0 && count( $matches ) > 0 ) {
+			if ( strpos( $content, '"sanction-vote-noright"' ) !== false ) {
+				continue;
+			} elseif ( preg_match( '/<span class="sanction-vote-agree-period">(\d+)<\/span>/', $content, $matches ) != 0 && count( $matches ) > 0 ) {
 				$period = (int)$matches[1];
 			} elseif ( strpos( $content, '"sanction-vote-agree"' ) !== false ) {
 				// 찬성만 하고 날짜를 적지 않았다면 1일로 처리합니다.
@@ -772,6 +799,31 @@ class Sanction {
 				$period = 0;
 			}
 			else {
+				continue;
+			}
+
+			if( !SanctionsUtils::hasVoteRight( User::newFromId( $userId ), $reason ) ) {
+				$db->update(
+					'flow_revision',
+					[
+						'rev_content' => $row->rev_content.Html::rawelement( 'span', [ 'class' => 'sanction-vote-noright' ] )
+					],
+					[
+						'rev_id' => $row->rev_id
+					]
+				);
+				$content = '이 의견은 다음 이유로 집계되지 않습니다.'.
+	                PHP_EOL.'* '.implode( PHP_EOL.'* ', $reason );
+	            try {
+		        	$this->replyTo( $row->rev_id, $content );
+	            } catch ( Flow\Exception\DataModelException $e ) {
+	            	/**
+	            	 * 제안이 없고 리플이 있는 의견을 수정하여 제안을 추가할 경우 그 바로 아래에 리플을 달 수 없기 때문에 오류가 발생합니다. 
+	            	 * @todo
+	            	 */
+
+	            }
+				unset( $votes[$userId] );
 				continue;
 			}
 
@@ -784,12 +836,6 @@ class Sanction {
 				'stv_period' => $period,
 				'stv_last_update_timestamp' => $timestamp
 			];
-		}
-
-		// 무효표를 버립니다
-		foreach ( $votes as $userId => $vote ) {
-			if( !SanctionsUtils::hasVoteRight( User::newFromId( $userId ) ) )
-				unset( $votes[$userId] );
 		}
 
 		// 유효표가 하나도 없을 경우 아무것도 하지 않습니다.
@@ -852,7 +898,40 @@ class Sanction {
 		return true;
 	}
 
-	public static function getSanctionSummaryHeader() {
+	public function replyTo ( $to, string $content ) {
+		$topicTitleText = $this->getTopic()->getFullText();
+		$topicTitle = Title::newFromText( $topicTitleText );
+		$topicId = $this->mTopic;
+
+		$factory = Container::get( 'factory.loader.workflow' );
+		$loader = $factory->createWorkflowLoader( $topicTitle, $topicId );
+		$blocks = $loader->getBlocks();
+		$action = 'reply';
+		$params = [
+			'topic' => [
+				'page' => $topicTitleText,
+				'token' => self::getBot()->getEditToken(),
+				'action' => 'flow',
+				'submodule' => 'reply',
+				'replyTo' => $to,
+				'content' => $content,
+				'format' => 'wikitext'
+			]
+		];
+		$context = RequestContext::getMain();
+		$context->setUser( self::getBot() );
+		$blocksToCommit = $loader->handleSubmit(
+			$context,
+			$action,
+			$params
+		);
+		if ( !count( $blocksToCommit ) ) {
+			return false;
+		}
+		$commitMetadata = $loader->commit( $blocksToCommit );
+	}
+
+	public function getSanctionSummaryHeader() {
 		return '';
 	}
 

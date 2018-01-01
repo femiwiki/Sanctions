@@ -21,7 +21,7 @@ class SanctionsUtils {
 		if( !$user->isAllowed('edit') )
 			if ( $reason !== false ) $reason[] = '편집 권한이 없음'; else return false;
 
-		$verificationPeriod = (int)wfMessage( 'sanctions-voting-right-verification-period' )->text();
+		$verificationPeriod = (float)wfMessage( 'sanctions-voting-right-verification-period' )->text();
 		$verificationEdits = (int)wfMessage( 'sanctions-voting-right-verification-edits' )->text();
 		
 		$twentyDaysAgo = time()-( 60*60*24*$verificationPeriod );
