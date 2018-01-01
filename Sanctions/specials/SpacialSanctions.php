@@ -253,14 +253,12 @@ class SpacialSanctions extends SpecialPage {
 					// '제재안 집행에 실패하였습니다.'
 					break;
 				}
-					list( $query['showResult'], $query['code'], $query['uuid'] ) = [ true, 3, $sanction->getTopicUUID()->getAlphaDecimal() ];
-					// '제재안을 처리하였습니다.'
+				list( $query['showResult'], $query['code'], $query['uuid'] ) = [ true, 3, $sanction->getTopicUUID()->getAlphaDecimal() ];
+				// '제재안을 처리하였습니다.'
 			break;
 		}
 
-		$output->redirect(
-			$this->getTitle()->getLocalURL( $query )
-		);
+		$output->redirect( $this->getTitle()->getLocalURL( $query ) );
 
 		return true;
 	}

@@ -27,6 +27,7 @@ class SanctionsPager extends IndexPager {
 	}
 
 	function getQueryInfo () {
+		Sanction::checkAllSanctionNewVotes();
 		$subquery = $this->mDb->selectSQLText(
 				 		'sanctions_vote',
 				 		[ 'stv_id', 'stv_topic' ],
@@ -63,7 +64,6 @@ class SanctionsPager extends IndexPager {
 		 //foreach($row as $key => $value) echo $key.'-'.$value.'<br/>';
 		 //echo '<div style="clear:both;">------------------------------------------------</div>';
 		$sanction = Sanction::newFromId( $row->st_id );
-		$sanction->checkNewVotes();
 
 		if ( $this->getUserHasVoteRight() )
 			$isVoted = $row->voted_from != null;

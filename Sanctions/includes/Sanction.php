@@ -52,13 +52,13 @@ class Sanction {
 	/**
 	 * Bool 이 값이 참일 때만 $mIsPassed, $mVoteNumber, $mAgreeVote의 값이 유효합니다.
 	 */
-	protected $mCounted;
+	protected $mCounted = false;
 
-	protected $mIsPassed = false;
+	protected $mIsPassed;
 
-	protected $mVoteNumber = 0;
+	protected $mVoteNumber;
 
-	protected $mAgreeVote = 0;
+	protected $mAgreeVote;
 
 	/**
 	 * 제재안을 새로 만들어 저장합니다.
@@ -335,25 +335,27 @@ class Sanction {
 	 * 즉시 부결 조건을 만족하는지 확인하고 실행합니다.
 	 */
 	public function immediateRejectionIfNeeded() {
-		if( $this->NeedToImmediateRejection() )
+		if( $this->NeedToImmediateRejection() ) {
 			return $this->immediateRejection();
+		}
 	}
 
 	// 부결 조건인 3인 이상의 반대를 검사합니다.
 	public function NeedToImmediateRejection() {
-		$votes = $this->getVotes();
+		$agree = $this->mAgreeVote;
+		$count = $this->mVoteNumber;
 
-		$sumPeriod = 0;
-		foreach( $votes as $userId => $period ) {
-			$sumPeriod += $period;
-		}
-
-		if( count( $votes ) >= 3 && $sumPeriod === 0 )
+		if ( $count >= 3 && $agree === 0 )
 			return true;
-		return false;
 	}
 
 	public function immediateRejection() {
+		// 부결시키면 표가 사라지므로 그 전에 주제 요약을 작성합니다.
+		$this->countVotes( true );
+		$this->updateTopicSummary();
+
+		$this->mExpiry = wfTimestamp( TS_MW );
+
 		// 긴급 절차였다면 임시 조치를 해제합니다.
 		if ( $this->mIsEmergency ) {
 			$reason = '[[주제:'.$this->mTopic->getAlphadecimal().'|제재안]] 부결에 따른 임시 조치 해제';
@@ -371,12 +373,6 @@ class Sanction {
 			],
 			[ 'st_id' => $this->mId ]
 		);
-		$db->delete(
-			'sanctions_vote',
-			[ 'stv_topic' => $this->mTopic->getBinary() ]
-		);
-		
-		$this->updateTopicSummary();
 	}
 
 	// @todo 실패할 경우 false를 반환하기
@@ -384,8 +380,6 @@ class Sanction {
 		if ( !$this->isExpired() || $this->mIsHandled )
 			return false;
 		$this->mIsHandled = true;
-
-		$this->checkNewVotes();
 
 		$id = $this->mId;
 		$emergency = $this->mIsEmergency;
@@ -400,6 +394,9 @@ class Sanction {
 		}
 		else if ( $passed && $emergency )
 			$this->replaceTemporaryMeasure();
+
+		// 주제 요약을 갱신합니다.
+		$this->updateTopicSummary();
 
 		// 데이터베이스에 반영합니다.
 		$db = $this->getDb();
@@ -416,9 +413,6 @@ class Sanction {
 			'sanctions_vote',
 			[ 'stv_topic' => $topic->getBinary() ]
 		);
-
-		// 주제 요약을 갱신합니다.
-		$this->updateTopicSummary();
 
 		return true;
 	}
@@ -441,7 +435,6 @@ class Sanction {
 				'ORDER BY' => 'rev_id DESC'
 			]
 		);
-		$previousIdText = null;
 		if ( $row != null )
 			$previousIdText = UUID::create($row->rev_id)->getAlphadecimal();
 
@@ -459,18 +452,22 @@ class Sanction {
 				'token' => self::getBot()->getEditToken(),
 				'action' => 'flow',
 				'submodule' => 'edit-topic-summary',
-				'prev_revision' => $previousIdText ? $previousIdText : null,
+				'prev_revision' => isset($previousIdText) ? $previousIdText : null,
 				'summary' => $this->getSanctionSummary(),
 				'format' => 'wikitext'
 			]
 		];
-		$context = RequestContext::getMain();
+		$context = clone RequestContext::getMain();
+
+		// 
+		//$loggedUser = $context->getUser();
 		$context->setUser( self::getBot() );
 		$blocksToCommit = $loader->handleSubmit(
 			$context,
 			$action,
 			$params
 		);
+		//$context->setUser( $loggedUser );
 		if ( !count( $blocksToCommit ) ) {
 			return false;
 		}
@@ -489,12 +486,10 @@ class Sanction {
 		$expired = $this->isExpired();
 		$passed = $this->isPassed();
 	
-		echo $count;
 		if ( $count == 0 ) {
 			$statusText = '부결';
-			$reasonText = '참가자가 0명임';
-		}
-		elseif ( $count < 3 ) {
+			$reasonText = '참가자가 없음';
+		} elseif ( $count < 3 ) {
 			if ( $agree == $count ) {
 				$statusText = '가결';
 				$reasonText = '참가자가 3명 미만이고 반대가 없음';
@@ -503,9 +498,11 @@ class Sanction {
 				$statusText = '부결';
 				$reasonText = '참가자가 3명 미만이고 반대가 있음';
 			}
-		}
-		else {
-			if ( $agree >= $count*2/3 ) {
+		} else {
+			if ( $count == 3 && $agree == 0 ) {
+				$statusText = '즉시 부결';
+				$reasonText = '참가자 3명이 전부 반대함';
+			} else if ( $agree >= $count*2/3 ) {
 				$statusText = '가결';
 				$reasonText = '참가자가 3명 이상이고 ⅔ 이상인 '.$agree.'명이 찬성';
 			}
@@ -525,13 +522,13 @@ class Sanction {
 		$summary[] = '상태: '.$statusText.
 			( $expired?'':' 가능' ).
 			( $reasonText?' ('.$reasonText.')':'' );
-		if ( !$expired ) {
+		if ( !$expired && !( $count == 3 && $agree == 0 ) ) {
 			$summary[] = '의결 종료 예정 시각: '.MWTimestamp::getLocalInstance( $this->mExpiry )->getTimestamp( TS_ISO_8601 );
 		}
 
 		$prefix = '* ';
 		$suffix = PHP_EOL;
-	
+
 		return $this->getSanctionSummaryHeader().$prefix.implode( $suffix.$prefix, $summary ).$suffix;
 	}
 
@@ -606,6 +603,7 @@ class Sanction {
 		$count = count( $votes );
 
 		if ( $count === 0 ) {
+			$this->mIsPassed = false;
 			$this->mAgreeVote = 0;
 			$this->mVoteNumber = 0;
 
@@ -617,9 +615,7 @@ class Sanction {
 			if ( $period > 0 ) $agree++;
 		}
 
-		$this->mIsPassed = ( $count >= 3 && $agree >= $count*2/3 )
-		|| ( $count < 3 && $agree == $count );
-
+		$this->mIsPassed = ( $count >= 3 && $agree >= $count*2/3 ) || ( $count < 3 && $agree == $count );
 		$this->mAgreeVote = $agree;
 		$this->mVoteNumber = $count;
 	}
@@ -635,7 +631,7 @@ class Sanction {
 	}
 
 	public function isExpired() {
-		return $this->mExpiry < wfTimestamp( TS_MW );
+		return $this->mExpiry <= wfTimestamp( TS_MW );
 	}
 
 	public function isHandled() {
@@ -670,7 +666,7 @@ class Sanction {
 					'stv_topic' => $this->mTopic->getBinary()
 				]
 			);
-			// ResultWrapper를 array로 바꾸기 @todo 제대로 된 방법으로 고치기
+			// ResultWrapper를 array로 바꾸기 @todo 괜찮은 방법으로 고치기
 			foreach ( $res as $row )
 				$this->mVotes[$row->stv_user] = $row->stv_period;
 		}
@@ -720,6 +716,22 @@ class Sanction {
 		if ( $row !== false )
 			return self::newFromId( $row->st_id) ;
 		return null;
+	}
+
+	public static function checkAllSanctionNewVotes() {
+		$db = wfGetDB( DB_MASTER );
+
+		$sanctions = $db->select(
+			'sanctions',
+			'st_id',
+			[
+				'st_handled' => 0,
+			]
+		);
+
+		foreach ( $sanctions as $sanction ) {
+			Sanction::newFromId( $sanction->st_id )->checkNewVotes();
+		}
 	}
 
 	/**
@@ -788,7 +800,7 @@ class Sanction {
 			// post에 의견이 담겨있는지 검사합니다.
 			// 각 의견의 구분은 위키의 틀 안에 적어둔 태그를 사용합니다.
 			$period = 0;
-			if ( strpos( $content, '"sanction-vote-noright"' ) !== false ) {
+			if ( strpos( $content, '"sanction-vote-counted"' ) !== false ) {
 				continue;
 			} elseif ( preg_match( '/<span class="sanction-vote-agree-period">(\d+)<\/span>/', $content, $matches ) != 0 && count( $matches ) > 0 ) {
 				$period = (int)$matches[1];
@@ -802,16 +814,18 @@ class Sanction {
 				continue;
 			}
 
+			$db->update(
+				'flow_revision',
+				[
+					'rev_content' => $row->rev_content.Html::rawelement( 'span', [ 'class' => 'sanction-vote-counted' ] )
+				],
+				[
+					'rev_id' => $row->rev_id
+				]
+			);
+
+			$reason = array(); // 있으면 비우기
 			if( !SanctionsUtils::hasVoteRight( User::newFromId( $userId ), $reason ) ) {
-				$db->update(
-					'flow_revision',
-					[
-						'rev_content' => $row->rev_content.Html::rawelement( 'span', [ 'class' => 'sanction-vote-noright' ] )
-					],
-					[
-						'rev_id' => $row->rev_id
-					]
-				);
 				$content = '이 의견은 다음 이유로 집계되지 않습니다.'.
 	                PHP_EOL.'* '.implode( PHP_EOL.'* ', $reason );
 	            try {
@@ -977,6 +991,8 @@ class Sanction {
 		$botName = '제재안';
 		$bot = User::newSystemUser( $botName, [ 'steal' => true ] );
 		$bot->addGroup( 'sysop' );
+		$bot->addGroup( 'autoconfirmed' );
+		$bot->addGroup( 'bot' );
 
 		return $bot;
 	}
