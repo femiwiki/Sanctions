@@ -2,6 +2,7 @@
 
 CREATE TABLE /*$wgDBprefix*/sanctions (
     st_id INT unsigned NOT NULL AUTO_INCREMENT,
+    st_author BIGINT unsigned NOT NULL,
     st_topic binary(11) NOT null,
     st_target BIGINT unsigned NOT NULL,
     st_original_name varchar(255) binary DEFAULT '',
