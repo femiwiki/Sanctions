@@ -1,4 +1,5 @@
 <h1>Sanctions 확장기능</h1>
+<p>제재안 처리를 간편하게 하기 위한 확장기능입니다.</p>
 <h2> 설치방법 </h2>
 <ol>
     <li>Sanctions 폴더를 <code>extensions/</code> 아래에 위치시킵니다.</li>
