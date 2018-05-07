@@ -1,4 +1,4 @@
-<h1>Sanction 확장기능</h1>
+<h1>Sanctions 확장기능</h1>
 <h2> 설치방법 </h2>
 <ol>
     <li>Sanctions 폴더를 <code>extensions/</code> 아래에 위치시킵니다.</li>
