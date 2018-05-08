@@ -280,7 +280,7 @@ class Sanction {
 				self::unblock( $target, false );
 
 			$blockExpiry = $expiry;
-			self::doBlock( $target, $blockExpiry, $reason, false );
+			self::doBlock( $target, $blockExpiry, $reason, false, $user );
 		}
 	}
 
@@ -317,7 +317,7 @@ class Sanction {
 			// 즉 차단 기록을 살펴 이 제재안과 무관한 차단 기록이 있다면 기간을 비교하여 
 			// 이 제재안의 의결 종료 기간이 차단 해제 시간보다 뒤라면 차단 기간을 줄입니다.
 			if( $target->isBlocked() && $target->getBlock()->getExpiry() == $this->mExpiry )
-				self::unblock( $target, true, $reason );
+				self::unblock( $target, true, $reason, $user == null ? $this->getBot() : $user );
 			return true;
 		}
 	}
@@ -998,7 +998,7 @@ class Sanction {
 		return $bot;
 	}
 
-	protected static function doBlock( $target, $expiry, $reason, $preventEditOwnUserTalk = true ) {
+	protected static function doBlock( $target, $expiry, $reason, $preventEditOwnUserTalk = true, $user = null ) {
 		$bot = self::getBot();
 
 		$block = new Block();
@@ -1027,7 +1027,7 @@ class Sanction {
 		$logEntry = new ManualLogEntry( 'block', 'block' );
 		$logEntry->setTarget( Title::makeTitle( NS_USER, $target ) );
 		$logEntry->setComment( $reason );
-		$logEntry->setPerformer( $bot );
+		$logEntry->setPerformer( $user == null ? $bot : $user );
 		$logEntry->setParameters( $logParams );
 		$blockIds = array_merge( array( $success['id'] ), $success['autoIds'] );
 		$logEntry->setRelations( array( 'ipb_id' => $blockIds ) );
@@ -1037,7 +1037,7 @@ class Sanction {
 		return true;
 	}
 
-	protected static function unblock( $target, $withLog = false, $reason = null ) {
+	protected static function unblock( $target, $withLog = false, $reason = null, $user = null ) {
 		$block = $target->getBlock();
 
 		if ( $block == null || !$block->delete() )
@@ -1058,7 +1058,7 @@ class Sanction {
 	        $logEntry = new ManualLogEntry( 'block', 'unblock' );
 	        $logEntry->setTarget( $page );
 	        $logEntry->setComment( $reason );
-	        $logEntry->setPerformer( $bot );
+	        $logEntry->setPerformer( $user == null ? $bot : $user );
 	        $logId = $logEntry->insert();
 	        $logEntry->publish( $logId );
 	    }
