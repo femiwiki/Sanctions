@@ -142,7 +142,7 @@ class Sanction {
 		return $sanction;
 	}
 
-	public function toggleEmergency() {
+	public function toggleEmergency( $user = null ) {
 		//이미 만료된 제재안은 절차를 변경할 수 없습니다.
 		if ( $this->isExpired() ) return false;
 
@@ -152,10 +152,10 @@ class Sanction {
 		$toEmergency = !$emergency;
 
 		if( $toEmergency )
-			$this->takeTemporaryMeasure();
+			$this->takeTemporaryMeasure( $user );
 		else {
 			$reason = '[[주제:'.$this->mTopic->getAlphadecimal().'|제재안]] 일반 절차 전환에 따른 임시 조치 해제';
-			$this->removeTemporaryMeasure( $reason );
+			$this->removeTemporaryMeasure( $reason, $user );
 		}
 
 		$emergency = !$emergency;
@@ -250,7 +250,7 @@ class Sanction {
 	 * 임시 조치를 취합니다
 	 * @return Bool 성공
 	 */
-	public function takeTemporaryMeasure() {
+	public function takeTemporaryMeasure( $user = null ) {
 		$target = $this->mTarget;
 		$insultingName = $this->isForInsultingName();
 		$reason = '[[주제:'.$this->mTopic->getAlphadecimal().'|제재안]]의 긴급 절차 전환';
@@ -263,7 +263,7 @@ class Sanction {
 					$target->getName(),
 					'임시사용자명'.wfTimestamp(TS_MW),
 					$target->getId(),
-					$this->getBot(),
+					$user == null ? $this->getBot() : $user,
 					[ 'reason' => $reason ]
 				);
 				if ( !$rename->rename() ) {
@@ -288,7 +288,7 @@ class Sanction {
 	 * 임시 조치를 해제합니다.
 	 * @param $reason String 해제 이유입니다.
 	 */
-	public function removeTemporaryMeasure( $reason ) {
+	public function removeTemporaryMeasure( $reason, $user = null ) {
 		$target = $this->mTarget;
 		$isForInsultingName = $this->isForInsultingName();
 
@@ -303,7 +303,7 @@ class Sanction {
 					$targetName,
 					$originalName,
 					$target->getId(),
-					$this->getBot(),
+					$user == null ? $this->getBot() : $user,
 					[ 'reason' => $reason ]
 				);
 				if ( !$rename->rename() )
