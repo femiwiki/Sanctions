@@ -122,24 +122,24 @@ class SpacialSanctions extends SpecialPage {
 			$error = $request->getVal( 'errorCode' );
 			if ( $error !== null )
 				$output->addHTML( Html::rawelement(
-	                'div',
-	                [ 'class' => 'sanction-execute-result' ],
-	                self::makeErrorMessage(
-	                	$request->getVal( 'errorCode' ),
-	                	$request->getVal( 'uuid' ),
-	                	$request->getVal( 'targetName' )
-	                )
-	            ) );
+					'div',
+					[ 'class' => 'sanction-execute-result' ],
+					self::makeErrorMessage(
+						$request->getVal( 'errorCode' ),
+						$request->getVal( 'uuid' ),
+						$request->getVal( 'targetName' )
+					)
+				) );
 			else
 				$output->addHTML( Html::rawelement(
-	                'div',
-	                [ 'class' => 'sanction-execute-result' ],
-	                self::makeMessage(
-	                	$request->getVal( 'code' ),
-	                	$request->getVal( 'uuid' ),
-	                	$request->getVal( 'targetName' )
-	                )
-	            ) );
+					'div',
+					[ 'class' => 'sanction-execute-result' ],
+					self::makeMessage(
+						$request->getVal( 'code' ),
+						$request->getVal( 'uuid' ),
+						$request->getVal( 'targetName' )
+					)
+				) );
 			
 			return false;
 		}
@@ -311,10 +311,10 @@ class SpacialSanctions extends SpecialPage {
 
 		$out = '';
 		$out .= Xml::element(
-             'h2',
-             [],
-             $this->msg( 'sanctions-sactions-form-header' )->text()
-         );
+			 'h2',
+			 [],
+			 $this->msg( 'sanctions-sactions-form-header' )->text()
+		 );
 		$out .= Xml::tags(
 			'form',
 			[
