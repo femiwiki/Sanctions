@@ -345,7 +345,7 @@ class Sanction {
 		$agree = $this->mAgreeVote;
 		$count = $this->mVoteNumber;
 
-		if ( $count >= 3 && $agree === 0 )
+		if ( $count - $agree >= 3 )
 			return true;
 	}
 
