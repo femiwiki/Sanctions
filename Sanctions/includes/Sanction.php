@@ -243,7 +243,7 @@ class Sanction {
 			if ( $target->isBlocked() ) {
 				// 이 제재안에 따라 결정된 차단 종료 시간이 기존 차단 해제 시간보다 뒤라면 제거합니다.
 				if ( $target->getBlock()->getExpiry() < $blockExpiry )
-					unblock( $target, false );
+					self::unblock( $target, false );
 				else
 					return true;
 			}
