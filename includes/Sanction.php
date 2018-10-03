@@ -1018,7 +1018,7 @@ class Sanction {
 		$block->setBlocker( $bot );
 		$block->mReason = $reason;
 		$block->isHardblock( true );
-		$block->isAutoblocking( true );
+		$block->isAutoblocking( boolval( wfMessage( 'sanctions-autoblock' )->text() ) );
 		$block->prevents( 'createaccount', true );
 		$block->prevents( 'editownusertalk', $preventEditOwnUserTalk );
 		$block->mExpiry = $expiry;
