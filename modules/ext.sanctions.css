@@ -7,6 +7,7 @@
 }
 
 .sanction {
+	box-sizing: border-box;
 	padding: 1em;
 	border-bottom: 1px solid #b9b5d9;
 }
