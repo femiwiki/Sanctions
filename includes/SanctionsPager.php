@@ -54,10 +54,10 @@ class SanctionsPager extends IndexPager {
 			$query['fields']['voted_from'] = 'stv_id';
 			$query['join_conds'] = ['sub' => ['LEFT JOIN', 'st_topic = sub.stv_topic']];
 		} else {
-			// 제재 절차 참가 권한이 없을 때는 만료된 제재안은 보지 않습니다.		
+			// 제재 절차 참가 권한이 없을 때는 만료된 제재안은 보지 않습니다.
 			$query['conds'][] = 'st_expiry > '.wfTimestamp(TS_MW);
 		}
-		
+
 		return $query;
 	}
 
@@ -68,7 +68,7 @@ class SanctionsPager extends IndexPager {
 
 		if ( $this->getUserHasVoteRight() )
 			$isVoted = $row->voted_from != null;
-		
+
 		$author = $sanction->getAuthor();
 		$isMySanction = $author->equals( $this->getUser() );
 
@@ -98,20 +98,20 @@ class SanctionsPager extends IndexPager {
 		if ( $isForInsultingName ) {
 			$originalName = $sanction->getTargetOriginalName();
 			$length = mb_strlen($originalName, 'utf-8');
-			$targetNameForDiplay = 
+			$targetNameForDiplay =
 				mb_substr($originalName, 0, 1, 'utf-8')
 				.str_pad('', $length-2, '*');
 
 			if ( $length > 1 )
 				$targetNameForDiplay .= iconv_substr($originalName, $length-1, $length, 'utf-8');
-		} else 
+		} else
 			$targetNameForDiplay = $targetName;
 
 		$topicTitle = $sanction->getTopic();
 
 		$userLinkTitle = Title::newFromText(
 			 strtok( $this->getTitle(), '/' )
-			.'/'.$target->getName() 
+			.'/'.$target->getName()
 		); // @todo 다른 방법 찾기
 
 		$rowTitle = linker::link( $userLinkTitle, $targetNameForDiplay, ['class'=>'sanction-target']).' 님에 대한 ';
@@ -177,7 +177,7 @@ class SanctionsPager extends IndexPager {
 
 		if ( $this->targetName == null )
 			$text = '현재 의결 중인 제재안이 없습니다.';
-		else 
+		else
 			$text = '현재 의결 중인 '.$this->targetName.'님에 대한 제재안이 없습니다.';
 		return Html::rawelement(
             'div',
@@ -245,7 +245,7 @@ class SanctionsPager extends IndexPager {
 				'sanction-action',
 				'execute'
 			)
-		); 
+		);
 
 		return $out;
 	}
