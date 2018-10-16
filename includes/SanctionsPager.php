@@ -18,7 +18,7 @@ class SanctionsPager extends IndexPager {
 
 	function getExtraSortFields () {
 		if ( $this->getUserHasVoteRight() )
-			return ['voted_from', 'st_expiry'];
+			return [ 'my_sanction', 'voted_from', 'st_expiry' ];
 		return null;
 	}
 
@@ -39,9 +39,9 @@ class SanctionsPager extends IndexPager {
 			 ],
 			'fields' => [
 				'st_id',
-				'st_author',
+				'my_sanction' => 'st_author = ' . $this->getUser()->getId(),
 				'st_expiry',
-				'not_expired' => 'st_expiry > '.wfTimestamp(TS_MW),
+				'not_expired' => 'st_expiry > ' . wfTimestamp(TS_MW),
 			],
 			'conds' => [ 'st_handled' => 0 ]
 		];
@@ -50,9 +50,9 @@ class SanctionsPager extends IndexPager {
 			$query['conds'][] = 'st_target = '.User::newFromName( $this->targetName )->getId();
 
 		if ( $this->getUserHasVoteRight() ) {
-			$query['tables']['sub'] = '('.$subquery.') AS'; // AS를 따로 써야 작동하길래 이렇게 썼는데 당최 이게 맞는지??
+			$query['tables']['sub'] = '(' . $subquery . ') AS'; // AS를 따로 쓰지 않으면 정상적으로 작동하지 않습니다.
 			$query['fields']['voted_from'] = 'stv_id';
-			$query['join_conds'] = ['sub' => ['LEFT JOIN', 'st_topic = sub.stv_topic']];
+			$query['join_conds'] = [ 'sub' => [ 'LEFT JOIN', 'st_topic = sub.stv_topic' ] ];
 		} else {
 			// 제재 절차 참가 권한이 없을 때는 만료된 제재안은 보지 않습니다.
 			$query['conds'][] = 'st_expiry > '.wfTimestamp(TS_MW);
