@@ -190,7 +190,6 @@ class Sanction {
 	 */
 	public function justTakeMeasure() {
 		$target = $this->mTarget;
-		$targetId = $target->getId();
 		$isForInsultingName = $this->isForInsultingName();
 		$reason = '[[주제:'.$this->mTopic->getAlphadecimal().'|제재안]]의 가결';
 
@@ -201,14 +200,7 @@ class Sanction {
 			if ( $targetName != $originalName )
 				return true;
 
-			$rename = new RenameuserSQL(
-				$targetName,
-				'임시사용자명'.wfTimestamp(TS_MW),
-				$targetId,
-				$this->getBot(),
-				[ 'reason' => $reason ]
-			);
-			if ( !$rename->rename() )
+			if ( !self::doRename( $targetName, '임시사용자명'.wfTimestamp(TS_MW), $target, $this->getBot(), $reason ) )
 				return false;
 			return true;
 		} else {
@@ -265,18 +257,8 @@ class Sanction {
 		if( $insultingName ) {
 			$originalName = $this->mTargetOriginalName;
 
-			if( $target->getName() == $originalName ) {
-				$rename = new RenameuserSQL(
-					$target->getName(),
-					'임시사용자명'.wfTimestamp(TS_MW),
-					$target->getId(),
-					$user == null ? $this->getBot() : $user,
-					[ 'reason' => $reason ]
-				);
-				if ( !$rename->rename() ) {
-					return false;
-				}
-			}
+			if ( $target->getName() == $originalName )
+				self::doRename( $target->getName(), '임시사용자명'.wfTimestamp(TS_MW), $target, $user, $reason );
 		}
 		else {
 			$expiry = $this->mExpiry;
@@ -306,14 +288,7 @@ class Sanction {
 			if( $targetName == $originalName ) {
 				return true;
 			} else {
-				$rename = new RenameuserSQL(
-					$targetName,
-					$originalName,
-					$target->getId(),
-					$user == null ? $this->getBot() : $user,
-					[ 'reason' => $reason ]
-				);
-				if ( !$rename->rename() )
+				if ( !self::doRename( $targetName, $originalName, $target, $user, $reason ) )
 					return false;
 				return true;
 			}
@@ -1008,6 +983,96 @@ class Sanction {
 		$bot->addGroup( 'bot' );
 
 		return $bot;
+	}
+
+	/**
+	 * Rename the given User.
+	 * This funcion includes some code that originally are in SpecialRenameuser.php
+	 *
+	 * @param $oldName String
+	 * @param $newName String
+	 * @param $target User
+	 * @param $renamer User
+	 * @param $reason String
+	 */
+	protected static function doRename( $oldName, $newName, $target, $renamer, $reason ) {
+		$bot = self::getBot();
+		$targetId = $target->idForName();
+		$oldUser = User::newFromName( $oldName );
+		$newUser = User::newFromName( $newName );
+		$oldUserPageTitle = Title::makeTitle( NS_USER, $oldName );
+		$newUserPageTitle = Title::makeTitle( NS_USER, $newName );
+
+		if ( $targetId === 0 || $newUser->idForName() !== 0 )
+			return false;
+
+		// Give other affected extensions a chance to validate or abort
+		if ( !Hooks::run(
+			'RenameUserAbort',
+			[ $targetId, $oldName, $newName ]
+		) ) {
+			return false;
+		}
+
+		// Do the heavy lifting...
+		$rename = new RenameuserSQL(
+			$oldName,
+			$newName,
+			$targetId,
+			$renamer,
+			[ 'reason' => $reason ]
+		);
+		if ( !$rename->rename() )
+			return false;
+
+		// If this user is renaming his/herself, make sure that Title::moveTo()
+		// doesn't make a bunch of null move edits under the old name!
+		if ( $renamer->getId() === $uid ) {
+			$renamer->setName( $newName );
+		}
+
+		// Move any user pages
+		if ( $bot->isAllowed( 'move' ) ) {
+			$dbr = wfGetDB( DB_REPLICA );
+			$pages = $dbr->select(
+				'page',
+				[ 'page_namespace', 'page_title' ],
+				[
+					'page_namespace' => [ NS_USER, NS_USER_TALK ],
+					$dbr->makeList( [
+						'page_title ' . $dbr->buildLike( $oldUserPageTitle->getDBkey() . '/', $dbr->anyString() ),
+						'page_title = ' . $dbr->addQuotes( $oldUserPageTitle->getDBkey() ),
+					], LIST_OR ),
+				],
+				__METHOD__
+			);
+			foreach ( $pages as $row ) {
+				$oldPage = Title::makeTitleSafe( $row->page_namespace, $row->page_title );
+				$newPage = Title::makeTitleSafe( $row->page_namespace,
+					preg_replace( '!^[^/]+!', $newUserPageTitle->getDBkey(), $row->page_title ) );
+
+				$movePage = new MovePage( $oldPage, $newPage );
+
+				if ( !$movePage->isValidMove() ) {
+					return false;
+				} else {
+					$success = $movePage->move(
+						$bot,
+						wfMessage(
+							'renameuser-move-log',
+							$oldUserPageTitle->getText(),
+							$newUserPageTitle->getText() )->inContentLanguage()->text(),
+						true
+					);
+
+					if ( !$success->isGood() ) {
+						return false;
+					}
+				}
+			}
+		}
+
+		return true;
 	}
 
 	protected static function doBlock( $target, $expiry, $reason, $preventEditOwnUserTalk = true, $user = null ) {
