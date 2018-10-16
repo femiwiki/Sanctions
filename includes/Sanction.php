@@ -9,11 +9,11 @@ class Sanction {
 	 */
 	protected $mId;
 	/**
-	 * @var UUID
+	 * @var User
 	 */
 	protected $mAuthor;
 	/**
-	 * @var String
+	 * @var UUID
 	 */
 	protected $mTopic;
 
@@ -216,7 +216,7 @@ class Sanction {
 
 			self::doBlock( $target, $blockExpiry, $reason, true );
 			return true;
-  	    }
+  		}
   	}
 
 	/**
@@ -812,19 +812,33 @@ class Sanction {
 				]
 			);
 
-			$reason = array(); // 있으면 비우기
-			if( !SanctionsUtils::hasVoteRight( User::newFromId( $userId ), $reason ) ) {
+			$reason = []; // 있으면 비우기
+			if ( $this->getAuthor()->getId() == $userId ) {
 				$content = '이 의견은 다음 이유로 집계되지 않습니다.'.
-	                PHP_EOL.'* '.implode( PHP_EOL.'* ', $reason );
-	            try {
-		        	$this->replyTo( $row->rev_id, $content );
-	            } catch ( Flow\Exception\DataModelException $e ) {
-	            	/**
-	            	 * 제안이 없고 리플이 있는 의견을 수정하여 제안을 추가할 경우 그 바로 아래에 리플을 달 수 없기 때문에 오류가 발생합니다.
-	            	 * @todo
-	            	 */
+					PHP_EOL.'* 자신의 제재안에 표결할 수 없습니다.';
+				try {
+					$this->replyTo( $row->rev_id, $content );
+				} catch ( Flow\Exception\DataModelException $e ) {
+					/**
+					 * 제안이 없고 리플이 있는 의견을 수정하여 제안을 추가할 경우 그 바로 아래에 리플을 달 수 없기 때문에 오류가 발생합니다.
+					 * @todo
+					 */
 
-	            }
+				}
+				unset( $votes[$userId] );
+				continue;
+			} else if( !SanctionsUtils::hasVoteRight( User::newFromId( $userId ), $reason ) ) {
+				$content = '이 의견은 다음 이유로 집계되지 않습니다.'.
+					PHP_EOL.'* '.implode( PHP_EOL.'* ', $reason );
+				try {
+					$this->replyTo( $row->rev_id, $content );
+				} catch ( Flow\Exception\DataModelException $e ) {
+					/**
+					 * 제안이 없고 리플이 있는 의견을 수정하여 제안을 추가할 경우 그 바로 아래에 리플을 달 수 없기 때문에 오류가 발생합니다.
+					 * @todo
+					 */
+
+				}
 				unset( $votes[$userId] );
 				continue;
 			}
@@ -1108,8 +1122,8 @@ class Sanction {
 		$logEntry->setParameters( $logParams );
 		$blockIds = array_merge( array( $success['id'] ), $success['autoIds'] );
 		$logEntry->setRelations( array( 'ipb_id' => $blockIds ) );
-        $logId = $logEntry->insert();
-        $logEntry->publish( $logId );
+		$logId = $logEntry->insert();
+		$logEntry->publish( $logId );
 
 		return true;
 	}
@@ -1122,22 +1136,22 @@ class Sanction {
 
 		// SpecialUnblock.php에 있던 것과 같은 내용입니다.
 		if ( $block->getType() == Block::TYPE_AUTO ) {
-    		$page = Title::makeTitle( NS_USER, '#' . $block->getId() );
-    	} else {
-    		$page = $block->getTarget() instanceof User
-    			? $block->getTarget()->getUserPage()
-    			: Title::makeTitle( NS_USER, $block->getTarget() );
-    	}
+			$page = Title::makeTitle( NS_USER, '#' . $block->getId() );
+		} else {
+			$page = $block->getTarget() instanceof User
+				? $block->getTarget()->getUserPage()
+				: Title::makeTitle( NS_USER, $block->getTarget() );
+		}
 
 		if ( $withLog ) {
 			$bot = self::getBot();
 
-	        $logEntry = new ManualLogEntry( 'block', 'unblock' );
-	        $logEntry->setTarget( $page );
-	        $logEntry->setComment( $reason );
-	        $logEntry->setPerformer( $user == null ? $bot : $user );
-	        $logId = $logEntry->insert();
-	        $logEntry->publish( $logId );
-	    }
+			$logEntry = new ManualLogEntry( 'block', 'unblock' );
+			$logEntry->setTarget( $page );
+			$logEntry->setComment( $reason );
+			$logEntry->setPerformer( $user == null ? $bot : $user );
+			$logId = $logEntry->insert();
+			$logEntry->publish( $logId );
+		}
 	}
 }
