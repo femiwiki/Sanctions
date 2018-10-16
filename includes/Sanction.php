@@ -29,7 +29,7 @@ class Sanction {
 	protected $mTargetOriginalName;
 
 	/**
-	 * @var 
+	 * @var
 	 */
 	protected $mExpiry;
 
@@ -139,7 +139,7 @@ class Sanction {
 
 		$sanction = new self();
 		$sanction->loadFrom( 'st_topic', $uuid );
-		
+
 		if ( !$sanction )
 			return false;
 
@@ -200,7 +200,7 @@ class Sanction {
 
 			if ( $targetName != $originalName )
 				return true;
-			
+
 			$rename = new RenameuserSQL(
 				$targetName,
 				'임시사용자명'.wfTimestamp(TS_MW),
@@ -221,7 +221,7 @@ class Sanction {
 				else
 					return true;
 			}
-			
+
 			self::doBlock( $target, $blockExpiry, $reason, true );
 			return true;
   	    }
@@ -321,7 +321,7 @@ class Sanction {
 		else {
 			// 현재 차단이 이 제재안에 의한 것일 때에는 차단을 해제합니다.
 			// @todo 긴급 절차로 인해 다른 짧은 차단이 덮어 씌였다면 짧은 차단을 복구합니다.
-			// 즉 차단 기록을 살펴 이 제재안과 무관한 차단 기록이 있다면 기간을 비교하여 
+			// 즉 차단 기록을 살펴 이 제재안과 무관한 차단 기록이 있다면 기간을 비교하여
 			// 이 제재안의 의결 종료 기간이 차단 해제 시간보다 뒤라면 차단 기간을 줄입니다.
 			if( $target->isBlocked() && $target->getBlock()->getExpiry() == $this->mExpiry )
 				self::unblock( $target, true, $reason, $user == null ? $this->getBot() : $user );
@@ -424,7 +424,7 @@ class Sanction {
 		return true;
 	}
 
-	// @todo 이미 작성된 주제 요약이 있을 때는 (etsprev_revision을 비웠기 때문에) 제대로 작동하지 않습니다. 
+	// @todo 이미 작성된 주제 요약이 있을 때는 (etsprev_revision을 비웠기 때문에) 제대로 작동하지 않습니다.
 	public function updateTopicSummary() {
 		$db = $this->getDb();
 		$row = $db->selectRow(
@@ -466,7 +466,7 @@ class Sanction {
 		];
 		$context = clone RequestContext::getMain();
 
-		// 
+		//
 		//$loggedUser = $context->getUser();
 		$context->setUser( self::getBot() );
 		$blocksToCommit = $loader->handleSubmit(
@@ -492,7 +492,7 @@ class Sanction {
 		$count = $this->mVoteNumber;
 		$expired = $this->isExpired();
 		$passed = $this->isPassed();
-	
+
 		if ( $count == 0 ) {
 			$statusText = '부결';
 			$reasonText = '참가자가 없음';
@@ -570,7 +570,7 @@ class Sanction {
 	}
 
 	/**
-	 * 제재 기간을 반환합니다. 
+	 * 제재 기간을 반환합니다.
 	 * @param $getAnyway Bool 참이라면 가결/부결에 무관하게 평균 제재 기간만을 반환합니다.
 	 * @return Integer
 	 */
@@ -597,7 +597,7 @@ class Sanction {
 	 	// - 1인 이상, 3인 미만이 의견을 내고 반대가 없는 경우
 		$passed = ( $count >= 3 && $agree >= $count*2/3 )
 			|| ( $count < 3 && $agree == $count );
-		
+
 		if ( $passed )
 			return ceil( $sumPeriod / $count );
 		return 0;
@@ -845,7 +845,7 @@ class Sanction {
 		        	$this->replyTo( $row->rev_id, $content );
 	            } catch ( Flow\Exception\DataModelException $e ) {
 	            	/**
-	            	 * 제안이 없고 리플이 있는 의견을 수정하여 제안을 추가할 경우 그 바로 아래에 리플을 달 수 없기 때문에 오류가 발생합니다. 
+	            	 * 제안이 없고 리플이 있는 의견을 수정하여 제안을 추가할 경우 그 바로 아래에 리플을 달 수 없기 때문에 오류가 발생합니다.
 	            	 * @todo
 	            	 */
 
@@ -867,7 +867,7 @@ class Sanction {
 
 		// 유효표가 하나도 없을 경우 아무것도 하지 않습니다.
 		if ( !count( $votes ) ) return false;
-		
+
 		$dbIsTouched = false;
 		foreach ( $votes as $userId => $vote ) {
 			$previous = $db->selectRow(
@@ -897,7 +897,7 @@ class Sanction {
 					'sanctions_vote',
 					[
 						'stv_period' => $vote['stv_period'],
-						'stv_last_update_timestamp' => $vote['stv_last_update_timestamp'],						
+						'stv_last_update_timestamp' => $vote['stv_last_update_timestamp'],
 					],
 					[
 						'stv_topic' => $uuid->getBinary(),
