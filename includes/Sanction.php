@@ -372,7 +372,7 @@ class Sanction {
 			$this->justTakeMeasure();
 		elseif ( !$passed && $emergency ) {
 			$reason = '[[주제:'.$this->mTopic->getAlphadecimal().'|제재안]] 부결에 따른 임시 조치 해제';
-			$this->removeTemporaryMeasure( $reason );
+			$this->removeTemporaryMeasure( $reason, $this->getBot() );
 		}
 		else if ( $passed && $emergency )
 			$this->replaceTemporaryMeasure();
