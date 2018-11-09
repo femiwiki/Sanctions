@@ -132,14 +132,12 @@ class SanctionsPager extends IndexPager {
             'div',
             array('class' => $class)
         );
-		if( $expired ) {
-			if ( !$handled ) {
-				$out .= Html::rawelement(
-					'div',
-					[ 'class' => 'sanction-expired' ],
-					'처리 대기중'
-				);
-			}
+		if( $expired && !$handled ) {
+			$out .= Html::rawelement(
+				'div',
+				[ 'class' => 'sanction-expired' ],
+				'처리 대기중'
+			);
 			$out .= Html::rawelement(
                 'div',
                 [ 'class' => 'sanction-pass-status' ],
