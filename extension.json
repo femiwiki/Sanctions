@@ -43,7 +43,6 @@
 		"DiffRevisionTools": "SanctionsHooks::onDiffRevisionTools",
 		"HistoryRevisionTools": "SanctionsHooks::onHistoryRevisionTools",
 		"FlowAddModules": "SanctionsHooks::onFlowAddModules"
-			
 	},
 	"SpecialPages": {
 		"Sanctions": "SpacialSanctions"

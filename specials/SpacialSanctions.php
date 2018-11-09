@@ -27,7 +27,7 @@ class SpacialSanctions extends SpecialPage {
 
 		$output->addModuleStyles( 'ext.sanctions' );
 
-		//대상자가 있다면 제목을 변경하고 전체 목록을 보는 링크를 추가합니다.
+		// 대상자가 있다면 제목을 변경하고 전체 목록을 보는 링크를 추가합니다.
 		if ( $this->mTargetName != null ) {
 			$output->setPageTitle( $this->msg( 'sanctions-title-with-target', $this->mTargetName ) );
 			$output->setSubTitle( '< '.Linker::link( $this->getTitle(),'모든 제재안 보기' ) );
@@ -40,7 +40,7 @@ class SpacialSanctions extends SpecialPage {
 		$reason = array();
 		if ( SanctionsUtils::hasVoteRight( $this->getUser(), $reason ) )
 			$output->addHTML( $this->makeForm() );
-		else { 
+		else {
 			if ( $this->getUser()->isAnon () )
 				$output->addWikiText( '다음의 이유로 제재 절차 참여를 위한 조건이 맞지 않습니다. [[페미위키:제재 정책]]을 참고해 주세요.' );
 			else
@@ -140,7 +140,7 @@ class SpacialSanctions extends SpecialPage {
 						$request->getVal( 'targetName' )
 					)
 				) );
-			
+
 			return false;
 		}
 
@@ -174,7 +174,7 @@ class SpacialSanctions extends SpecialPage {
 				$targetName = $request->getVal( 'target' );
 				$forInsultingName = $request->getBool( 'forInsultingName' );
 				$content = $request->getVal( 'content' )? : '내용이 입력되지 않았습니다.';
-		
+
 				if ( !$targetName ) {
 					list( $query['showResult'], $query['errorCode'] ) = [ true, 100 ];
 					// '사용자명이 입력되지 않았습니다.'
@@ -182,7 +182,7 @@ class SpacialSanctions extends SpecialPage {
 				}
 
 				$target = User::newFromName( $targetName );
-				
+
 				if ( $target->getId() === 0 ) {
 					list( $query['showResult'], $query['errorCode'], $query['targetName'] ) = [ true, 101, $targetName ];
 					// '"'.$targetName.'"라는 이름의 사용자가 존재하지 않습니다.'
@@ -197,7 +197,7 @@ class SpacialSanctions extends SpecialPage {
 						break;
 					}
 				}
-				
+
 				$sanction = Sanction::write( $user, $target, $forInsultingName, $content );
 
 				if ( !$sanction ) {
@@ -327,9 +327,9 @@ class SpacialSanctions extends SpecialPage {
 				'target', 10, $this->mTargetName, [ 'class' => 'mw-ui-input-inline' ] ) .
 			' '.
 			Xml::checkLabel(
-				'부적절한 사용자명', 'forInsultingName', 'forInsultingName', $this->mNewRevisionId == null && $this->mTargetName != null, [] )			. 
+				'부적절한 사용자명', 'forInsultingName', 'forInsultingName', $this->mNewRevisionId == null && $this->mTargetName != null, [] ).
 			Xml::textarea( 'content', $content, 40, 7, ['placeholder' => $this->msg( 'sanctions-content-placeholder' )->text()] ).
-			
+
 			Html::submitButton(
 				$this->msg( 'sanctions-submit' )->text(),
 				['id'=>'submit-button'], [ 'mw-ui-progressive' ]
@@ -356,7 +356,7 @@ class SpacialSanctions extends SpecialPage {
 		$oldRevisionId = $this->mOldRevisionId;
 
 		$rt = '';
-		if ( $oldRevisionId != null ) {			
+		if ( $oldRevisionId != null ) {
 			$rt = '* [[특수:차이/'.$oldRevisionId.'/'.$newRevisionId.'|'.$newRevision->getTitle()->getFullText().']]';
 		} else {
 			$rt = '* [[특수:넘겨주기/revision/'.$newRevisionId.'|'.$newRevision->getTitle()->getFullText().']]';
