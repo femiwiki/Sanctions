@@ -11,15 +11,13 @@ class SanctionsPager extends IndexPager {
 	}
 
 	function getIndexField () {
-		if ( $this->getUserHasVoteRight() )
-			return 'not_expired';
-		return 'st_expiry';
+		return 'st_handled';
 	}
 
 	function getExtraSortFields () {
 		if ( $this->getUserHasVoteRight() )
-			return [ 'my_sanction', 'voted_from', 'st_expiry' ];
-		return null;
+			return [ 'not_expired', 'my_sanction', 'voted_from', 'st_expiry' ];
+		return 'st_expiry';
 	}
 
 	function getNavigationBar () {
@@ -42,6 +40,7 @@ class SanctionsPager extends IndexPager {
 				'my_sanction' => 'st_author = ' . $this->getUser()->getId(),
 				'st_expiry',
 				'not_expired' => 'st_expiry > ' . wfTimestamp(TS_MW),
+				'st_handled'
 			]
 		];
 
