@@ -37,8 +37,8 @@ class SanctionsHooks {
 			if ( !$redirect || $redirect == 'no ')
 				$out->redirect( $specialSanctionTitle->getLocalURL( $query ) );
 
-			// CSS를 적용합니다. 주로 입력 폼을 막습니다.
-			$out->addModuleStyles( 'ext.flow-default-board' );
+			// CSS와 JavaScript를 적용합니다.
+			$out->addModules( 'ext.sanctions.flow-board' );
 
 			return true;
 		}
@@ -59,7 +59,10 @@ class SanctionsHooks {
 		$sanction = Sanction::newFromUUID( $uuid );
 		if ( $sanction === false )
 			return true;
-		
+
+		// CSS와 JavaScript를 적용합니다.
+		$out->addModules( 'ext.sanctions.flow-topic' );
+
 		// 만료되지 않은 제재안이라면 새 표가 있는지 체크합니다. 이는 주제 요약을 갱신하기 위함이며 원래는 이 hook 말고 ArticleSaveComplete나 RevisionInsertComplete에서 실행하고 싶었지만 flow 게시글을 작성할 때는 작동하지 않아 불가했습니다.
 		if ( !$sanction->isExpired() ){
 			$sanction->checkNewVotes();

@@ -25,7 +25,8 @@ class SpacialSanctions extends SpecialPage {
 		// Request가 있었다면 처리합니다. (리다이렉트할 경우 true를 반환합니다)
 		if ( $this->HandleRequestsIfExist( $output ) ) return;
 
-		$output->addModuleStyles( 'ext.sanctions' );
+		$output->addModuleStyles( 'ext.sanctions.special.sanctions.styles' );
+		$output->addModuleScripts( 'ext.sanctions.special.sanctions' );
 
 		// 대상자가 있다면 제목을 변경하고 전체 목록을 보는 링크를 추가합니다.
 		if ( $this->mTargetName != null ) {

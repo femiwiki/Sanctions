@@ -24,13 +24,25 @@
 		"SanctionsUtils": "includes/SanctionsUtils.php"
 	},
 	"ResourceModules": {
-		"ext.sanctions": {
-			"position": "top",
-			"styles": "ext.sanctions.css"
+		"ext.sanctions.special.sanctions.styles": {
+			"styles": [
+				"styles/spacial-sanctions.less"
+			]
 		},
-		"ext.flow-default-board": {
-			"position": "top",
-			"styles": "ext.flow-default-board.css"
+		"ext.sanctions.special.sanctions": {
+			"scripts": [
+				"ext.sanctions.specialSanctions.js"
+			]
+		},
+		"ext.sanctions.flow-board": {
+			"styles": [
+				"styles/flow-board.css"
+			]
+		},
+		"ext.sanctions.flow-topic": {
+			"scripts": [
+				"ext.flowTopic.js"
+			]
 		}
 	},
 	"ResourceFileModulePaths": {
