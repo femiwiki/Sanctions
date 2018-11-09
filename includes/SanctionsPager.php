@@ -42,12 +42,13 @@ class SanctionsPager extends IndexPager {
 				'my_sanction' => 'st_author = ' . $this->getUser()->getId(),
 				'st_expiry',
 				'not_expired' => 'st_expiry > ' . wfTimestamp(TS_MW),
-			],
-			'conds' => [ 'st_handled' => 0 ]
+			]
 		];
 
 		if ( $this->targetName )
 			$query['conds'][] = 'st_target = '.User::newFromName( $this->targetName )->getId();
+		else
+			$query['conds']['st_handled'] = 0;
 
 		if ( $this->getUserHasVoteRight() ) {
 			$query['tables']['sub'] = '(' . $subquery . ') AS'; // AS를 따로 쓰지 않으면 정상적으로 작동하지 않습니다.
@@ -78,7 +79,9 @@ class SanctionsPager extends IndexPager {
 		$process = $sanction->isEmergency() ? '긴급' : '일반';
 		$passStatus = $sanction->isPassed() ? '가결' : '부결';
 
-		if ( !$expired ) {
+		$handled = $sanction->isHandled();
+
+		if ( !$expired && !$handled ) {
 			$diff = MWTimestamp::getInstance( $expiry )->diff( MWTimestamp::getInstance() );
 			if( $diff->d )
 				$timeLeftText = $diff->d.'일 '.$diff->h.'시간 남음';
@@ -121,7 +124,8 @@ class SanctionsPager extends IndexPager {
 		$class .=  ( $isMySanction ? ' my-sanction': '' )
 			.( $isForInsultingName ? ' insulting-name' : ' block' )
 			.( $sanction->isEmergency() ? ' emergency' : '' )
-			.( $expired ? ' expired' : '' );
+			.( $expired ? ' expired' : '' )
+			.( $handled ? ' handled' : '' );
 		if ( $this->getUserHasVoteRight() && !$isMySanction )
 			$class .= $isVoted ? ' voted' : ' not-voted';
 
@@ -130,37 +134,42 @@ class SanctionsPager extends IndexPager {
             array('class' => $class)
         );
 		if( $expired ) {
-			$out .= Html::rawelement(
-                'div',
-                [ 'class' => 'sanction-expired' ],
-                '처리 대기중'
-            );
+			if ( !$handled ) {
+				$out .= Html::rawelement(
+					'div',
+					[ 'class' => 'sanction-expired' ],
+					'처리 대기중'
+				);
+			}
 			$out .= Html::rawelement(
                 'div',
                 [ 'class' => 'sanction-pass-status' ],
                 $passStatus
             );
         }
-		if ( $this->getUserHasVoteRight() )
+		if ( $this->getUserHasVoteRight() || $isMySanction )
 			$out .= Html::rawelement(
                 'div',
                 [ 'class' => 'sanction-vote-status' ],
                 $isMySanction ? '내 제재안' : ( $isVoted ? '참여함' : '참여 전' )
             );
-		if( !$expired )
+		if ( !$expired && !$handled )
 			$out .= Html::rawelement(
                 'div',
                 [ 'class' => 'sanction-timeLeft' ],
                 $timeLeftText
             );
-		if( $expired && $this->getUserHasVoteRight() )
+		if ( $expired && $this->getUserHasVoteRight() && !$handled )
 			$out .= $this->executeButton( $sanction->getId() );
-		$out .= Html::rawelement(
-            'div',
-            ['class' => 'sanction-process'],
-            $process
-        );
-		if( !$expired && $this->getUser()->isAllowed( 'block' ) )
+		if ( !$handled )
+		{
+			$out .= Html::rawelement(
+				'div',
+				['class' => 'sanction-process'],
+				$process
+			);
+		}
+		if ( !$expired && !$handled && $this->getUser()->isAllowed( 'block' ) )
 			$out .= $this->processToggleButton( $sanction->getId() );
 
 		$out .= Html::rawelement(
