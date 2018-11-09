@@ -76,7 +76,7 @@ class SanctionsPager extends IndexPager {
 		$expired = $sanction->isExpired();
 
 		$process = $sanction->isEmergency() ? '긴급' : '일반';
-		$passed = $sanction->isPassed() ? '가결' : '부결';
+		$passStatus = $sanction->isPassed() ? '가결' : '부결';
 
 		if ( !$expired ) {
 			$diff = MWTimestamp::getInstance( $expiry )->diff( MWTimestamp::getInstance() );
@@ -138,7 +138,7 @@ class SanctionsPager extends IndexPager {
 			$out .= Html::rawelement(
                 'div',
                 [ 'class' => 'sanction-pass-status' ],
-                $passed
+                $passStatus
             );
         }
 		if ( $this->getUserHasVoteRight() )
