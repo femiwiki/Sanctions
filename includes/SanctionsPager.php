@@ -1,6 +1,5 @@
 <?php
 
-use Flow\Model\UUID;
 
 class SanctionsPager extends IndexPager {
 	protected $UserHasVoteRight = null;
@@ -10,44 +9,46 @@ class SanctionsPager extends IndexPager {
 		$this->targetName = $targetName;
 	}
 
-	function getIndexField () {
+	function getIndexField() {
 		return 'st_handled';
 	}
 
-	function getExtraSortFields () {
-		if ( $this->getUserHasVoteRight() )
+	function getExtraSortFields() {
+		if ( $this->getUserHasVoteRight() ) {
 			return [ 'not_expired', 'my_sanction', 'voted_from', 'st_expiry' ];
+		}
 		return 'st_expiry';
 	}
 
-	function getNavigationBar () {
+	function getNavigationBar() {
 		return '';
 	}
 
-	function getQueryInfo () {
+	function getQueryInfo() {
 		Sanction::checkAllSanctionNewVotes();
 		$subquery = $this->mDb->selectSQLText(
-				 		'sanctions_vote',
-				 		[ 'stv_id', 'stv_topic' ],
-				 		[ 'stv_user' => $this->getUser()->getId() ]
-				 );
+			'sanctions_vote',
+			[ 'stv_id', 'stv_topic' ],
+			[ 'stv_user' => $this->getUser()->getId() ]
+		);
 		$query = [
-			'tables' => [
-				 'sanctions'
-			 ],
-			'fields' => [
-				'st_id',
-				'my_sanction' => 'st_author = ' . $this->getUser()->getId(),
-				'st_expiry',
-				'not_expired' => 'st_expiry > ' . wfTimestamp(TS_MW),
-				'st_handled'
-			]
+		'tables' => [
+		'sanctions'
+		],
+		'fields' => [
+		'st_id',
+		'my_sanction' => 'st_author = ' . $this->getUser()->getId(),
+		'st_expiry',
+		'not_expired' => 'st_expiry > ' . wfTimestamp( TS_MW ),
+		'st_handled'
+		]
 		];
 
-		if ( $this->targetName )
-			$query['conds'][] = 'st_target = '.User::newFromName( $this->targetName )->getId();
-		else
+		if ( $this->targetName ) {
+			$query['conds'][] = 'st_target = ' . User::newFromName( $this->targetName )->getId();
+		} else {
 			$query['conds']['st_handled'] = 0;
+		}
 
 		if ( $this->getUserHasVoteRight() ) {
 			$query['tables']['sub'] = '(' . $subquery . ') AS'; // AS를 따로 쓰지 않으면 정상적으로 작동하지 않습니다.
@@ -55,19 +56,20 @@ class SanctionsPager extends IndexPager {
 			$query['join_conds'] = [ 'sub' => [ 'LEFT JOIN', 'st_topic = sub.stv_topic' ] ];
 		} else {
 			// 제재 절차 참가 권한이 없을 때는 만료된 제재안은 보지 않습니다.
-			$query['conds'][] = 'st_expiry > '.wfTimestamp(TS_MW);
+			$query['conds'][] = 'st_expiry > ' . wfTimestamp( TS_MW );
 		}
 
 		return $query;
 	}
 
 	function formatRow( $row ) {
-		 //foreach($row as $key => $value) echo $key.'-'.$value.'<br/>';
-		 //echo '<div style="clear:both;">------------------------------------------------</div>';
+		//foreach($row as $key => $value) echo $key.'-'.$value.'<br/>';
+		//echo '<div style="clear:both;">------------------------------------------------</div>';
 		$sanction = Sanction::newFromId( $row->st_id );
 
-		if ( $this->getUserHasVoteRight() )
+		if ( $this->getUserHasVoteRight() ) {
 			$isVoted = $row->voted_from != null;
+		}
 
 		$author = $sanction->getAuthor();
 		$isMySanction = $author->equals( $this->getUser() );
@@ -82,14 +84,15 @@ class SanctionsPager extends IndexPager {
 
 		if ( !$expired && !$handled ) {
 			$diff = MWTimestamp::getInstance( $expiry )->diff( MWTimestamp::getInstance() );
-			if( $diff->d )
-				$timeLeftText = $diff->d.'일 '.$diff->h.'시간 남음';
-			elseif ( $diff->h )
-				$timeLeftText = $diff->h.'시간 남음';
-			elseif ( $diff->i )
-				$timeLeftText = $diff->i.'분 남음';
-			else
-				$timeLeftText = $diff->s.'초 남음';
+			if ( $diff->d ) {
+				$timeLeftText = $diff->d . '일 ' . $diff->h . '시간 남음';
+			} elseif ( $diff->h ) {
+				$timeLeftText = $diff->h . '시간 남음';
+			} elseif ( $diff->i ) {
+				$timeLeftText = $diff->i . '분 남음';
+			} else {
+				$timeLeftText = $diff->s . '초 남음';
+			}
 		}
 
 		$target = $sanction->getTarget();
@@ -99,97 +102,104 @@ class SanctionsPager extends IndexPager {
 
 		if ( $isForInsultingName ) {
 			$originalName = $sanction->getTargetOriginalName();
-			$length = mb_strlen($originalName, 'utf-8');
+			$length = mb_strlen( $originalName, 'utf-8' );
 			$targetNameForDiplay =
-				mb_substr($originalName, 0, 1, 'utf-8')
-				.str_pad('', $length-2, '*');
+			mb_substr( $originalName, 0, 1, 'utf-8' )
+			. str_pad( '', $length - 2, '*' );
 
-			if ( $length > 1 )
-				$targetNameForDiplay .= iconv_substr($originalName, $length-1, $length, 'utf-8');
-		} else
+			if ( $length > 1 ) {
+				$targetNameForDiplay .= iconv_substr( $originalName, $length - 1, $length, 'utf-8' );
+			}
+		} else {
 			$targetNameForDiplay = $targetName;
+		}
 
 		$topicTitle = $sanction->getTopic();
 
 		$userLinkTitle = Title::newFromText(
-			 strtok( $this->getTitle(), '/' )
-			.'/'.$target->getName()
+			strtok( $this->getTitle(), '/' )
+			. '/' . $target->getName()
 		); // @todo 다른 방법 찾기
 
-		$rowTitle = linker::link( $userLinkTitle, $targetNameForDiplay, ['class'=>'sanction-target']).' 님에 대한 ';
-		$rowTitle .= linker::link( $topicTitle, $isForInsultingName ? '부적절한 사용자명 변경 건의' : '편집 차단 건의', [ 'class'=>'sanction-type' ] );
+		$rowTitle = linker::link( $userLinkTitle, $targetNameForDiplay, [ 'class' => 'sanction-target' ] ) . ' 님에 대한 ';
+		$rowTitle .= linker::link( $topicTitle, $isForInsultingName ? '부적절한 사용자명 변경 건의' : '편집 차단 건의', [ 'class' => 'sanction-type' ] );
 
 		$class = 'sanction';
-		$class .=  ( $isMySanction ? ' my-sanction': '' )
-			.( $isForInsultingName ? ' insulting-name' : ' block' )
-			.( $sanction->isEmergency() ? ' emergency' : '' )
-			.( $expired ? ' expired' : '' )
-			.( $handled ? ' handled' : '' );
-		if ( $this->getUserHasVoteRight() && !$isMySanction )
+		$class .= ( $isMySanction ? ' my-sanction' : '' )
+		. ( $isForInsultingName ? ' insulting-name' : ' block' )
+		. ( $sanction->isEmergency() ? ' emergency' : '' )
+		. ( $expired ? ' expired' : '' )
+		. ( $handled ? ' handled' : '' );
+		if ( $this->getUserHasVoteRight() && !$isMySanction ) {
 			$class .= $isVoted ? ' voted' : ' not-voted';
+		}
 
 		$out = Html::openElement(
-            'div',
-            array('class' => $class)
-        );
-		if( $expired && !$handled ) {
+			'div',
+			[ 'class' => $class ]
+		);
+		if ( $expired && !$handled ) {
 			$out .= Html::rawelement(
 				'div',
 				[ 'class' => 'sanction-expired' ],
 				'처리 대기중'
 			);
 			$out .= Html::rawelement(
-                'div',
-                [ 'class' => 'sanction-pass-status' ],
-                $passStatus
-            );
-        }
-		if ( $this->getUserHasVoteRight() || $isMySanction )
-			$out .= Html::rawelement(
-                'div',
-                [ 'class' => 'sanction-vote-status' ],
-                $isMySanction ? '내 제재안' : ( $isVoted ? '참여함' : '참여 전' )
-            );
-		if ( !$expired && !$handled )
-			$out .= Html::rawelement(
-                'div',
-                [ 'class' => 'sanction-timeLeft' ],
-                $timeLeftText
-            );
-		if ( $expired && $this->getUserHasVoteRight() && !$handled )
-			$out .= $this->executeButton( $sanction->getId() );
-		if ( !$handled )
-		{
+				'div',
+				[ 'class' => 'sanction-pass-status' ],
+				$passStatus
+			);
+		}
+		if ( $this->getUserHasVoteRight() || $isMySanction ) {
 			$out .= Html::rawelement(
 				'div',
-				['class' => 'sanction-process'],
+				[ 'class' => 'sanction-vote-status' ],
+				$isMySanction ? '내 제재안' : ( $isVoted ? '참여함' : '참여 전' )
+			);
+		}
+		if ( !$expired && !$handled ) {
+			$out .= Html::rawelement(
+				'div',
+				[ 'class' => 'sanction-timeLeft' ],
+				$timeLeftText
+			);
+		}
+		if ( $expired && $this->getUserHasVoteRight() && !$handled ) {
+			$out .= $this->executeButton( $sanction->getId() );
+		}
+		if ( !$handled ) {
+			$out .= Html::rawelement(
+				'div',
+				[ 'class' => 'sanction-process' ],
 				$process
 			);
 		}
-		if ( !$expired && !$handled && $this->getUser()->isAllowed( 'block' ) )
+		if ( !$expired && !$handled && $this->getUser()->isAllowed( 'block' ) ) {
 			$out .= $this->processToggleButton( $sanction->getId() );
+		}
 
 		$out .= Html::rawelement(
-                        'div',
-                        ['class' => 'sanction-title'],
-                        $rowTitle
-                    );
+			'div',
+			[ 'class' => 'sanction-title' ],
+			$rowTitle
+		);
 
-		return $out.Html::closeElement('div');
+		return $out . Html::closeElement( 'div' );
 	}
 
-	function getEmptyBody () {
+	function getEmptyBody() {
 		$text = '제재안이 없습니다.';
 
-		if ( $this->targetName == null )
+		if ( $this->targetName == null ) {
 			$text = '현재 의결 중인 제재안이 없습니다.';
-		else
-			$text = '현재 의결 중인 '.$this->targetName.'님에 대한 제재안이 없습니다.';
+		} else {
+			$text = '현재 의결 중인 ' . $this->targetName . '님에 대한 제재안이 없습니다.';
+		}
 		return Html::rawelement(
-            'div',
-            ['class' => 'sanction-empty'],
-            $text
-        );
+			'div',
+			[ 'class' => 'sanction-empty' ],
+			$text
+		);
 	}
 
 	protected function processToggleButton( $sanctionId ) {
@@ -198,13 +208,13 @@ class SanctionsPager extends IndexPager {
 		$out .= Xml::tags(
 			'form',
 			[
-				'method' => 'post',
-				'action' => $this->getContext()->getTitle()->getFullURL(),
-				'class'=>'sanction-process-toggle'
+			'method' => 'post',
+			'action' => $this->getContext()->getTitle()->getFullURL(),
+			'class' => 'sanction-process-toggle'
 			],
 			Html::submitButton(
 				'전환',
-				[ 'class'=>'sanction-process-toggle-button'],
+				[ 'class' => 'sanction-process-toggle-button' ],
 				[ 'mw-ui-progressive' ]
 			) .
 			Html::hidden(
@@ -214,7 +224,7 @@ class SanctionsPager extends IndexPager {
 			Html::hidden(
 				'sanctionId',
 				$sanctionId
-			).
+			) .
 			Html::hidden(
 				'sanction-action',
 				'toggle-emergency'
@@ -224,19 +234,19 @@ class SanctionsPager extends IndexPager {
 		return $out;
 	}
 
-	protected function executeButton($sanctionId) {
+	protected function executeButton( $sanctionId ) {
 		$out = '';
 
 		$out .= Xml::tags(
 			'form',
 			[
-				'method' => 'post',
-				'action' => $this->getContext()->getTitle()->getFullURL(),
-				'class'=>'sanction-exectute-form'
+			'method' => 'post',
+			'action' => $this->getContext()->getTitle()->getFullURL(),
+			'class' => 'sanction-exectute-form'
 			],
 			Html::submitButton(
 				'처리',
-				[ 'class'=>'sanction-exectute-button' ],
+				[ 'class' => 'sanction-exectute-button' ],
 				[ 'mw-ui-progressive' ]
 			) .
 			Html::hidden(
@@ -246,7 +256,7 @@ class SanctionsPager extends IndexPager {
 			Html::hidden(
 				'sanctionId',
 				$sanctionId
-			).
+			) .
 			Html::hidden(
 				'sanction-action',
 				'execute'
@@ -257,8 +267,9 @@ class SanctionsPager extends IndexPager {
 	}
 
 	protected function getUserHasVoteRight() {
-		if ( $this->UserHasVoteRight === null )
+		if ( $this->UserHasVoteRight === null ) {
 			$this->UserHasVoteRight = SanctionsUtils::hasVoteRight( $this->getUser() );
+		}
 		return $this->UserHasVoteRight;
 	}
 }

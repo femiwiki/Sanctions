@@ -66,10 +66,11 @@ class Sanction {
 
 	/**
 	 * 제재안을 새로 만들어 저장합니다.
-	 * @param $user User 제재안을 쓸 사람
-	 * @param $target User 제재안에 쓰인 제재가 필요한 사람
-	 * @param $forInsultingName Bool 제재안이 부적절한 사용자명에 의한 것인지의 여부
-	 * @param $content String 제재안의 내용(wikitext 스타일)
+	 *
+	 * @param  $user User 제재안을 쓸 사람
+	 * @param  $target User 제재안에 쓰인 제재가 필요한 사람
+	 * @param  $forInsultingName Bool 제재안이 부적절한 사용자명에 의한 것인지의 여부
+	 * @param  $content String 제재안의 내용(wikitext 스타일)
 	 * @return Sanction 작성된 제재안.
 	 */
 	public static function write( $user, $target, $forInsultingName, $content ) {
@@ -79,12 +80,13 @@ class Sanction {
 		$targetName = $target->getName();
 
 		// 대상자의 아이디가 없다면(가입자가 아니라면) 실패합니다.
-		if ( $targetId === 0 )
+		if ( $targetId === 0 ) {
 			return false;
+		}
 
 		// 제재안 주제를 만듭니다.
 		$discussionPageName = wfMessage( 'sanctions-discussion-page-name' )->text(); //페미위키토론:제재안에 대한 의결
-		$topicTitle = '[[사용자:'.$targetName.']] 님에 대한 ';
+		$topicTitle = '[[사용자:' . $targetName . ']] 님에 대한 ';
 		$topicTitle .= $forInsultingName ? '부적절한 사용자명 변경 건의' : '편집 차단 건의';
 		$factory = Container::get( 'factory.loader.workflow' );
 		$page = Title::newFromText( $discussionPageName );
@@ -92,14 +94,14 @@ class Sanction {
 		$blocks = $loader->getBlocks();
 		$action = 'new-topic';
 		$params = [
-			'topiclist' => [
-				'page' => $discussionPageName,
-				'token' => $user->getEditToken(),
-				'action' => 'flow',
-				'submodule' => 'new-topic',
-				'topic' => $topicTitle,
-				'content' => $content
-			]
+		'topiclist' => [
+		'page' => $discussionPageName,
+		'token' => $user->getEditToken(),
+		'action' => 'flow',
+		'submodule' => 'new-topic',
+		'topic' => $topicTitle,
+		'content' => $content
+		]
 		];
 		$context = RequestContext::getMain();
 		$blocksToCommit = $loader->handleSubmit(
@@ -107,8 +109,9 @@ class Sanction {
 			$action,
 			$params
 		);
-		if ( !count( $blocksToCommit ) )
+		if ( !count( $blocksToCommit ) ) {
 			return false;
+		}
 
 		$commitMetadata = $loader->commit( $blocksToCommit );
 
@@ -122,17 +125,17 @@ class Sanction {
 		// DB를 씁니다.
 		$votingPeriod = (float)wfMessage( 'sanctions-voting-period' )->text();
 		$now = wfTimestamp( TS_MW );
-		$expiry = wfTimestamp( TS_MW, time() + ( 60*60*24 * $votingPeriod ) );
+		$expiry = wfTimestamp( TS_MW, time() + ( 60 * 60 * 24 * $votingPeriod ) );
 
 		$uuid = UUID::create( $topicId )->getBinary();
-		$data = array(
-			'st_author'=> $authorId,
-			'st_target'=> $targetId,
-			'st_topic'=> $uuid,
-			'st_expiry'=> $expiry,
-			'st_original_name'=> $forInsultingName ? $targetName : '',
-			'st_last_update_timestamp' => $now
-		);
+		$data = [
+		'st_author' => $authorId,
+		'st_target' => $targetId,
+		'st_topic' => $uuid,
+		'st_expiry' => $expiry,
+		'st_original_name' => $forInsultingName ? $targetName : '',
+		'st_last_update_timestamp' => $now
+		];
 
 		$db = wfGetDB( DB_MASTER );
 		$db->insert( 'sanctions', $data, __METHOD__ );
@@ -140,28 +143,31 @@ class Sanction {
 		$sanction = new self();
 		$sanction->loadFrom( 'st_topic', $uuid );
 
-		if ( !$sanction )
+		if ( !$sanction ) {
 			return false;
+		}
 
-		if ( !$sanction->updateTopicSummary() )
-			; // @todo 뭐해야하지
+		if ( !$sanction->updateTopicSummary() ) {
 
+			// @todo 뭐해야하지
+		}
 		return $sanction;
 	}
 
 	public function toggleEmergency( $user = null ) {
 		//이미 만료된 제재안은 절차를 변경할 수 없습니다.
-		if ( $this->isExpired() ) return false;
+		if ( $this->isExpired() ) { return false;
+		}
 
 		$this->checkNewVotes();
 
 		$emergency = $this->mIsEmergency;
 		$toEmergency = !$emergency;
 
-		if( $toEmergency )
+		if ( $toEmergency ) {
 			$this->takeTemporaryMeasure( $user );
-		else {
-			$reason = '[[주제:'.$this->mTopic->getAlphadecimal().'|제재안]] 일반 절차 전환에 따른 임시 조치 해제';
+		} else {
+			$reason = '[[주제:' . $this->mTopic->getAlphadecimal() . '|제재안]] 일반 절차 전환에 따른 임시 조치 해제';
 			$this->removeTemporaryMeasure( $reason, $user );
 		}
 
@@ -175,8 +181,8 @@ class Sanction {
 		$db->update(
 			'sanctions',
 			[
-				'st_emergency' => $emergency ? 1 : 0,
-				'st_last_update_timestamp' => $now
+			'st_emergency' => $emergency ? 1 : 0,
+			'st_last_update_timestamp' => $now
 			],
 			[ 'st_id' => $id ]
 		);
@@ -186,58 +192,64 @@ class Sanction {
 
 	/**
 	 * 제재안의 의결에 따라 차단이나 사용자명 변경을 합니다.
+	 *
 	 * @return Bool 성공
 	 */
 	public function justTakeMeasure() {
 		$target = $this->mTarget;
 		$isForInsultingName = $this->isForInsultingName();
-		$reason = '[[주제:'.$this->mTopic->getAlphadecimal().'|제재안]]의 가결';
+		$reason = '[[주제:' . $this->mTopic->getAlphadecimal() . '|제재안]]의 가결';
 
 		if ( $isForInsultingName ) {
 			$targetName = $target->getName();
 			$originalName = $this->mTargetOriginalName;
 
-			if ( $targetName != $originalName )
+			if ( $targetName != $originalName ) {
 				return true;
+			}
 
-			if ( !self::doRename( $targetName, '임시사용자명'.wfTimestamp(TS_MW), $target, $this->getBot(), $reason ) )
+			if ( !self::doRename( $targetName, '임시사용자명' . wfTimestamp( TS_MW ), $target, $this->getBot(), $reason ) ) {
 				return false;
+			}
 			return true;
 		} else {
 			$period = $this->getPeriod();
-			$blockExpiry = wfTimestamp( TS_MW, time() + ( 60*60*24 * $period ) );
+			$blockExpiry = wfTimestamp( TS_MW, time() + ( 60 * 60 * 24 * $period ) );
 			if ( $target->isBlocked() ) {
 				// 이 제재안에 따라 결정된 차단 종료 시간이 기존 차단 해제 시간보다 뒤라면 제거합니다.
-				if ( $target->getBlock()->getExpiry() < $blockExpiry )
+				if ( $target->getBlock()->getExpiry() < $blockExpiry ) {
 					self::unblock( $target, false );
-				else
+				} else {
 					return true;
+				}
 			}
 
 			self::doBlock( $target, $blockExpiry, $reason, true );
 			return true;
-  		}
-  	}
+		}
+	}
 
 	/**
 	 * (긴급 절차의)임시 조치를 정식 제재로 교체합니다.
+	 *
 	 * @return Bool 성공
 	 */
 	public function replaceTemporaryMeasure() {
 		$target = $this->mTarget;
 		$isForInsultingName = $this->isForInsultingName();
-		$reason = '[[주제:'.$this->mTopic->getAlphadecimal().'|제재안]]의 가결';
+		$reason = '[[주제:' . $this->mTopic->getAlphadecimal() . '|제재안]]의 가결';
 
 		if ( $isForInsultingName ) {
 			return true;
 		} else {
-			$blockExpiry = wfTimestamp( TS_MW, time() + ( 60*60*24 * $this->getPeriod() ) );
+			$blockExpiry = wfTimestamp( TS_MW, time() + ( 60 * 60 * 24 * $this->getPeriod() ) );
 			if ( $target->isBlocked() ) {
 				// 이 제재안에 따라 결정된 차단 종료 시간이 기존 차단 해제 시간보다 뒤라면 제거합니다.
-				if ( $target->getBlock()->getExpiry() < $blockExpiry )
+				if ( $target->getBlock()->getExpiry() < $blockExpiry ) {
 					self::unblock( $target, false );
-				else
+				} else {
 					return true;
+				}
 			}
 
 			self::doBlock( $target, $blockExpiry, $reason, true );
@@ -247,26 +259,28 @@ class Sanction {
 
 	/**
 	 * 임시 조치를 취합니다
+	 *
 	 * @return Bool 성공
 	 */
 	public function takeTemporaryMeasure( $user = null ) {
 		$target = $this->mTarget;
 		$insultingName = $this->isForInsultingName();
-		$reason = '[[주제:'.$this->mTopic->getAlphadecimal().'|제재안]]의 긴급 절차 전환';
+		$reason = '[[주제:' . $this->mTopic->getAlphadecimal() . '|제재안]]의 긴급 절차 전환';
 
-		if( $insultingName ) {
+		if ( $insultingName ) {
 			$originalName = $this->mTargetOriginalName;
 
-			if ( $target->getName() == $originalName )
-				self::doRename( $target->getName(), '임시사용자명'.wfTimestamp(TS_MW), $target, $user, $reason );
-		}
-		else {
+			if ( $target->getName() == $originalName ) {
+				self::doRename( $target->getName(), '임시사용자명' . wfTimestamp( TS_MW ), $target, $user, $reason );
+			}
+		} else {
 			$expiry = $this->mExpiry;
 			//의결 만료 기간까지 차단하기
 			//이미 차단되어 있다면 기간을 비교하여
 			//이 제재안의 의결 종료 시간이 차단 해제 시간보다 뒤라면 늘려 차단합니다.
-			if( $target->isBlocked() && $target->getBlock()->getExpiry() < $expiry )
+			if ( $target->isBlocked() && $target->getBlock()->getExpiry() < $expiry ) {
 				self::unblock( $target, false );
+			}
 
 			$blockExpiry = $expiry;
 			self::doBlock( $target, $blockExpiry, $reason, false, $user );
@@ -275,31 +289,33 @@ class Sanction {
 
 	/**
 	 * 임시 조치를 해제합니다.
+	 *
 	 * @param $reason String 해제 이유입니다.
 	 */
 	public function removeTemporaryMeasure( $reason, $user = null ) {
 		$target = $this->mTarget;
 		$isForInsultingName = $this->isForInsultingName();
 
-		if( $isForInsultingName ){
+		if ( $isForInsultingName ) {
 			$targetName = $target->getName();
 			$originalName = $this->mTargetOriginalName;
 
-			if( $targetName == $originalName ) {
+			if ( $targetName == $originalName ) {
 				return true;
 			} else {
-				if ( !self::doRename( $targetName, $originalName, $target, $user, $reason ) )
+				if ( !self::doRename( $targetName, $originalName, $target, $user, $reason ) ) {
 					return false;
+				}
 				return true;
 			}
-		}
-		else {
+		} else {
 			// 현재 차단이 이 제재안에 의한 것일 때에는 차단을 해제합니다.
 			// @todo 긴급 절차로 인해 다른 짧은 차단이 덮어 씌였다면 짧은 차단을 복구합니다.
 			// 즉 차단 기록을 살펴 이 제재안과 무관한 차단 기록이 있다면 기간을 비교하여
 			// 이 제재안의 의결 종료 기간이 차단 해제 시간보다 뒤라면 차단 기간을 줄입니다.
-			if( $target->isBlocked() && $target->getBlock()->getExpiry() == $this->mExpiry )
+			if ( $target->isBlocked() && $target->getBlock()->getExpiry() == $this->mExpiry ) {
 				self::unblock( $target, true, $reason, $user == null ? $this->getBot() : $user );
+			}
 			return true;
 		}
 	}
@@ -317,7 +333,7 @@ class Sanction {
 	 * 즉시 부결 조건을 만족하는지 확인하고 실행합니다.
 	 */
 	public function immediateRejectionIfNeeded() {
-		if( $this->NeedToImmediateRejection() ) {
+		if ( $this->NeedToImmediateRejection() ) {
 			return $this->immediateRejection();
 		}
 	}
@@ -327,8 +343,9 @@ class Sanction {
 		$agree = $this->mAgreeVote;
 		$count = $this->mVoteNumber;
 
-		if ( $count - $agree >= 3 )
+		if ( $count - $agree >= 3 ) {
 			return true;
+		}
 	}
 
 	public function immediateRejection() {
@@ -340,7 +357,7 @@ class Sanction {
 
 		// 긴급 절차였다면 임시 조치를 해제합니다.
 		if ( $this->mIsEmergency ) {
-			$reason = '[[주제:'.$this->mTopic->getAlphadecimal().'|제재안]] 부결에 따른 임시 조치 해제';
+			$reason = '[[주제:' . $this->mTopic->getAlphadecimal() . '|제재안]] 부결에 따른 임시 조치 해제';
 			$this->removeTemporaryMeasure( $reason );
 		}
 
@@ -350,8 +367,8 @@ class Sanction {
 		$res = $db->update(
 			'sanctions',
 			[
-				'st_expiry' => wfTimestamp( TS_MW ),
-				'st_last_update_timestamp' => $now
+			'st_expiry' => wfTimestamp( TS_MW ),
+			'st_last_update_timestamp' => $now
 			],
 			[ 'st_id' => $this->mId ]
 		);
@@ -359,8 +376,9 @@ class Sanction {
 
 	// @todo 실패할 경우 false를 반환하기
 	public function execute() {
-		if ( !$this->isExpired() || $this->mIsHandled )
+		if ( !$this->isExpired() || $this->mIsHandled ) {
 			return false;
+		}
 		$this->mIsHandled = true;
 
 		$id = $this->mId;
@@ -368,14 +386,14 @@ class Sanction {
 		$passed = $this->isPassed();
 		$topic = $this->mTopic;
 
-		if ( $passed && !$emergency )
+		if ( $passed && !$emergency ) {
 			$this->justTakeMeasure();
-		elseif ( !$passed && $emergency ) {
-			$reason = '[[주제:'.$this->mTopic->getAlphadecimal().'|제재안]] 부결에 따른 임시 조치 해제';
+		} elseif ( !$passed && $emergency ) {
+			$reason = '[[주제:' . $this->mTopic->getAlphadecimal() . '|제재안]] 부결에 따른 임시 조치 해제';
 			$this->removeTemporaryMeasure( $reason, $this->getBot() );
-		}
-		else if ( $passed && $emergency )
+		} elseif ( $passed && $emergency ) {
 			$this->replaceTemporaryMeasure();
+		}
 
 		// 주제 요약을 갱신합니다.
 		$this->updateTopicSummary();
@@ -386,8 +404,8 @@ class Sanction {
 		$res = $db->update(
 			'sanctions',
 			[
-				'st_handled' => 1,
-				'st_last_update_timestamp' => $now
+			'st_handled' => 1,
+			'st_last_update_timestamp' => $now
 			],
 			[ 'st_id' => $id ]
 		);
@@ -405,20 +423,21 @@ class Sanction {
 		$row = $db->selectRow(
 			'flow_revision',
 			[
-				'*'
+			'*'
 			],
 			[
-				'rev_type_id' => $this->mTopic->getBinary(),
-				'rev_type' => 'post-summary'
+			'rev_type_id' => $this->mTopic->getBinary(),
+			'rev_type' => 'post-summary'
 			],
 			__METHOD__,
 			[
-				'LIMIT' => 1,
-				'ORDER BY' => 'rev_id DESC'
+			'LIMIT' => 1,
+			'ORDER BY' => 'rev_id DESC'
 			]
 		);
-		if ( $row != null )
-			$previousIdText = UUID::create($row->rev_id)->getAlphadecimal();
+		if ( $row != null ) {
+			$previousIdText = UUID::create( $row->rev_id )->getAlphadecimal();
+		}
 
 		$factory = Container::get( 'factory.loader.workflow' );
 
@@ -429,15 +448,15 @@ class Sanction {
 		$blocks = $loader->getBlocks();
 		$action = 'edit-topic-summary';
 		$params = [
-			'topicsummary' => [
-				'page' => $topicTitleText,
-				'token' => self::getBot()->getEditToken(),
-				'action' => 'flow',
-				'submodule' => 'edit-topic-summary',
-				'prev_revision' => isset($previousIdText) ? $previousIdText : null,
-				'summary' => $this->getSanctionSummary(),
-				'format' => 'wikitext'
-			]
+		'topicsummary' => [
+		'page' => $topicTitleText,
+		'token' => self::getBot()->getEditToken(),
+		'action' => 'flow',
+		'submodule' => 'edit-topic-summary',
+		'prev_revision' => isset( $previousIdText ) ? $previousIdText : null,
+		'summary' => $this->getSanctionSummary(),
+		'format' => 'wikitext'
+		]
 		];
 		$context = clone RequestContext::getMain();
 
@@ -475,8 +494,7 @@ class Sanction {
 			if ( $agree == $count ) {
 				$statusText = '가결';
 				$reasonText = '참가자가 3명 미만이고 반대가 없음';
-			}
-			else {
+			} else {
 				$statusText = '부결';
 				$reasonText = '참가자가 3명 미만이고 반대가 있음';
 			}
@@ -484,34 +502,34 @@ class Sanction {
 			if ( $count == 3 && $agree == 0 ) {
 				$statusText = '즉시 부결';
 				$reasonText = '참가자 3명이 전부 반대함';
-			} else if ( $agree >= $count*2/3 ) {
+			} elseif ( $agree >= $count * 2 / 3 ) {
 				$statusText = '가결';
-				$reasonText = '참가자가 3명 이상이고 ⅔ 이상인 '.$agree.'명이 찬성';
-			}
-			else {
+				$reasonText = '참가자가 3명 이상이고 ⅔ 이상인 ' . $agree . '명이 찬성';
+			} else {
 				$statusText = '부결';
-				$reasonText = '참가자가 3명 이상이고 ⅔ 미만인 '.$agree.'명이 찬성';
+				$reasonText = '참가자가 3명 이상이고 ⅔ 미만인 ' . $agree . '명이 찬성';
 			}
 		}
 
 		if ( !$this->isForInsultingName() ) {
 			$period = $this->getPeriod();
-			if ( $period > 0 )
-				$statusText = $period.'일 차단으로 '.$statusText;
+			if ( $period > 0 ) {
+				$statusText = $period . '일 차단으로 ' . $statusText;
+			}
 		}
 
-		$summary = array();
-		$summary[] = '상태: '.$statusText.
-			( $expired?'':' 가능' ).
-			( $reasonText?' ('.$reasonText.')':'' );
+		$summary = [];
+		$summary[] = '상태: ' . $statusText .
+		( $expired ? '' : ' 가능' ) .
+		( $reasonText ? ' (' . $reasonText . ')' : '' );
 		if ( !$expired && !( $count == 3 && $agree == 0 ) ) {
-			$summary[] = '의결 종료 예정 시각: '.MWTimestamp::getLocalInstance( $this->mExpiry )->getTimestamp( TS_ISO_8601 );
+			$summary[] = '의결 종료 예정 시각: ' . MWTimestamp::getLocalInstance( $this->mExpiry )->getTimestamp( TS_ISO_8601 );
 		}
 
 		$prefix = '* ';
 		$suffix = PHP_EOL;
 
-		return $this->getSanctionSummaryHeader().$prefix.implode( $suffix.$prefix, $summary ).$suffix;
+		return $this->getSanctionSummaryHeader() . $prefix . implode( $suffix . $prefix, $summary ) . $suffix;
 	}
 
 	// @todo $value는 $row의 값으로 갱신하지 않기
@@ -524,8 +542,9 @@ class Sanction {
 			[ $name => $value ]
 		);
 
-		if ( $row === false )
+		if ( $row === false ) {
 			return false;
+		}
 
 		try {
 			$this->mId = $row->st_id;
@@ -546,7 +565,8 @@ class Sanction {
 
 	/**
 	 * 제재 기간을 반환합니다.
-	 * @param $getAnyway Bool 참이라면 가결/부결에 무관하게 평균 제재 기간만을 반환합니다.
+	 *
+	 * @param  $getAnyway Bool 참이라면 가결/부결에 무관하게 평균 제재 기간만을 반환합니다.
 	 * @return Integer
 	 */
 	public function getPeriod( $getAnyway = false ) {
@@ -554,33 +574,38 @@ class Sanction {
 		$count = count( $votes );
 
 		// 표가 하나도 없다면 0일입니다.
-		if ( $count === 0 ) return 0;
+		if ( $count === 0 ) { return 0;
+		}
 
 		$sumPeriod = 0;
 		$agree = 0;
 		$maxBlockPeriod = (float)wfMessage( 'sanctions-max-block-period' )->text();
 		foreach ( $votes as $userId => $period ) {
-			$sumPeriod += $period>$maxBlockPeriod?$maxBlockPeriod:$period;
-			if ( $period > 0 ) $agree++;
+			$sumPeriod += $period > $maxBlockPeriod ? $maxBlockPeriod : $period;
+			if ( $period > 0 ) { $agree++;
+			}
 		}
 
-		if ( $getAnyway )
-			return ceil( $sumPeriod/$count );
+		if ( $getAnyway ) {
+			return ceil( $sumPeriod / $count );
+		}
 
 		// 가결 여부를 구합니다. 가결 조건은 다음과 같습니다.
-	 	// - 3인 이상이 의견을 내고 2/3 이상이 찬성한 경우
-	 	// - 1인 이상, 3인 미만이 의견을 내고 반대가 없는 경우
-		$passed = ( $count >= 3 && $agree >= $count*2/3 )
-			|| ( $count < 3 && $agree == $count );
+		// - 3인 이상이 의견을 내고 2/3 이상이 찬성한 경우
+		// - 1인 이상, 3인 미만이 의견을 내고 반대가 없는 경우
+		$passed = ( $count >= 3 && $agree >= $count * 2 / 3 )
+		|| ( $count < 3 && $agree == $count );
 
-		if ( $passed )
+		if ( $passed ) {
 			return ceil( $sumPeriod / $count );
+		}
 		return 0;
 	}
 
 	protected function countVotes( $reset = false ) {
-		if ( $this->mCounted && !$reset )
+		if ( $this->mCounted && !$reset ) {
 			return;
+		}
 		$this->mCounted = true;
 
 		$votes = $this->getVotes();
@@ -596,10 +621,11 @@ class Sanction {
 
 		$agree = 0;
 		foreach ( $votes as $userId => $period ) {
-			if ( $period > 0 ) $agree++;
+			if ( $period > 0 ) { $agree++;
+			}
 		}
 
-		$this->mIsPassed = ( $count >= 3 && $agree >= $count*2/3 ) || ( $count < 3 && $agree == $count );
+		$this->mIsPassed = ( $count >= 3 && $agree >= $count * 2 / 3 ) || ( $count < 3 && $agree == $count );
 		$this->mAgreeVote = $agree;
 		$this->mVoteNumber = $count;
 	}
@@ -610,8 +636,8 @@ class Sanction {
 		$agree = $this->mAgreeVote;
 		$count = $this->mVoteNumber;
 
-		return ( $count >= 3 && $agree >= $count*2/3 )
-			|| ( $count > 0 && $count < 3 && $agree == $count );
+		return ( $count >= 3 && $agree >= $count * 2 / 3 )
+		|| ( $count > 0 && $count < 3 && $agree == $count );
 	}
 
 	public function isExpired() {
@@ -644,19 +670,20 @@ class Sanction {
 
 	public function getVotes() {
 		if ( $this->mVotes === null ) {
-			$this->mVotes = array();
+			$this->mVotes = [];
 
 			$db = $this->getDb();
 			$res = $db->select(
 				'sanctions_vote',
 				'*',
 				[
-					'stv_topic' => $this->mTopic->getBinary()
+				'stv_topic' => $this->mTopic->getBinary()
 				]
 			);
 			// ResultWrapper를 array로 바꾸기 @todo 괜찮은 방법으로 고치기
-			foreach ( $res as $row )
+			foreach ( $res as $row ) {
 				$this->mVotes[$row->stv_user] = $row->stv_period;
+			}
 		}
 
 		return $this->mVotes;
@@ -676,7 +703,7 @@ class Sanction {
 	public function getTopic() {
 		$UUIDText = $this->mTopic->getAlphadecimal();
 
-		return Title::newFromText( '주제:'.$UUIDText ); // @todo 이건 아닌것 같음
+		return Title::newFromText( '주제:' . $UUIDText ); // @todo 이건 아닌것 같음
 	}
 
 	public function getTopicUUID() {
@@ -685,24 +712,26 @@ class Sanction {
 
 	/**
 	 * 어떤 사용자에 대한 부적절한 사용자명 변경 건의가 있는지를 확인합니다.
-	 * @param $user User
+	 *
+	 * @param  $user User
 	 * @return Bool
 	 */
 	public static function existingSanctionForInsultingNameOf( $user ) {
-		$db = wfGetDB ( DB_MASTER );
+		$db = wfGetDB( DB_MASTER );
 		$targetId = $user->getId();
 
 		$row = $db->selectRow(
 			'sanctions',
 			'*',
 			[
-				'st_target' => $targetId,
-				"st_original_name <> ''",
-				'st_expiry > '. wfTimestamp( TS_MW )
+			'st_target' => $targetId,
+			"st_original_name <> ''",
+			'st_expiry > ' . wfTimestamp( TS_MW )
 			]
 		);
-		if ( $row !== false )
-			return self::newFromId( $row->st_id) ;
+		if ( $row !== false ) {
+			return self::newFromId( $row->st_id );
+		}
 		return null;
 	}
 
@@ -713,12 +742,12 @@ class Sanction {
 			'sanctions',
 			'st_id',
 			[
-				'st_handled' => 0,
+			'st_handled' => 0,
 			]
 		);
 
 		foreach ( $sanctions as $sanction ) {
-			Sanction::newFromId( $sanction->st_id )->checkNewVotes();
+			self::newFromId( $sanction->st_id )->checkNewVotes();
 		}
 	}
 
@@ -727,7 +756,8 @@ class Sanction {
 	 */
 	public function checkNewVotes() {
 		// 닫힌 제재안은 검사하지 않습니다.
-		if ( $this->isExpired() ) return false;
+		if ( $this->isExpired() ) { return false;
+		}
 
 		$uuid = $this->getTopicUUID();
 		$db = $this->getDb();
@@ -737,8 +767,8 @@ class Sanction {
 			'flow_workflow',
 			'workflow_last_update_timestamp',
 			[
-				'workflow_id' => $uuid->getBinary(),
-				'workflow_type' => 'topic'
+			'workflow_id' => $uuid->getBinary(),
+			'workflow_type' => 'topic'
 			]
 		);
 		$id = $this->mId;
@@ -746,7 +776,7 @@ class Sanction {
 			'sanctions',
 			'st_last_update_timestamp',
 			[
-				'st_id' => $id
+			'st_id' => $id
 			]
 		);
 		if ( $topicLastUpdate <= $sanctionLastUpdate ) {
@@ -756,25 +786,25 @@ class Sanction {
 		// 이 제재안 주제에 작성된 모든 리플의 모든 리비전을 가져옵니다. // @todo 모든 리비전을 가져오고 싶진 않은데
 		$res = $db->select(
 			[
-				'flow_workflow',
-				'flow_tree_node',
-				'flow_tree_revision',
-				'flow_revision'
+			'flow_workflow',
+			'flow_tree_node',
+			'flow_tree_revision',
+			'flow_revision'
 			],
 			[
-				'rev_id',
-				'rev_user_id',
-				'rev_content'
+			'rev_id',
+			'rev_user_id',
+			'rev_content'
 			],
 			[
-				'workflow_id' => $uuid->getBinary()
+			'workflow_id' => $uuid->getBinary()
 			],
 			__METHOD__,
 			[ 'DISTINCT' ],
 			[
-				'flow_tree_node' => [ 'INNER JOIN', 'workflow_id = tree_ancestor_id' ],
-				'flow_tree_revision' => [ 'INNER JOIN', 'tree_descendant_id = tree_rev_descendant_id' ],
-				'flow_revision' => [ 'INNER JOIN', 'tree_rev_id = rev_id' ],
+			'flow_tree_node' => [ 'INNER JOIN', 'workflow_id = tree_ancestor_id' ],
+			'flow_tree_revision' => [ 'INNER JOIN', 'tree_descendant_id = tree_rev_descendant_id' ],
+			'flow_revision' => [ 'INNER JOIN', 'tree_rev_id = rev_id' ],
 			]
 		);
 
@@ -797,44 +827,45 @@ class Sanction {
 				$period = 1;
 			} elseif ( strpos( $content, '"sanction-vote-disagree"' ) !== false ) {
 				$period = 0;
-			}
-			else {
+			} else {
 				continue;
 			}
 
 			$db->update(
 				'flow_revision',
 				[
-					'rev_content' => $row->rev_content.Html::rawelement( 'span', [ 'class' => 'sanction-vote-counted' ] )
+				'rev_content' => $row->rev_content . Html::rawelement( 'span', [ 'class' => 'sanction-vote-counted' ] )
 				],
 				[
-					'rev_id' => $row->rev_id
+				'rev_id' => $row->rev_id
 				]
 			);
 
 			$reason = []; // 있으면 비우기
 			if ( $this->getAuthor()->getId() == $userId ) {
-				$content = '이 의견은 다음 이유로 집계되지 않습니다.'.
-					PHP_EOL.'* 자신의 제재안에 표결할 수 없습니다.';
+				   $content = '이 의견은 다음 이유로 집계되지 않습니다.' .
+					PHP_EOL . '* 자신의 제재안에 표결할 수 없습니다.';
 				try {
 					$this->replyTo( $row->rev_id, $content );
 				} catch ( Flow\Exception\DataModelException $e ) {
 					/**
 					 * 제안이 없고 리플이 있는 의견을 수정하여 제안을 추가할 경우 그 바로 아래에 리플을 달 수 없기 때문에 오류가 발생합니다.
+		  *
 					 * @todo
 					 */
 
 				}
 				unset( $votes[$userId] );
 				continue;
-			} else if( !SanctionsUtils::hasVoteRight( User::newFromId( $userId ), $reason ) ) {
-				$content = '이 의견은 다음 이유로 집계되지 않습니다.'.
-					PHP_EOL.'* '.implode( PHP_EOL.'* ', $reason );
+			} elseif ( !SanctionsUtils::hasVoteRight( User::newFromId( $userId ), $reason ) ) {
+				$content = '이 의견은 다음 이유로 집계되지 않습니다.' .
+				 PHP_EOL . '* ' . implode( PHP_EOL . '* ', $reason );
 				try {
 					$this->replyTo( $row->rev_id, $content );
 				} catch ( Flow\Exception\DataModelException $e ) {
 					/**
 					 * 제안이 없고 리플이 있는 의견을 수정하여 제안을 추가할 경우 그 바로 아래에 리플을 달 수 없기 때문에 오류가 발생합니다.
+				   *
 					 * @todo
 					 */
 
@@ -844,53 +875,55 @@ class Sanction {
 			}
 
 			// 이 의견이 해당 사용자가 남긴 가장 마지막 의견이 아니라면 무시합니다.
-			if( isset( $votes[$userId] ) && $votes[$userId]['stv_last_update_timestamp'] > $timestamp )
+			if ( isset( $votes[$userId] ) && $votes[$userId]['stv_last_update_timestamp'] > $timestamp ) {
 				continue;
+			}
 
 			//배열에 저장합니다.
 			$votes[$userId] = [
-				'stv_period' => $period,
-				'stv_last_update_timestamp' => $timestamp
+			'stv_period' => $period,
+			'stv_last_update_timestamp' => $timestamp
 			];
 		}
 
 		// 유효표가 하나도 없을 경우 아무것도 하지 않습니다.
-		if ( !count( $votes ) ) return false;
+		if ( !count( $votes ) ) { return false;
+		}
 
 		$dbIsTouched = false;
 		foreach ( $votes as $userId => $vote ) {
 			$previous = $db->selectRow(
 				'sanctions_vote',
 				[
-					'stv_period',
-					'stv_last_update_timestamp'
+				'stv_period',
+				'stv_last_update_timestamp'
 				],
 				[
-					'stv_topic' => $uuid->getBinary(),
-					'stv_user' => $userId
+				'stv_topic' => $uuid->getBinary(),
+				'stv_user' => $userId
 				]
 			);
 			if ( $previous == false ) {
 				$db->insert(
 					'sanctions_vote',
 					[
-						'stv_topic' => $uuid->getBinary(),
-						'stv_user' => $userId,
-						'stv_period' => $vote['stv_period'],
-						'stv_last_update_timestamp' => $vote['stv_last_update_timestamp']
+					 'stv_topic' => $uuid->getBinary(),
+					 'stv_user' => $userId,
+					 'stv_period' => $vote['stv_period'],
+					 'stv_last_update_timestamp' => $vote['stv_last_update_timestamp']
 					]
 				);
-				$dbIsTouched = true;
-			} else if ( $previous->stv_last_update_timestamp < $vote['stv_last_update_timestamp'] && $previous->stv_period != $vote['stv_period'] ) {
+				   $dbIsTouched = true;
+			} elseif ( $previous->stv_last_update_timestamp < $vote['stv_last_update_timestamp'] && $previous->stv_period != $vote['stv_period'] ) {
 				$db->update(
 					'sanctions_vote',
 					[
-						'stv_period' => $vote['stv_period'],
-						'stv_last_update_timestamp' => $vote['stv_last_update_timestamp'],
+					'stv_period' => $vote['stv_period'],
+					'stv_last_update_timestamp' => $vote['stv_last_update_timestamp'],
 					],
 					[
-						'stv_topic' => $uuid->getBinary(),
-						'stv_user' => $userId
+					'stv_topic' => $uuid->getBinary(),
+					'stv_user' => $userId
 					]
 				);
 				$dbIsTouched = true;
@@ -902,10 +935,10 @@ class Sanction {
 			$db->update(
 				'sanctions',
 				[
-					'st_last_update_timestamp' => $sanctionLastUpdate
+				'st_last_update_timestamp' => $sanctionLastUpdate
 				],
 				[
-					'st_id' => $id
+				'st_id' => $id
 				]
 			);
 			$this->onVotesChanged();
@@ -914,7 +947,7 @@ class Sanction {
 		return true;
 	}
 
-	public function replyTo ( $to, string $content ) {
+	public function replyTo( $to, string $content ) {
 		$topicTitleText = $this->getTopic()->getFullText();
 		$topicTitle = Title::newFromText( $topicTitleText );
 		$topicId = $this->mTopic;
@@ -924,15 +957,15 @@ class Sanction {
 		$blocks = $loader->getBlocks();
 		$action = 'reply';
 		$params = [
-			'topic' => [
-				'page' => $topicTitleText,
-				'token' => self::getBot()->getEditToken(),
-				'action' => 'flow',
-				'submodule' => 'reply',
-				'replyTo' => $to,
-				'content' => $content,
-				'format' => 'wikitext'
-			]
+		'topic' => [
+		'page' => $topicTitleText,
+		'token' => self::getBot()->getEditToken(),
+		'action' => 'flow',
+		'submodule' => 'reply',
+		'replyTo' => $to,
+		'content' => $content,
+		'format' => 'wikitext'
+		]
 		];
 		$context = RequestContext::getMain();
 		$context->setUser( self::getBot() );
@@ -953,21 +986,23 @@ class Sanction {
 
 	public static function newFromId( string $id ) {
 		$rt = new self();
-		if ( $rt->loadFrom( 'st_id', $id ) )
+		if ( $rt->loadFrom( 'st_id', $id ) ) {
 			return $rt;
+		}
 		return false;
 	}
 
 	public static function newFromUUID( $UUID ) {
-		if ( $UUID instanceof UUID )
+		if ( $UUID instanceof UUID ) {
 			$UUID = $UUID->getBinary();
-		else if ( is_string( $UUID ) ) {
-			$UUID = UUID::create( strtolower($UUID) )->getBinary();
+		} elseif ( is_string( $UUID ) ) {
+			$UUID = UUID::create( strtolower( $UUID ) )->getBinary();
 		}
 
 		$rt = new self();
-		if ( $rt->loadFrom( 'st_topic', $UUID ) )
+		if ( $rt->loadFrom( 'st_topic', $UUID ) ) {
 			return $rt;
+		}
 		return false;
 	}
 
@@ -984,8 +1019,9 @@ class Sanction {
 	}
 
 	protected function getDb() {
-		if ( !$this->mDb )
+		if ( !$this->mDb ) {
 			$this->mDb = wfGetDB( DB_MASTER );
+		}
 		return $this->mDb;
 	}
 
@@ -1017,14 +1053,16 @@ class Sanction {
 		$oldUserPageTitle = Title::makeTitle( NS_USER, $oldName );
 		$newUserPageTitle = Title::makeTitle( NS_USER, $newName );
 
-		if ( $targetId === 0 || $newUser->idForName() !== 0 )
+		if ( $targetId === 0 || $newUser->idForName() !== 0 ) {
 			return false;
+		}
 
 		// Give other affected extensions a chance to validate or abort
 		if ( !Hooks::run(
 			'RenameUserAbort',
 			[ $targetId, $oldName, $newName ]
-		) ) {
+		)
+		) {
 			return false;
 		}
 
@@ -1036,8 +1074,9 @@ class Sanction {
 			$renamer,
 			[ 'reason' => $reason ]
 		);
-		if ( !$rename->rename() )
+		if ( !$rename->rename() ) {
 			return false;
+		}
 
 		// If this user is renaming his/herself, make sure that Title::moveTo()
 		// doesn't make a bunch of null move edits under the old name!
@@ -1052,35 +1091,40 @@ class Sanction {
 				'page',
 				[ 'page_namespace', 'page_title' ],
 				[
-					'page_namespace' => [ NS_USER, NS_USER_TALK ],
-					$dbr->makeList( [
-						'page_title ' . $dbr->buildLike( $oldUserPageTitle->getDBkey() . '/', $dbr->anyString() ),
-						'page_title = ' . $dbr->addQuotes( $oldUserPageTitle->getDBkey() ),
-					], LIST_OR ),
+				'page_namespace' => [ NS_USER, NS_USER_TALK ],
+				$dbr->makeList(
+					[
+					'page_title ' . $dbr->buildLike( $oldUserPageTitle->getDBkey() . '/', $dbr->anyString() ),
+					'page_title = ' . $dbr->addQuotes( $oldUserPageTitle->getDBkey() ),
+					], LIST_OR
+				),
 				],
 				__METHOD__
 			);
 			foreach ( $pages as $row ) {
-				$oldPage = Title::makeTitleSafe( $row->page_namespace, $row->page_title );
-				$newPage = Title::makeTitleSafe( $row->page_namespace,
-					preg_replace( '!^[^/]+!', $newUserPageTitle->getDBkey(), $row->page_title ) );
+				   $oldPage = Title::makeTitleSafe( $row->page_namespace, $row->page_title );
+				$newPage = Title::makeTitleSafe(
+					$row->page_namespace,
+					preg_replace( '!^[^/]+!', $newUserPageTitle->getDBkey(), $row->page_title )
+				);
 
-				$movePage = new MovePage( $oldPage, $newPage );
+				   $movePage = new MovePage( $oldPage, $newPage );
 
 				if ( !$movePage->isValidMove() ) {
-					return false;
+					   return false;
 				} else {
 					$success = $movePage->move(
 						$bot,
 						wfMessage(
 							'renameuser-move-log',
 							$oldUserPageTitle->getText(),
-							$newUserPageTitle->getText() )->inContentLanguage()->text(),
+							$newUserPageTitle->getText()
+						)->inContentLanguage()->text(),
 						true
 					);
 
 					if ( !$success->isGood() ) {
-						return false;
+							 return false;
 					}
 				}
 			}
@@ -1104,11 +1148,12 @@ class Sanction {
 
 		$success = $block->insert();
 
-		if ( !$success ) return false;
+		if ( !$success ) { return false;
+		}
 
-		$logParams = array();
+		$logParams = [];
 		$logParams['5::duration'] = MWTimestamp::getInstance( $expiry )->getTimestamp( TS_ISO_8601 ); // 뭐가 있는지 그냥 이러면 현지 시각으로 잘 나옵니다
-		$flags = array( 'nocreate' );
+		$flags = [ 'nocreate' ];
 		if ( !$block->isAutoblocking() && !IP::isIPAddress( $target ) ) {
 			// Conditionally added same as SpecialBlock
 			$flags[] = 'noautoblock';
@@ -1120,8 +1165,8 @@ class Sanction {
 		$logEntry->setComment( $reason );
 		$logEntry->setPerformer( $user == null ? $bot : $user );
 		$logEntry->setParameters( $logParams );
-		$blockIds = array_merge( array( $success['id'] ), $success['autoIds'] );
-		$logEntry->setRelations( array( 'ipb_id' => $blockIds ) );
+		$blockIds = array_merge( [ $success['id'] ], $success['autoIds'] );
+		$logEntry->setRelations( [ 'ipb_id' => $blockIds ] );
 		$logId = $logEntry->insert();
 		$logEntry->publish( $logId );
 
@@ -1131,16 +1176,17 @@ class Sanction {
 	protected static function unblock( $target, $withLog = false, $reason = null, $user = null ) {
 		$block = $target->getBlock();
 
-		if ( $block == null || !$block->delete() )
+		if ( $block == null || !$block->delete() ) {
 			return false;
+		}
 
 		// SpecialUnblock.php에 있던 것과 같은 내용입니다.
 		if ( $block->getType() == Block::TYPE_AUTO ) {
 			$page = Title::makeTitle( NS_USER, '#' . $block->getId() );
 		} else {
 			$page = $block->getTarget() instanceof User
-				? $block->getTarget()->getUserPage()
-				: Title::makeTitle( NS_USER, $block->getTarget() );
+			? $block->getTarget()->getUserPage()
+			: Title::makeTitle( NS_USER, $block->getTarget() );
 		}
 
 		if ( $withLog ) {

@@ -1,14 +1,16 @@
 <?php
-$magicWords = array();
+$magicWords = [];
 
-/** English (English) */
-$magicWords['en'] = array(
-	'sanctions' => array( 0, 'sanctions' )
-);
+/**
+ * English (English)
+*/
+$magicWords['en'] = [
+	'sanctions' => [ 0, 'sanctions' ]
+];
 
-/** Korean (한국어) */
-$magicWords['ko'] = array(
-	'sanctions' => array( 0, '제재안목록' )
-);
-
-?>
+/**
+ * Korean (한국어)
+*/
+$magicWords['ko'] = [
+	'sanctions' => [ 0, '제재안목록' ]
+];
