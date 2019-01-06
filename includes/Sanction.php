@@ -537,7 +537,7 @@ class Sanction {
 		( $reasonText ? ' (' . $reasonText . ')' : '' );
 		if ( !$expired && !( $count == 3 && $agree == 0 ) ) {
 			$time = MWTimestamp::getLocalInstance( $this->mExpiry );
-			$summary[] .= '의결 종료 예정 시각: '. $time->getTimestamp( TS_ISO_8601 );
+			$summary[] .= '의결 종료 예정 시각: ' . $time->getTimestamp( TS_ISO_8601 );
 		}
 
 		$prefix = '* ';
@@ -1165,7 +1165,7 @@ class Sanction {
 		return true;
 	}
 
-	protected static function doBlock($target, $expiry, $reason,
+	protected static function doBlock( $target, $expiry, $reason,
 			$preventEditOwnUserTalk = true, $user = null ) {
 		$bot = self::getBot();
 

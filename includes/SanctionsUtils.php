@@ -85,7 +85,7 @@ class SanctionsUtils {
 				if ( $reason !== false ) {
 					$reason[] = implode( [
 						'차단이 풀린 ',
-						MWTimestamp::getLocalInstance( $blockExpiry )->getTimestamp( TS_ISO_8601 ).
+						MWTimestamp::getLocalInstance( $blockExpiry )->getTimestamp( TS_ISO_8601 ) .
 						'으로부터 ',
 						$verificationPeriod,
 						'일이 경과하지 않음'

@@ -7,7 +7,7 @@ class SanctionsHooks {
 	/**
 	 * 데이터베이스 테이블을 만듭니다.
 	 *
-	 * @param DatabaseUpdater $updater
+	 * @param DatabaseUpdater|null $updater
 	 * @throws MWException
 	 * @return bool
 	 */
