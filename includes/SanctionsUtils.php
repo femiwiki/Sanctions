@@ -5,7 +5,7 @@ class SanctionsUtils {
 	 * 제재 절차에 참가 가능한지 알아봅니다.
 	 *
 	 * @param User $user 알아볼 사용자입니다.
-	 * @param array $reason 참가 불가능할 경우 불가능한 이유들을 담은 배열입니다.
+	 * @param array &$reason 참가 불가능할 경우 불가능한 이유들을 담은 배열입니다.
 	 * @return 참가 여부를 반환합니다.
 	 */
 	public static function hasVoteRight( User $user, &$reason = false ) {

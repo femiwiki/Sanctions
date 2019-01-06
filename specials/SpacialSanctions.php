@@ -192,23 +192,23 @@ class SpacialSanctions extends SpecialPage {
 				$content = $request->getVal( 'content' ) ? : '내용이 입력되지 않았습니다.';
 
 				if ( !$targetName ) {
-					  list( $query['showResult'], $query['errorCode'] ) = [ true, 100 ];
-					  // '사용자명이 입력되지 않았습니다.'
-					  break;
+					list( $query['showResult'], $query['errorCode'] ) = [ true, 100 ];
+					// '사용자명이 입력되지 않았습니다.'
+					break;
 				}
 
 				$target = User::newFromName( $targetName );
 
 				if ( $target->getId() === 0 ) {
-					  list( $query['showResult'], $query['errorCode'], $query['targetName'] )
-					  	= [ true, 101, $targetName ];
-					  // '"'.$targetName.'"라는 이름의 사용자가 존재하지 않습니다.'
-					  break;
+					list( $query['showResult'], $query['errorCode'], $query['targetName'] )
+					= [ true, 101, $targetName ];
+					// '"'.$targetName.'"라는 이름의 사용자가 존재하지 않습니다.'
+					break;
 				}
 
 				//만일 동일 사용자명에 대한 부적절한 사용자명 변경 건의안이 이미 있다면 중복 작성을 막습니다.
 				if ( $forInsultingName ) {
-					  $existingSanction = Sanction::existingSanctionForInsultingNameOf( $target );
+					$existingSanction = Sanction::existingSanctionForInsultingNameOf( $target );
 					if ( $existingSanction != null ) {
 						list(
 							$query['showResult'],
@@ -228,9 +228,9 @@ class SpacialSanctions extends SpecialPage {
 				$sanction = Sanction::write( $user, $target, $forInsultingName, $content );
 
 				if ( !$sanction ) {
-					  list( $query['showResult'], $query['errorCode'] ) = [ true, 2 ];
-					  // '제재안 작성에 실패하였습니다.'
-					  break;
+					list( $query['showResult'], $query['errorCode'] ) = [ true, 2 ];
+					// '제재안 작성에 실패하였습니다.'
+					break;
 				}
 
 				$topicTitleText = $sanction->getTopic()->getFullText();
@@ -244,39 +244,39 @@ class SpacialSanctions extends SpecialPage {
 
 				// 차단 권한이 없다면 절차를 변경할 수 없습니다.
 				if ( !$user->isAllowed( 'block' ) ) {
-					  list( $query['showResult'], $query['errorCode'] ) = [ true, 1 ];
-					  // '권한이 없습니다.'
-					  break;
+					list( $query['showResult'], $query['errorCode'] ) = [ true, 1 ];
+					// '권한이 없습니다.'
+					break;
 				}
 
 				$sanctionId = $request->getVal( 'sanctionId' );
 				$sanction = Sanction::newFromId( $sanctionId );
 
 				if ( !$sanction || !$sanction->toggleEmergency( $user ) ) {
-					  list( $query['showResult'], $query['errorCode'], $query['uuid'] )
-					  	= [ true, 3, $sanction->getTopicUUID()->getAlphaDecimal() ];
-					  // '절차 변경에 실패하였습니다.'
-					  break;
+					list( $query['showResult'], $query['errorCode'], $query['uuid'] )
+					= [ true, 3, $sanction->getTopicUUID()->getAlphaDecimal() ];
+					// '절차 변경에 실패하였습니다.'
+					break;
 				}
 
 				if ( $sanction->isEmergency() ) {
-					  list( $query['showResult'], $query['code'], $query['uuid'] )
-					  	= [ true, 1, $sanction->getTopicUUID()->getAlphaDecimal() ];
+					list( $query['showResult'], $query['code'], $query['uuid'] )
+					= [ true, 1, $sanction->getTopicUUID()->getAlphaDecimal() ];
 				}
 				// '절차를 긴급으로 바꾸었습니다.'
- else {
-					  list( $query['showResult'], $query['code'], $query['uuid'] )
-					  	= [ true, 2, $sanction->getTopicUUID()->getAlphaDecimal() ];
-	}
+ 				else {
+					list( $query['showResult'], $query['code'], $query['uuid'] )
+					= [ true, 2, $sanction->getTopicUUID()->getAlphaDecimal() ];
+				}
 				// '절차를 일반으로 바꾸었습니다.'
 				break;
 			case 'execute':
 				//결과에 따른 제재안 집행
 				$user = $this->getUser();
 				if ( !SanctionsUtils::hasVoteRight( $user ) ) {
-					  list( $query['showResult'], $query['errorCode'] ) = [ true, 1 ];
-					  // '권한이 없습니다.'
-					  break;
+					list( $query['showResult'], $query['errorCode'] ) = [ true, 1 ];
+					// '권한이 없습니다.'
+					break;
 				}
 
 				$sanctionId = $request->getVal( 'sanctionId' );

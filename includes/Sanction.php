@@ -870,7 +870,7 @@ class Sanction {
 
 			$reason = []; // 있으면 비우기
 			if ( $this->getAuthor()->getId() == $userId ) {
-				   $content = '이 의견은 다음 이유로 집계되지 않습니다.' .
+				$content = '이 의견은 다음 이유로 집계되지 않습니다.' .
 					PHP_EOL . '* 자신의 제재안에 표결할 수 없습니다.';
 				try {
 					$this->replyTo( $row->rev_id, $content );
@@ -935,7 +935,7 @@ class Sanction {
 					 'stv_last_update_timestamp' => $vote['stv_last_update_timestamp']
 					]
 				);
-				   $dbIsTouched = true;
+				$dbIsTouched = true;
 			} elseif (
 				$previous->stv_last_update_timestamp < $vote['stv_last_update_timestamp'] &&
 				$previous->stv_period != $vote['stv_period']
@@ -972,7 +972,11 @@ class Sanction {
 		return true;
 	}
 
-	public function replyTo( $to, string $content ) {
+	/**
+	 * @param string $to
+	 * @param string $content
+	 */
+	public function replyTo( $to, $content ) {
 		$topicTitleText = $this->getTopic()->getFullText();
 		$topicTitle = Title::newFromText( $topicTitleText );
 		$topicId = $this->mTopic;
@@ -1009,7 +1013,10 @@ class Sanction {
 		return '';
 	}
 
-	public static function newFromId( string $id ) {
+	/**
+	 * @param string $id
+	 */
+	public static function newFromId( $id ) {
 		$rt = new self();
 		if ( $rt->loadFrom( 'st_id', $id ) ) {
 			return $rt;
@@ -1127,16 +1134,16 @@ class Sanction {
 				__METHOD__
 			);
 			foreach ( $pages as $row ) {
-				   $oldPage = Title::makeTitleSafe( $row->page_namespace, $row->page_title );
+				$oldPage = Title::makeTitleSafe( $row->page_namespace, $row->page_title );
 				$newPage = Title::makeTitleSafe(
 					$row->page_namespace,
 					preg_replace( '!^[^/]+!', $newUserPageTitle->getDBkey(), $row->page_title )
 				);
 
-				   $movePage = new MovePage( $oldPage, $newPage );
+				$movePage = new MovePage( $oldPage, $newPage );
 
 				if ( !$movePage->isValidMove() ) {
-					   return false;
+					return false;
 				} else {
 					$success = $movePage->move(
 						$bot,
@@ -1149,7 +1156,7 @@ class Sanction {
 					);
 
 					if ( !$success->isGood() ) {
-							 return false;
+						return false;
 					}
 				}
 			}
