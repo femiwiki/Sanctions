@@ -67,10 +67,10 @@ class Sanction {
 	/**
 	 * 제재안을 새로 만들어 저장합니다.
 	 *
-	 * @param  $user User 제재안을 쓸 사람
-	 * @param  $target User 제재안에 쓰인 제재가 필요한 사람
-	 * @param  $forInsultingName Bool 제재안이 부적절한 사용자명에 의한 것인지의 여부
-	 * @param  $content String 제재안의 내용(wikitext 스타일)
+	 * @param User $user 제재안을 쓸 사람
+	 * @param User $target 제재안에 쓰인 제재가 필요한 사람
+	 * @param Bool $forInsultingName 제재안이 부적절한 사용자명에 의한 것인지의 여부
+	 * @param String $content 제재안의 내용(wikitext 스타일)
 	 * @return Sanction 작성된 제재안.
 	 */
 	public static function write( $user, $target, $forInsultingName, $content ) {
@@ -208,7 +208,14 @@ class Sanction {
 				return true;
 			}
 
-			if ( !self::doRename( $targetName, '임시사용자명' . wfTimestamp( TS_MW ), $target, $this->getBot(), $reason ) ) {
+			$renameIsDone = self::doRename(
+				$targetName,
+				'임시사용자명' . wfTimestamp( TS_MW ),
+				$target,
+				$this->getBot(),
+				$reason
+			);
+			if ( !$renameIsDone ) {
 				return false;
 			}
 			return true;
@@ -271,7 +278,13 @@ class Sanction {
 			$originalName = $this->mTargetOriginalName;
 
 			if ( $target->getName() == $originalName ) {
-				self::doRename( $target->getName(), '임시사용자명' . wfTimestamp( TS_MW ), $target, $user, $reason );
+				self::doRename(
+					$target->getName(),
+					'임시사용자명' . wfTimestamp( TS_MW ),
+					$target,
+					$user,
+					$reason
+				);
 			}
 		} else {
 			$expiry = $this->mExpiry;
@@ -290,7 +303,7 @@ class Sanction {
 	/**
 	 * 임시 조치를 해제합니다.
 	 *
-	 * @param $reason String 해제 이유입니다.
+	 * @param String $reason 해제 이유입니다.
 	 */
 	public function removeTemporaryMeasure( $reason, $user = null ) {
 		$target = $this->mTarget;
@@ -523,13 +536,19 @@ class Sanction {
 		( $expired ? '' : ' 가능' ) .
 		( $reasonText ? ' (' . $reasonText . ')' : '' );
 		if ( !$expired && !( $count == 3 && $agree == 0 ) ) {
-			$summary[] = '의결 종료 예정 시각: ' . MWTimestamp::getLocalInstance( $this->mExpiry )->getTimestamp( TS_ISO_8601 );
+			$time = MWTimestamp::getLocalInstance( $this->mExpiry );
+			$summary[] .= '의결 종료 예정 시각: '. $time->getTimestamp( TS_ISO_8601 );
 		}
 
 		$prefix = '* ';
 		$suffix = PHP_EOL;
 
-		return $this->getSanctionSummaryHeader() . $prefix . implode( $suffix . $prefix, $summary ) . $suffix;
+		return implode( [
+			$this->getSanctionSummaryHeader(),
+			$prefix,
+			implode( $suffix . $prefix, $summary ),
+			$suffix
+		] );
 	}
 
 	// @todo $value는 $row의 값으로 갱신하지 않기
@@ -566,7 +585,7 @@ class Sanction {
 	/**
 	 * 제재 기간을 반환합니다.
 	 *
-	 * @param  $getAnyway Bool 참이라면 가결/부결에 무관하게 평균 제재 기간만을 반환합니다.
+	 * @param Bool $getAnyway 참이라면 가결/부결에 무관하게 평균 제재 기간만을 반환합니다.
 	 * @return Integer
 	 */
 	public function getPeriod( $getAnyway = false ) {
@@ -625,7 +644,9 @@ class Sanction {
 			}
 		}
 
-		$this->mIsPassed = ( $count >= 3 && $agree >= $count * 2 / 3 ) || ( $count < 3 && $agree == $count );
+		$this->mIsPassed =
+			( $count >= 3 && $agree >= $count * 2 / 3 ) ||
+			( $count < 3 && $agree == $count );
 		$this->mAgreeVote = $agree;
 		$this->mVoteNumber = $count;
 	}
@@ -713,7 +734,7 @@ class Sanction {
 	/**
 	 * 어떤 사용자에 대한 부적절한 사용자명 변경 건의가 있는지를 확인합니다.
 	 *
-	 * @param  $user User
+	 * @param User $user
 	 * @return Bool
 	 */
 	public static function existingSanctionForInsultingNameOf( $user ) {
@@ -818,9 +839,11 @@ class Sanction {
 			// post에 의견이 담겨있는지 검사합니다.
 			// 각 의견의 구분은 위키의 틀 안에 적어둔 태그를 사용합니다.
 			$period = 0;
+			$agreeRegex = '/<span class="sanction-vote-agree-period">(\d+)<\/span>/';
+			$hasPeriod = preg_match( $agreeRegex, $content, $matches );
 			if ( strpos( $content, '"sanction-vote-counted"' ) !== false ) {
 				continue;
-			} elseif ( preg_match( '/<span class="sanction-vote-agree-period">(\d+)<\/span>/', $content, $matches ) != 0 && count( $matches ) > 0 ) {
+			} elseif ( $hasPeriod != 0 && count( $matches ) > 0 ) {
 				$period = (int)$matches[1];
 			} elseif ( strpos( $content, '"sanction-vote-agree"' ) !== false ) {
 				// 찬성만 하고 날짜를 적지 않았다면 1일로 처리합니다.
@@ -831,10 +854,14 @@ class Sanction {
 				continue;
 			}
 
+			$newContent = $row->rev_content . Html::rawelement(
+				'span',
+				[ 'class' => 'sanction-vote-counted' ]
+			);
 			$db->update(
 				'flow_revision',
 				[
-				'rev_content' => $row->rev_content . Html::rawelement( 'span', [ 'class' => 'sanction-vote-counted' ] )
+				'rev_content' => $newContent
 				],
 				[
 				'rev_id' => $row->rev_id
@@ -848,12 +875,8 @@ class Sanction {
 				try {
 					$this->replyTo( $row->rev_id, $content );
 				} catch ( Flow\Exception\DataModelException $e ) {
-					/**
-					 * 제안이 없고 리플이 있는 의견을 수정하여 제안을 추가할 경우 그 바로 아래에 리플을 달 수 없기 때문에 오류가 발생합니다.
-		  *
-					 * @todo
-					 */
-
+					// @todo 제안이 없고 리플이 있는 의견을 수정하여 제안을 추가할 경우 그 바로
+					// 아래에 리플을 달 수 없기 때문에 오류가 발생합니다.
 				}
 				unset( $votes[$userId] );
 				continue;
@@ -863,19 +886,18 @@ class Sanction {
 				try {
 					$this->replyTo( $row->rev_id, $content );
 				} catch ( Flow\Exception\DataModelException $e ) {
-					/**
-					 * 제안이 없고 리플이 있는 의견을 수정하여 제안을 추가할 경우 그 바로 아래에 리플을 달 수 없기 때문에 오류가 발생합니다.
-				   *
-					 * @todo
-					 */
-
+					// @todo 제안이 없고 리플이 있는 의견을 수정하여 제안을 추가할 경우 그 바로
+					// 아래에 리플을 달 수 없기 때문에 오류가 발생합니다.
 				}
 				unset( $votes[$userId] );
 				continue;
 			}
 
 			// 이 의견이 해당 사용자가 남긴 가장 마지막 의견이 아니라면 무시합니다.
-			if ( isset( $votes[$userId] ) && $votes[$userId]['stv_last_update_timestamp'] > $timestamp ) {
+			if (
+				isset( $votes[$userId] ) &&
+				$votes[$userId]['stv_last_update_timestamp'] > $timestamp
+			) {
 				continue;
 			}
 
@@ -914,7 +936,10 @@ class Sanction {
 					]
 				);
 				   $dbIsTouched = true;
-			} elseif ( $previous->stv_last_update_timestamp < $vote['stv_last_update_timestamp'] && $previous->stv_period != $vote['stv_period'] ) {
+			} elseif (
+				$previous->stv_last_update_timestamp < $vote['stv_last_update_timestamp'] &&
+				$previous->stv_period != $vote['stv_period']
+			) {
 				$db->update(
 					'sanctions_vote',
 					[
@@ -1039,11 +1064,11 @@ class Sanction {
 	 * Rename the given User.
 	 * This funcion includes some code that originally are in SpecialRenameuser.php
 	 *
-	 * @param $oldName String
-	 * @param $newName String
-	 * @param $target User
-	 * @param $renamer User
-	 * @param $reason String
+	 * @param String $oldName
+	 * @param String $newName
+	 * @param User $target
+	 * @param User $renamer
+	 * @param String $reason
 	 */
 	protected static function doRename( $oldName, $newName, $target, $renamer, $reason ) {
 		$bot = self::getBot();
@@ -1133,7 +1158,8 @@ class Sanction {
 		return true;
 	}
 
-	protected static function doBlock( $target, $expiry, $reason, $preventEditOwnUserTalk = true, $user = null ) {
+	protected static function doBlock($target, $expiry, $reason,
+			$preventEditOwnUserTalk = true, $user = null ) {
 		$bot = self::getBot();
 
 		$block = new Block();
@@ -1152,7 +1178,9 @@ class Sanction {
 		}
 
 		$logParams = [];
-		$logParams['5::duration'] = MWTimestamp::getInstance( $expiry )->getTimestamp( TS_ISO_8601 ); // 뭐가 있는지 그냥 이러면 현지 시각으로 잘 나옵니다
+		$time = MWTimestamp::getInstance( $expiry );
+		// 아래와 같이 해도 현지 시각으로 나옵니다.
+		$logParams['5::duration'] = $time->getTimestamp( TS_ISO_8601 );
 		$flags = [ 'nocreate' ];
 		if ( !$block->isAutoblocking() && !IP::isIPAddress( $target ) ) {
 			// Conditionally added same as SpecialBlock

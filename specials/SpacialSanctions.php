@@ -43,7 +43,11 @@ class SpacialSanctions extends SpecialPage {
 			if ( $this->getUser()->isAnon() ) {
 				$output->addWikiText( '다음의 이유로 제재 절차 참여를 위한 조건이 맞지 않습니다. [[페미위키:제재 정책]]을 참고해 주세요.' );
 			} else {
-				$output->addWikiText( '다음의 이유로 현재 ' . $this->getUser()->getName() . ' 님께서는 제재 절차에 참여할 수 없습니다. [[페미위키:제재 정책]]을 참고해 주세요.' );
+				$output->addWikiText( implode([
+					'다음의 이유로 현재 ',
+					$this->getUser()->getName(),
+					' 님께서는 제재 절차에 참여할 수 없습니다. [[페미위키:제재 정책]]을 참고해 주세요.'
+				] ) );
 			}
 
 			if ( count( $reason ) > 0 ) { $output->addWikiText( '* ' . implode( PHP_EOL . '* ', $reason ) );
@@ -196,7 +200,8 @@ class SpacialSanctions extends SpecialPage {
 				$target = User::newFromName( $targetName );
 
 				if ( $target->getId() === 0 ) {
-					  list( $query['showResult'], $query['errorCode'], $query['targetName'] ) = [ true, 101, $targetName ];
+					  list( $query['showResult'], $query['errorCode'], $query['targetName'] )
+					  	= [ true, 101, $targetName ];
 					  // '"'.$targetName.'"라는 이름의 사용자가 존재하지 않습니다.'
 					  break;
 				}
@@ -205,7 +210,17 @@ class SpacialSanctions extends SpecialPage {
 				if ( $forInsultingName ) {
 					  $existingSanction = Sanction::existingSanctionForInsultingNameOf( $target );
 					if ( $existingSanction != null ) {
-						list( $query['showResult'], $query['errorCode'], $query['targetName'], $query['uuid'] ) = [ true, 102, $targetName, $existingSanction->getTopicUUID()->getAlphaDecimal() ];
+						list(
+							$query['showResult'],
+							$query['errorCode'],
+							$query['targetName'],
+							$query['uuid']
+						) = [
+							true,
+							102,
+							$targetName,
+							$existingSanction->getTopicUUID()->getAlphaDecimal()
+						];
 						break;
 					}
 				}
@@ -219,7 +234,8 @@ class SpacialSanctions extends SpecialPage {
 				}
 
 				$topicTitleText = $sanction->getTopic()->getFullText();
-				list( $query['showResult'], $query['code'], $query['uuid'] ) = [ true, 0, $sanction->getTopicUUID()->getAlphaDecimal() ];
+				list( $query['showResult'], $query['code'], $query['uuid'] )
+					= [ true, 0, $sanction->getTopicUUID()->getAlphaDecimal() ];
 				// '제재안 '.Linker::link( $sanction->getTopic() ).'가 작성되었습니다.'
 				break;
 			case 'toggle-emergency':
@@ -237,17 +253,20 @@ class SpacialSanctions extends SpecialPage {
 				$sanction = Sanction::newFromId( $sanctionId );
 
 				if ( !$sanction || !$sanction->toggleEmergency( $user ) ) {
-					  list( $query['showResult'], $query['errorCode'], $query['uuid'] ) = [ true, 3, $sanction->getTopicUUID()->getAlphaDecimal() ];
+					  list( $query['showResult'], $query['errorCode'], $query['uuid'] )
+					  	= [ true, 3, $sanction->getTopicUUID()->getAlphaDecimal() ];
 					  // '절차 변경에 실패하였습니다.'
 					  break;
 				}
 
 				if ( $sanction->isEmergency() ) {
-					  list( $query['showResult'], $query['code'], $query['uuid'] ) = [ true, 1, $sanction->getTopicUUID()->getAlphaDecimal() ];
+					  list( $query['showResult'], $query['code'], $query['uuid'] )
+					  	= [ true, 1, $sanction->getTopicUUID()->getAlphaDecimal() ];
 				}
 				// '절차를 긴급으로 바꾸었습니다.'
  else {
-					  list( $query['showResult'], $query['code'], $query['uuid'] ) = [ true, 2, $sanction->getTopicUUID()->getAlphaDecimal() ];
+					  list( $query['showResult'], $query['code'], $query['uuid'] )
+					  	= [ true, 2, $sanction->getTopicUUID()->getAlphaDecimal() ];
 	}
 				// '절차를 일반으로 바꾸었습니다.'
 				break;
@@ -264,11 +283,13 @@ class SpacialSanctions extends SpecialPage {
 				$sanction = Sanction::newFromId( $sanctionId );
 
 				if ( !$sanction->execute() ) {
-					  list( $query['showResult'], $query['errorCode'], $query['uuid'] ) = [ true, 4, $sanction->getTopicUUID()->getAlphaDecimal() ];
-					  // '제재안 집행에 실패하였습니다.'
-					  break;
+					list( $query['showResult'], $query['errorCode'], $query['uuid'] )
+						= [ true, 4, $sanction->getTopicUUID()->getAlphaDecimal() ];
+					// '제재안 집행에 실패하였습니다.'
+					break;
 				}
-				list( $query['showResult'], $query['code'], $query['uuid'] ) = [ true, 3, $sanction->getTopicUUID()->getAlphaDecimal() ];
+				list( $query['showResult'], $query['code'], $query['uuid'] )
+					= [ true, 3, $sanction->getTopicUUID()->getAlphaDecimal() ];
 				// '제재안을 처리하였습니다.'
 				break;
 		}
@@ -343,10 +364,19 @@ class SpacialSanctions extends SpecialPage {
 			) .
 			' ' .
 			Xml::checkLabel(
-				'부적절한 사용자명', 'forInsultingName', 'forInsultingName', $this->mNewRevisionId == null && $this->mTargetName != null, []
+				'부적절한 사용자명',
+				'forInsultingName',
+				'forInsultingName',
+				$this->mNewRevisionId == null && $this->mTargetName != null,
+				[]
 			) .
-			Xml::textarea( 'content', $content, 40, 7, [ 'placeholder' => $this->msg( 'sanctions-content-placeholder' )->text() ] ) .
-
+			Xml::textarea(
+				'content',
+				$content,
+				40,
+				7,
+				[ 'placeholder' => $this->msg( 'sanctions-content-placeholder' )->text() ]
+			) .
 			Html::submitButton(
 				$this->msg( 'sanctions-submit' )->text(),
 				[ 'id' => 'submit-button' ], [ 'mw-ui-progressive' ]
@@ -375,9 +405,11 @@ class SpacialSanctions extends SpecialPage {
 
 		$rt = '';
 		if ( $oldRevisionId != null ) {
-			$rt = '* [[특수:차이/' . $oldRevisionId . '/' . $newRevisionId . '|' . $newRevision->getTitle()->getFullText() . ']]';
+			$rt = '* [[특수:차이/' . $oldRevisionId . '/' . $newRevisionId . '|' .
+				$newRevision->getTitle()->getFullText() . ']]';
 		} else {
-			$rt = '* [[특수:넘겨주기/revision/' . $newRevisionId . '|' . $newRevision->getTitle()->getFullText() . ']]';
+			$rt = '* [[특수:넘겨주기/revision/' . $newRevisionId . '|' .
+				$newRevision->getTitle()->getFullText() . ']]';
 		}
 
 		return $rt;

@@ -4,8 +4,8 @@ class SanctionsUtils {
 	/**
 	 * 제재 절차에 참가 가능한지 알아봅니다.
 	 *
-	 * @param  $user User 알아볼 사용자입니다.
-	 * @param  $reason array 참가 불가능할 경우 불가능한 이유들을 담은 배열입니다.
+	 * @param User $user 알아볼 사용자입니다.
+	 * @param array $reason 참가 불가능할 경우 불가능한 이유들을 담은 배열입니다.
 	 * @return 참가 여부를 반환합니다.
 	 */
 	public static function hasVoteRight( User $user, &$reason = false ) {
@@ -37,8 +37,11 @@ class SanctionsUtils {
 
 		// 계정 생성 후 20일 이상 경과되지 않았을 경우 불가
 		if ( $twentyDaysAgo < $reg ) {
-			if ( $reason !== false ) { $reason[] = '가입한 지 ' . $verificationPeriod . '일이 경과하지 않음(' . MWTimestamp::getLocalInstance( $reg )->getTimestamp( TS_ISO_8601 ) . '에 가입)';
-			} else { return false;
+			if ( $reason !== false ) {
+				$reason[] = '가입한 지 ' . $verificationPeriod . '일이 경과하지 않음(' .
+					MWTimestamp::getLocalInstance( $reg )->getTimestamp( TS_ISO_8601 ) . '에 가입)';
+			} else {
+				return false;
 			}
 		}
 
@@ -53,9 +56,13 @@ class SanctionsUtils {
 			'rev_timestamp > ' . $twentyDaysAgo
 			]
 		);
-		if ( $count < $verificationEdits ) { if ( $reason !== false ) { $reason[] = '최근 ' . $verificationPeriod . '일 간 편집 수가 ' . $count . '번으로 ' . $verificationEdits . '보다 작음';
-		} else { return false;
-		}
+		if ( $count < $verificationEdits ) {
+			if ( $reason !== false ) {
+				$reason[] = '최근 ' . $verificationPeriod . '일 간 편집 수가 ' .
+					$count . '번으로 ' . $verificationEdits . '보다 작음';
+			} else {
+				return false;
+			}
 		}
 
 		// 현재 제재되어 있는 경우 불가
@@ -74,9 +81,18 @@ class SanctionsUtils {
 				__METHOD__,
 				[ 'GROUP BY' => 'ipb_id' ]
 			);
-			if ( $blockExpiry > $twentyDaysAgo ) { if ( $reason !== false ) { $reason[] = '차단이 풀린 ' . MWTimestamp::getLocalInstance( $blockExpiry )->getTimestamp( TS_ISO_8601 ) . '으로부터 ' . $verificationPeriod . '일이 경과하지 않음';
-			} else { return false;
-			}
+			if ( $blockExpiry > $twentyDaysAgo ) {
+				if ( $reason !== false ) {
+					$reason[] = implode( [
+						'차단이 풀린 ',
+						MWTimestamp::getLocalInstance( $blockExpiry )->getTimestamp( TS_ISO_8601 ).
+						'으로부터 ',
+						$verificationPeriod,
+						'일이 경과하지 않음'
+					] );
+				} else {
+					return false;
+				}
 			}
 		}
 

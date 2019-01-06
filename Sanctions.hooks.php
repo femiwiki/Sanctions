@@ -7,7 +7,7 @@ class SanctionsHooks {
 	/**
 	 * 데이터베이스 테이블을 만듭니다.
 	 *
-	 * @param  $updater DatabaseUpdater
+	 * @param DatabaseUpdater $updater
 	 * @throws MWException
 	 * @return bool
 	 */
@@ -26,14 +26,15 @@ class SanctionsHooks {
 	/**
 	 * 제재안 관련 workflow 페이지들에 여러 처리를 합니다.
 	 *
-	 * @param $output: OutputPage object
+	 * @param OutputPage $out
 	 */
 	public static function onFlowAddModules( OutputPage $out ) {
 		$title = $out->getTitle();
 		$specialSanctionTitle = SpecialPage::getTitleFor( 'Sanctions' ); // 특수:제재안목록
 		$discussionPageName = wfMessage( 'sanctions-discussion-page-name' )->text(); //페미위키토론:제재안에 대한 의결
 
-		if ( $title == null ) { return true;
+		if ( $title == null ) {
+			return true;
 		}
 
 		// 제재안 목록 토론 페이지의 처리
@@ -73,7 +74,9 @@ class SanctionsHooks {
 		// CSS와 JavaScript를 적용합니다.
 		$out->addModules( 'ext.sanctions.flow-topic' );
 
-		// 만료되지 않은 제재안이라면 새 표가 있는지 체크합니다. 이는 주제 요약을 갱신하기 위함이며 원래는 이 hook 말고 ArticleSaveComplete나 RevisionInsertComplete에서 실행하고 싶었지만 flow 게시글을 작성할 때는 작동하지 않아 불가했습니다.
+		// 만료되지 않은 제재안이라면 새 표가 있는지 체크합니다. 이는 주제 요약을 갱신하기위함이며
+		// 원래는 이 hook 말고 ArticleSaveComplete나 RevisionInsertComplete에서 실행하고
+		// 싶었지만 flow 게시글을 작성할 때는 작동하지 않아 불가했습니다.
 		if ( !$sanction->isExpired() ) {
 			$sanction->checkNewVotes();
 		}
@@ -112,7 +115,8 @@ class SanctionsHooks {
 		}
 		$ids .= $newRev->getId();
 
-		$specialSanctionTitle = SpecialPage::getTitleFor( 'Sanctions', $newRev->getUserText() . '/' . $ids );
+		$titleText = $newRev->getUserText() . '/' . $ids;
+		$specialSanctionTitle = SpecialPage::getTitleFor( 'Sanctions', $titleText );
 		$links[] = Linker::link( $specialSanctionTitle, '이 편집을 근거로 제재 건의' );
 
 		return true;
@@ -129,7 +133,8 @@ class SanctionsHooks {
 			return true;
 		}
 
-		$specialSanctionTitle = SpecialPage::getTitleFor( 'Sanctions', $rev->getUserText() . '/' . $rev->getId() );
+		$titleText = $rev->getUserText() . '/' . $rev->getId();
+		$specialSanctionTitle = SpecialPage::getTitleFor( 'Sanctions', $titleText );
 		$links[] = Linker::link( $specialSanctionTitle, '이 편집을 근거로 제재 건의' );
 
 		return true;

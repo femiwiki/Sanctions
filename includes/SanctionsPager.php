@@ -121,8 +121,19 @@ class SanctionsPager extends IndexPager {
 			. '/' . $target->getName()
 		); // @todo 다른 방법 찾기
 
-		$rowTitle = linker::link( $userLinkTitle, $targetNameForDiplay, [ 'class' => 'sanction-target' ] ) . ' 님에 대한 ';
-		$rowTitle .= linker::link( $topicTitle, $isForInsultingName ? '부적절한 사용자명 변경 건의' : '편집 차단 건의', [ 'class' => 'sanction-type' ] );
+		$rowTitle = implode( [
+			linker::link(
+				$userLinkTitle,
+				$targetNameForDiplay,
+				[ 'class' => 'sanction-target' ]
+			),
+			' 님에 대한 ',
+			linker::link(
+				$topicTitle,
+				$isForInsultingName ? '부적절한 사용자명 변경 건의' : '편집 차단 건의',
+				[ 'class' => 'sanction-type' ]
+			)
+		] );
 
 		$class = 'sanction';
 		$class .= ( $isMySanction ? ' my-sanction' : '' )
