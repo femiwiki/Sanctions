@@ -7,9 +7,9 @@
 	},
 	"scripts": {
 		"test": [
-			"parallel-lint . --exclude vendor --exclude node_modules",
+			"parallel-lint --exclude vendor --exclude node_modules",
 			"phpcs -p -s",
-			"minus-x check ."
+			"minus-x check"
 		],
 		"fix": [
 			"minus-x fix .",
