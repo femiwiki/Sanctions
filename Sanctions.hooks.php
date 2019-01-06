@@ -29,6 +29,8 @@ class SanctionsHooks {
 		$specialSanctionTitle =  SpecialPage::getTitleFor('Sanctions'); // 특수:제재안목록
 		$discussionPageName = wfMessage( 'sanctions-discussion-page-name' )->text(); //페미위키토론:제재안에 대한 의결
 
+		if ( $title == null ) return true;
+		
 		// 제재안 목록 토론 페이지의 처리
 		if ( $title->getFullText() == $discussionPageName ) {
 			// url에 "redirect=no"가 붙어오지 않았다면 리다이렉트합니다. 근데 왜 이걸 따로 안 하면 무조건 리다이렉트가 되는 건지?
