@@ -1,7 +1,7 @@
 {
-	"@metadata": {
-		"authors": []
-	}, 
-	"sanctions": "Sanctions",
-	"sanctions-desc": ""
+  "@metadata": {
+    "authors": []
+  },
+  "sanctions": "Sanctions",
+  "sanctions-desc": "Let users handle sanctions"
 }
