@@ -6,6 +6,5 @@ git:
 
 before_script:
   - composer install --prefer-source --quiet --no-interaction
-  - curl -Lo .phpcs.xml https://raw.githubusercontent.com/wikimedia/mediawiki/REL1_31/.phpcs.xml
 script:
   - composer test .
