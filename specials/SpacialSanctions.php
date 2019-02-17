@@ -44,16 +44,22 @@ class SpacialSanctions extends SpecialPage {
 			$output->addHTML( $this->makeForm() );
 		} else {
 			if ( $this->getUser()->isAnon() ) {
-				$output->addWikiText( '다음의 이유로 제재 절차 참여를 위한 조건이 맞지 않습니다. [[페미위키:제재 정책]]을 참고해 주세요.' );
+				$message = '다음의 이유로 제재 절차 참여를 위한 조건이 맞지 않습니다. [[페미위키:제재 정책]]을 참고해 주세요.';
 			} else {
-				$output->addWikiText( implode( [
-					'다음의 이유로 현재 ',
-					$this->getUser()->getName(),
-					' 님께서는 제재 절차에 참여할 수 없습니다. [[페미위키:제재 정책]]을 참고해 주세요.'
-				] ) );
+				$message = '다음의 이유로 현재 ' .
+					$this->getUser()->getName() .
+					' 님께서는 제재 절차에 참여할 수 없습니다. [[페미위키:제재 정책]]을 참고해 주세요.' .
+					PHP_EOL;
 			}
 
-			if ( count( $reason ) > 0 ) { $output->addWikiText( '* ' . implode( PHP_EOL . '* ', $reason ) );
+			if ( count( $reason ) > 0 ) {
+				$message .= '* ' . implode( PHP_EOL . '* ', $reason );
+			}
+
+			if ( version_compare( $wgVersion, '1.32', '<' ) ) {
+				$output->addWikiText( $message );
+			} else {
+				$output->addWikiTextAsInterface( $message );
 			}
 		}
 	}
