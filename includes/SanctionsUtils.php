@@ -9,7 +9,7 @@ class SanctionsUtils {
 	 * @return 참가 여부를 반환합니다.
 	 */
 	public static function hasVoteRight( User $user, &$reason = false ) {
-		//로그인을 하지 않은 경우 불가
+		// 로그인을 하지 않은 경우 불가
 		if ( $user->isAnon() ) {
 			if ( $reason !== false ) { $reason[] = '로그인을 하지 않음';
 			}
@@ -22,7 +22,7 @@ class SanctionsUtils {
 		}
 		}
 
-		//현재 편집 권한이 없을 경우 불가
+		// 현재 편집 권한이 없을 경우 불가
 		if ( !$user->isAllowed( 'edit' ) ) {
 			if ( $reason !== false ) { $reason[] = '편집 권한이 없음';
 			} else { return false;

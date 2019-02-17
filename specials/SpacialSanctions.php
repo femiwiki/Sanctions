@@ -11,6 +11,9 @@ class SpacialSanctions extends SpecialPage {
 		parent::__construct( 'Sanctions' );
 	}
 
+	/**
+	 * @param string $subpage
+	 */
 	public function execute( $subpage ) {
 		$output = $this->getOutput();
 
@@ -20,7 +23,7 @@ class SpacialSanctions extends SpecialPage {
 		$this->outputHeader();
 
 		// Request가 있었다면 처리합니다. (리다이렉트할 경우 true를 반환합니다)
-		if ( $this->HandleRequestsIfExist( $output ) ) { return;
+		if ( $this->handleRequestsIfExist( $output ) ) { return;
 		}
 
 		$output->addModuleStyles( 'ext.sanctions.special.sanctions.styles' );
@@ -55,7 +58,10 @@ class SpacialSanctions extends SpecialPage {
 		}
 	}
 
-	function setParameter( $subpage ) {
+	/**
+	 * @param string $subpage
+	 */
+	private function setParameter( $subpage ) {
 		$parts = explode( '/', $subpage, 3 );
 
 		$targetName = null;
@@ -90,7 +96,7 @@ class SpacialSanctions extends SpecialPage {
 		if ( count( $parts ) == 1 ) { return;
 		}
 
-		//newRivisionId 구하기
+		// newRivisionId 구하기
 		$newRevisionId = $parts[ count( $parts ) - 1 ];
 
 		$newRevision = Revision::newFromId( $newRevisionId );
@@ -99,7 +105,7 @@ class SpacialSanctions extends SpecialPage {
 			return;
 		}
 
-		//oldRivisionId 구하기
+		// oldRivisionId 구하기
 		if ( count( $parts ) == 3 ) {
 			$oldRevisionId = $parts[1];
 			$oldRevision = Revision::newFromId( $oldRevisionId );
@@ -125,7 +131,7 @@ class SpacialSanctions extends SpecialPage {
 	/**
 	 * @return true를 반환하면 다른 내용을 보여주지 않습니다.
 	 */
-	function HandleRequestsIfExist( $output ) {
+	private function handleRequestsIfExist( $output ) {
 		$request = $this->getRequest();
 
 		if ( $request->getVal( 'showResult' ) == true ) {
@@ -166,26 +172,26 @@ class SpacialSanctions extends SpecialPage {
 
 		$query = []; // showResult, code, errorCode, uuid, targetName
 		// code
-		//     0    작성 성공
-		//     1    긴급 절차 전환 성공
-		//     2    일반 절차 전환 성공
-		//     3    집행
+		// 0    작성 성공
+		// 1    긴급 절차 전환 성공
+		// 2    일반 절차 전환 성공
+		// 3    집행
 		// error code
-		//     000    기타 문제
-		//        000    토큰
-		//        001 권한 오류
-		//        002 제재안 작성 실패
-		//        003    전환 실패
-		//     100    입력 문제
-		//        100    사용자명 미입력
-		//        101 사용자 없음
-		//        102 중복된 부적절한 사용자명 변경 건의
+		// 기타 문제
+		// 000    토큰
+		// 001 권한 오류
+		// 002 제재안 작성 실패
+		// 003    전환 실패
+		// 입력 문제
+		// 100    사용자명 미입력
+		// 101 사용자 없음
+		// 102 중복된 부적절한 사용자명 변경 건의
 		if ( !$this->getUser()->matchEditToken( $request->getVal( 'token' ), 'sanctions' ) ) {
 			list( $query['showResult'], $query['errorCode'] ) = [ true, 0 ];
 			// '토큰이 일치하지 않습니다.'
 		} else { switch ( $action ) {
 			case 'write':
-				//제재안 올리기
+				// 제재안 올리기
 				$user = $this->getUser();
 				$targetName = $request->getVal( 'target' );
 				$forInsultingName = $request->getBool( 'forInsultingName' );
@@ -206,7 +212,7 @@ class SpacialSanctions extends SpecialPage {
 					break;
 				}
 
-				//만일 동일 사용자명에 대한 부적절한 사용자명 변경 건의안이 이미 있다면 중복 작성을 막습니다.
+				// 만일 동일 사용자명에 대한 부적절한 사용자명 변경 건의안이 이미 있다면 중복 작성을 막습니다.
 				if ( $forInsultingName ) {
 					$existingSanction = Sanction::existingSanctionForInsultingNameOf( $target );
 					if ( $existingSanction != null ) {
@@ -269,7 +275,7 @@ class SpacialSanctions extends SpecialPage {
 				}
 				break;
 			case 'execute':
-				//결과에 따른 제재안 집행
+				// 결과에 따른 제재안 집행
 				$user = $this->getUser();
 				if ( !SanctionsUtils::hasVoteRight( $user ) ) {
 					list( $query['showResult'], $query['errorCode'] ) = [ true, 1 ];
@@ -298,6 +304,12 @@ class SpacialSanctions extends SpecialPage {
 		return true;
 	}
 
+	/**
+	 * @param int $errorCode
+	 * @param UUID $uuid
+	 * @param string $targetName
+	 * @return string 오류 메시지
+	 */
 	protected static function makeErrorMessage( $errorCode, $uuid, $targetName ) {
 		$link = $uuid ? Linker::link( Sanction::newFromUUID( $uuid )->getTopic() ) : '';
 		switch ( $errorCode ) {
@@ -322,6 +334,12 @@ class SpacialSanctions extends SpecialPage {
 		}
 	}
 
+	/**
+	 * @param int $code
+	 * @param UUID $uuid
+	 * @param string $targetName
+	 * @return string 메시지
+	 */
 	protected static function makeMessage( $code, $uuid, $targetName ) {
 		$link = $uuid ? Linker::link( Sanction::newFromUUID( $uuid )->getTopic() ) : '';
 		switch ( $code ) {
@@ -413,6 +431,9 @@ class SpacialSanctions extends SpecialPage {
 		return $rt;
 	}
 
+	/**
+	 * @return string
+	 */
 	protected function getGroupName() {
 		return 'users';
 	}

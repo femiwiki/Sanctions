@@ -2,29 +2,45 @@
 
 
 class SanctionsPager extends IndexPager {
-	protected $UserHasVoteRight = null;
+	protected $userHasVoteRight = null;
 
-	function __construct( $context, $targetName ) {
+	/**
+	 * @param IContextSource $context
+	 * @param string $targetName
+	 */
+	public function __construct( $context, $targetName ) {
 		parent::__construct( $context );
 		$this->targetName = $targetName;
 	}
 
-	function getIndexField() {
+	/**
+	 * @return string
+	 */
+	public function getIndexField() {
 		return 'st_handled';
 	}
 
-	function getExtraSortFields() {
+	/**
+	 * @return string
+	 */
+	public function getExtraSortFields() {
 		if ( $this->getUserHasVoteRight() ) {
 			return [ 'not_expired', 'my_sanction', 'voted_from', 'st_expiry' ];
 		}
 		return 'st_expiry';
 	}
 
-	function getNavigationBar() {
+	/**
+	 * @return string
+	 */
+	public function getNavigationBar() {
 		return '';
 	}
 
-	function getQueryInfo() {
+	/**
+	 * @return string
+	 */
+	public function getQueryInfo() {
 		Sanction::checkAllSanctionNewVotes();
 		$subquery = $this->mDb->selectSQLText(
 			'sanctions_vote',
@@ -62,9 +78,13 @@ class SanctionsPager extends IndexPager {
 		return $query;
 	}
 
-	function formatRow( $row ) {
-		//foreach($row as $key => $value) echo $key.'-'.$value.'<br/>';
-		//echo '<div style="clear:both;">------------------------------------------------</div>';
+	/**
+	 * @param array $row
+	 * @return string
+	 */
+	public function formatRow( $row ) {
+		// foreach($row as $key => $value) echo $key.'-'.$value.'<br/>';
+		// echo '<div style="clear:both;">------------------------------------------------</div>';
 		$sanction = Sanction::newFromId( $row->st_id );
 
 		if ( $this->getUserHasVoteRight() ) {
@@ -198,7 +218,10 @@ class SanctionsPager extends IndexPager {
 		return $out . Html::closeElement( 'div' );
 	}
 
-	function getEmptyBody() {
+	/**
+	 * @return string
+	 */
+	public function getEmptyBody() {
 		$text = '제재안이 없습니다.';
 
 		if ( $this->targetName == null ) {
@@ -213,6 +236,10 @@ class SanctionsPager extends IndexPager {
 		);
 	}
 
+	/**
+	 * @param UUID $sanctionId
+	 * @return string
+	 */
 	protected function processToggleButton( $sanctionId ) {
 		$out = '';
 
@@ -245,6 +272,10 @@ class SanctionsPager extends IndexPager {
 		return $out;
 	}
 
+	/**
+	 * @param UUID $sanctionId
+	 * @return string
+	 */
 	protected function executeButton( $sanctionId ) {
 		$out = '';
 
@@ -277,10 +308,13 @@ class SanctionsPager extends IndexPager {
 		return $out;
 	}
 
+	/**
+	 * @return bool
+	 */
 	protected function getUserHasVoteRight() {
-		if ( $this->UserHasVoteRight === null ) {
-			$this->UserHasVoteRight = SanctionsUtils::hasVoteRight( $this->getUser() );
+		if ( $this->userHasVoteRight === null ) {
+			$this->userHasVoteRight = SanctionsUtils::hasVoteRight( $this->getUser() );
 		}
-		return $this->UserHasVoteRight;
+		return $this->userHasVoteRight;
 	}
 }

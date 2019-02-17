@@ -5,7 +5,7 @@ use Flow\Model\UUID;
 
 class Sanction {
 	/**
-	 * @var Integer
+	 * @var int
 	 */
 	protected $mId;
 	/**
@@ -23,7 +23,7 @@ class Sanction {
 	protected $mTarget;
 
 	/**
-	 * @var String
+	 * @var string
 	 */
 
 	protected $mTargetOriginalName;
@@ -34,12 +34,12 @@ class Sanction {
 	protected $mExpiry;
 
 	/**
-	 * @var Bool
+	 * @var bool
 	 */
 	protected $mIsHandled;
 
 	/**
-	 * @var Bool
+	 * @var bool
 	 */
 	protected $mIsEmergency;
 
@@ -49,12 +49,12 @@ class Sanction {
 	protected $mVotes = null;
 
 	/**
-	 * @var array
+	 * @var Database
 	 */
 	protected $mDb;
 
 	/**
-	 * Bool 이 값이 참일 때만 $mIsPassed, $mVoteNumber, $mAgreeVote의 값이 유효합니다.
+	 * bool 이 값이 참일 때만 $mIsPassed, $mVoteNumber, $mAgreeVote의 값이 유효합니다.
 	 */
 	protected $mCounted = false;
 
@@ -69,7 +69,7 @@ class Sanction {
 	 *
 	 * @param User $user 제재안을 쓸 사람
 	 * @param User $target 제재안에 쓰인 제재가 필요한 사람
-	 * @param Bool $forInsultingName 제재안이 부적절한 사용자명에 의한 것인지의 여부
+	 * @param bool $forInsultingName 제재안이 부적절한 사용자명에 의한 것인지의 여부
 	 * @param String $content 제재안의 내용(wikitext 스타일)
 	 * @return Sanction 작성된 제재안.
 	 */
@@ -85,7 +85,7 @@ class Sanction {
 		}
 
 		// 제재안 주제를 만듭니다.
-		$discussionPageName = wfMessage( 'sanctions-discussion-page-name' )->text(); //페미위키토론:제재안에 대한 의결
+		$discussionPageName = wfMessage( 'sanctions-discussion-page-name' )->text(); // 페미위키토론:제재안에 대한 의결
 		$topicTitle = '[[사용자:' . $targetName . ']] 님에 대한 ';
 		$topicTitle .= $forInsultingName ? '부적절한 사용자명 변경 건의' : '편집 차단 건의';
 		$factory = Container::get( 'factory.loader.workflow' );
@@ -154,8 +154,12 @@ class Sanction {
 		return $sanction;
 	}
 
+	/**
+	 * @param User|null $user
+	 * @return bool
+	 */
 	public function toggleEmergency( $user = null ) {
-		//이미 만료된 제재안은 절차를 변경할 수 없습니다.
+		// 이미 만료된 제재안은 절차를 변경할 수 없습니다.
 		if ( $this->isExpired() ) { return false;
 		}
 
@@ -174,7 +178,7 @@ class Sanction {
 		$emergency = !$emergency;
 		$this->mIsEmergency = $emergency;
 
-		//DB에 적힌 절차를 바꿔 갱신합니다.
+		// DB에 적힌 절차를 바꿔 갱신합니다.
 		$id = $this->mId;
 		$db = $this->getDb();
 		$now = wfTimestamp( TS_MW );
@@ -193,7 +197,7 @@ class Sanction {
 	/**
 	 * 제재안의 의결에 따라 차단이나 사용자명 변경을 합니다.
 	 *
-	 * @return Bool 성공
+	 * @return bool 성공
 	 */
 	public function justTakeMeasure() {
 		$target = $this->mTarget;
@@ -239,7 +243,7 @@ class Sanction {
 	/**
 	 * (긴급 절차의)임시 조치를 정식 제재로 교체합니다.
 	 *
-	 * @return Bool 성공
+	 * @return bool 성공
 	 */
 	public function replaceTemporaryMeasure() {
 		$target = $this->mTarget;
@@ -267,7 +271,8 @@ class Sanction {
 	/**
 	 * 임시 조치를 취합니다
 	 *
-	 * @return Bool 성공
+	 * @param User|null $user
+	 * @return bool 성공
 	 */
 	public function takeTemporaryMeasure( $user = null ) {
 		$target = $this->mTarget;
@@ -288,9 +293,9 @@ class Sanction {
 			}
 		} else {
 			$expiry = $this->mExpiry;
-			//의결 만료 기간까지 차단하기
-			//이미 차단되어 있다면 기간을 비교하여
-			//이 제재안의 의결 종료 시간이 차단 해제 시간보다 뒤라면 늘려 차단합니다.
+			// 의결 만료 기간까지 차단하기
+			// 이미 차단되어 있다면 기간을 비교하여
+			// 이 제재안의 의결 종료 시간이 차단 해제 시간보다 뒤라면 늘려 차단합니다.
 			if ( $target->isBlocked() && $target->getBlock()->getExpiry() < $expiry ) {
 				self::unblock( $target, false );
 			}
@@ -303,7 +308,10 @@ class Sanction {
 	/**
 	 * 임시 조치를 해제합니다.
 	 *
-	 * @param String $reason 해제 이유입니다.
+	 * @param string $reason 해제 이유입니다.
+	 * @param User|null $user
+	 *
+	 * @return bool
 	 */
 	public function removeTemporaryMeasure( $reason, $user = null ) {
 		$target = $this->mTarget;
@@ -344,15 +352,19 @@ class Sanction {
 
 	/**
 	 * 즉시 부결 조건을 만족하는지 확인하고 실행합니다.
+	 * @return bool
 	 */
 	public function immediateRejectionIfNeeded() {
-		if ( $this->NeedToImmediateRejection() ) {
+		if ( $this->needToImmediateRejection() ) {
 			return $this->immediateRejection();
 		}
 	}
 
-	// 부결 조건인 3인 이상의 반대를 검사합니다.
-	public function NeedToImmediateRejection() {
+	/**
+	 * 부결 조건인 3인 이상의 반대를 검사합니다.
+	 * @return bool
+	 */
+	public function needToImmediateRejection() {
 		$agree = $this->mAgreeVote;
 		$count = $this->mVoteNumber;
 
@@ -473,15 +485,14 @@ class Sanction {
 		];
 		$context = clone RequestContext::getMain();
 
-		//
-		//$loggedUser = $context->getUser();
+		// $loggedUser = $context->getUser();
 		$context->setUser( self::getBot() );
 		$blocksToCommit = $loader->handleSubmit(
 			$context,
 			$action,
 			$params
 		);
-		//$context->setUser( $loggedUser );
+		// $context->setUser( $loggedUser );
 		if ( !count( $blocksToCommit ) ) {
 			return false;
 		}
@@ -492,6 +503,7 @@ class Sanction {
 
 	/**
 	 * @todo 더 자세한 개표 현황 등 추가하기
+	 * @return string
 	 */
 	public function getSanctionSummary() {
 		$this->countVotes();
@@ -585,8 +597,8 @@ class Sanction {
 	/**
 	 * 제재 기간을 반환합니다.
 	 *
-	 * @param Bool $getAnyway 참이라면 가결/부결에 무관하게 평균 제재 기간만을 반환합니다.
-	 * @return Integer
+	 * @param bool $getAnyway 참이라면 가결/부결에 무관하게 평균 제재 기간만을 반환합니다.
+	 * @return int
 	 */
 	public function getPeriod( $getAnyway = false ) {
 		$votes = $this->getvotes();
@@ -621,6 +633,9 @@ class Sanction {
 		return 0;
 	}
 
+	/**
+	 * @param bool $reset
+	 */
 	protected function countVotes( $reset = false ) {
 		if ( $this->mCounted && !$reset ) {
 			return;
@@ -673,22 +688,37 @@ class Sanction {
 		return $this->mIsEmergency;
 	}
 
+	/**
+	 * @return int
+	 */
 	public function getId() {
 		return $this->mId;
 	}
 
+	/**
+	 * @return User
+	 */
 	public function getAuthor() {
 		return $this->mAuthor;
 	}
 
+	/**
+	 * @return string
+	 */
 	public function getExpiry() {
 		return $this->mExpiry;
 	}
 
+	/**
+	 * @return User
+	 */
 	public function getTarget() {
 		return $this->mTarget;
 	}
 
+	/**
+	 * @return array
+	 */
 	public function getVotes() {
 		if ( $this->mVotes === null ) {
 			$this->mVotes = [];
@@ -714,6 +744,9 @@ class Sanction {
 		return $this->mTargetOriginalName != null;
 	}
 
+	/**
+	 * @return string
+	 */
 	public function getTargetOriginalName() {
 		return $this->mTargetOriginalName;
 	}
@@ -727,6 +760,9 @@ class Sanction {
 		return Title::newFromText( '주제:' . $UUIDText ); // @todo 이건 아닌것 같음
 	}
 
+	/**
+	 * @return UUID
+	 */
 	public function getTopicUUID() {
 		return $this->mTopic;
 	}
@@ -735,7 +771,7 @@ class Sanction {
 	 * 어떤 사용자에 대한 부적절한 사용자명 변경 건의가 있는지를 확인합니다.
 	 *
 	 * @param User $user
-	 * @return Bool
+	 * @return bool
 	 */
 	public static function existingSanctionForInsultingNameOf( $user ) {
 		$db = wfGetDB( DB_MASTER );
@@ -773,7 +809,7 @@ class Sanction {
 	}
 
 	/**
-	 * @return Bool 새로 반영된 표가 있는지 여부
+	 * @return bool 새로 반영된 표가 있는지 여부
 	 */
 	public function checkNewVotes() {
 		// 닫힌 제재안은 검사하지 않습니다.
@@ -901,7 +937,7 @@ class Sanction {
 				continue;
 			}
 
-			//배열에 저장합니다.
+			// 배열에 저장합니다.
 			$votes[$userId] = [
 			'stv_period' => $period,
 			'stv_last_update_timestamp' => $timestamp
@@ -975,6 +1011,7 @@ class Sanction {
 	/**
 	 * @param string $to
 	 * @param string $content
+	 * @return bool
 	 */
 	public function replyTo( $to, $content ) {
 		$topicTitleText = $this->getTopic()->getFullText();
@@ -1009,12 +1046,16 @@ class Sanction {
 		$commitMetadata = $loader->commit( $blocksToCommit );
 	}
 
+	/**
+	 * @return string
+	 */
 	public function getSanctionSummaryHeader() {
 		return '';
 	}
 
 	/**
 	 * @param string $id
+	 * @return bool
 	 */
 	public static function newFromId( $id ) {
 		$rt = new self();
@@ -1024,6 +1065,10 @@ class Sanction {
 		return false;
 	}
 
+	/**
+	 * @param UUID $UUID
+	 * @return bool
+	 */
 	public static function newFromUUID( $UUID ) {
 		if ( $UUID instanceof UUID ) {
 			$UUID = $UUID->getBinary();
@@ -1038,6 +1083,10 @@ class Sanction {
 		return false;
 	}
 
+	/**
+	 * @param UUID $vote
+	 * @return Sanction
+	 */
 	public static function newFromVoteId( $vote ) {
 		$db = wfGetDB( DB_MASTER );
 
@@ -1050,6 +1099,9 @@ class Sanction {
 		return self::newFromId( $sanctionId );
 	}
 
+	/**
+	 * @return Database
+	 */
 	protected function getDb() {
 		if ( !$this->mDb ) {
 			$this->mDb = wfGetDB( DB_MASTER );
@@ -1057,6 +1109,9 @@ class Sanction {
 		return $this->mDb;
 	}
 
+	/**
+	 * @return User
+	 */
 	protected static function getBot() {
 		$botName = '제재안';
 		$bot = User::newSystemUser( $botName, [ 'steal' => true ] );
@@ -1076,6 +1131,7 @@ class Sanction {
 	 * @param User $target
 	 * @param User $renamer
 	 * @param String $reason
+	 * @return bool
 	 */
 	protected static function doRename( $oldName, $newName, $target, $renamer, $reason ) {
 		$bot = self::getBot();
@@ -1165,6 +1221,15 @@ class Sanction {
 		return true;
 	}
 
+	/**
+	 * @param User $target
+	 * @param string $expiry
+	 * @param string $reason
+	 * @param bool $preventEditOwnUserTalk
+	 * @param User|null $user
+	 *
+	 * @return bool
+	 */
 	protected static function doBlock( $target, $expiry, $reason,
 			$preventEditOwnUserTalk = true, $user = null ) {
 		$bot = self::getBot();
@@ -1208,6 +1273,13 @@ class Sanction {
 		return true;
 	}
 
+	/**
+	 * @param User $target
+	 * @param bool $withLog
+	 * @param string|null $reason
+	 * @param User|null $user
+	 * @return bool
+	 */
 	protected static function unblock( $target, $withLog = false, $reason = null, $user = null ) {
 		$block = $target->getBlock();
 

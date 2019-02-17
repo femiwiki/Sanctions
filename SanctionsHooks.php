@@ -27,11 +27,12 @@ class SanctionsHooks {
 	 * 제재안 관련 workflow 페이지들에 여러 처리를 합니다.
 	 *
 	 * @param OutputPage $out
+	 * @return bool
 	 */
 	public static function onFlowAddModules( OutputPage $out ) {
 		$title = $out->getTitle();
 		$specialSanctionTitle = SpecialPage::getTitleFor( 'Sanctions' ); // 특수:제재안목록
-		$discussionPageName = wfMessage( 'sanctions-discussion-page-name' )->text(); //페미위키토론:제재안에 대한 의결
+		$discussionPageName = wfMessage( 'sanctions-discussion-page-name' )->text(); // 페미위키토론:제재안에 대한 의결
 
 		if ( $title == null ) {
 			return true;
@@ -80,7 +81,7 @@ class SanctionsHooks {
 		if ( !$sanction->isExpired() ) {
 			$sanction->checkNewVotes();
 		}
-		//else @todo 만료 표시
+		// else @todo 만료 표시
 
 		return true;
 	}
@@ -99,9 +100,10 @@ class SanctionsHooks {
 
 	/**
 	 * (편집) (편집 취소)
-	 * $newRev: Revision object of the "new" revision
-	 * &$links: Array of HTML links
-	 * $oldRev: Revision object of the "old" revision (may be null)
+	 * @param Revesion $newRev Revision object of the "new" revision
+	 * @param array &$links Array of HTML links
+	 * @param Revision $oldRev Revision object of the "old" revision (may be null)
+	 * @return bool
 	 */
 	public static function onDiffRevisionTools( Revision $newRev, &$links, $oldRev ) {
 		global $wgUser;
@@ -123,8 +125,9 @@ class SanctionsHooks {
 	}
 
 	/**
-	 * $rev: Revision object
-	 * &$links: Array of HTML links
+	 * @param Revision $rev Revision object
+	 * @param array &$links Array of HTML links
+	 * @return bool
 	 */
 	public static function onHistoryRevisionTools( $rev, &$links ) {
 		global $wgUser;
