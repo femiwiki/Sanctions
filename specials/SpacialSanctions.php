@@ -56,11 +56,7 @@ class SpacialSanctions extends SpecialPage {
 				$message .= '* ' . implode( PHP_EOL . '* ', $reason );
 			}
 
-			if ( version_compare( $wgVersion, '1.32', '<' ) ) {
-				$output->addWikiText( $message );
-			} else {
-				$output->addWikiTextAsInterface( $message );
-			}
+			$output->addWikiTextAsInterface( $message );
 		}
 	}
 
