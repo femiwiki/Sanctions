@@ -142,4 +142,25 @@ class SanctionsHooks {
 
 		return true;
 	}
+
+	/**
+	 * @param BaseTemplate $baseTemplate The BaseTemplate base skin template.
+	 * @param array &$toolbox An array of toolbox items.
+	 */
+	public static function onBaseTemplateToolbox( BaseTemplate $baseTemplate, array &$toolbox ) {
+		$user = $baseTemplate->getSkin()->getRelevantUser();
+		if ( $user ) {
+			$rootUser = $user->getName();
+
+			$toolbox = wfArrayInsertAfter(
+				$toolbox,
+				[ 'sanctions' => [
+					'text' => '제재안 목록',
+					'href' => Skin::makeSpecialUrlSubpage( 'Sanctions', $rootUser ),
+					'id' => 't-sanctions'
+				] ],
+				isset( $toolbox['blockip'] ) ? 'blockip' : 'log'
+			);
+		}
+	}
 }
