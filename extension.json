@@ -45,6 +45,7 @@
     "DiffRevisionTools": "SanctionsHooks::onDiffRevisionTools",
     "HistoryRevisionTools": "SanctionsHooks::onHistoryRevisionTools",
     "BaseTemplateToolbox": "SanctionsHooks::onBaseTemplateToolbox",
+    "ContributionsToolLinks": "SanctionsHooks::onContributionsToolLinks",
     "FlowAddModules": "SanctionsHooks::onFlowAddModules"
   },
   "SpecialPages": {

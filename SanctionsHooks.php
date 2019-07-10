@@ -163,4 +163,17 @@ class SanctionsHooks {
 			);
 		}
 	}
+
+	/**
+	 * @param int $id - User identifier
+	 * @param Title $title - User page title
+	 * @param array &$tools - Array of tool links
+	 * @param SpecialPage $sp - The SpecialPage object
+	 */
+	public static function onContributionsToolLinks( $id, $title, &$tools, $sp ) {
+		$tools['sanctions'] = $sp->getLinkRenderer()->makeKnownLink(
+				SpecialPage::getTitleFor( 'Sanctions', $username ),
+				'제재안 목록'
+			);
+	}
 }
