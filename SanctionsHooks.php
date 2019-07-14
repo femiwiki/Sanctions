@@ -172,7 +172,7 @@ class SanctionsHooks {
 	 */
 	public static function onContributionsToolLinks( $id, $title, &$tools, $sp ) {
 		$tools['sanctions'] = $sp->getLinkRenderer()->makeKnownLink(
-				SpecialPage::getTitleFor( 'Sanctions', $username ),
+				SpecialPage::getTitleFor( 'Sanctions', User::newFromId( $id ) ),
 				'제재안 목록'
 			);
 	}
