@@ -86,7 +86,7 @@ class Sanction {
 
 		// 제재안 주제를 만듭니다.
 		$discussionPageName = wfMessage( 'sanctions-discussion-page-name' )->text(); // 페미위키토론:제재안에 대한 의결
-		$topicTitle = '[[사용자:' . $targetName . ']] 님에 대한 ';
+		$topicTitle = "[[Special:redirect/user/${targetId}|${targetName}]] 님에 대한 ";
 		$topicTitle .= $forInsultingName ? '부적절한 사용자명 변경 건의' : '편집 차단 건의';
 		$factory = Container::get( 'factory.loader.workflow' );
 		$page = Title::newFromText( $discussionPageName );

@@ -424,10 +424,10 @@ class SpacialSanctions extends SpecialPage {
 		$rt = '';
 		if ( $oldRevisionId != null ) {
 			$rt = '* [[특수:차이/' . $oldRevisionId . '/' . $newRevisionId . '|' .
-				$newRevision->getTitle()->getFullText() . ']]';
+				$newRevision->getTitle()->getFullText() . ' 문서의 편집]]';
 		} else {
 			$rt = '* [[특수:넘겨주기/revision/' . $newRevisionId . '|' .
-				$newRevision->getTitle()->getFullText() . ']]';
+				$newRevision->getTitle()->getFullText() . ' 문서(새글)]]';
 		}
 
 		return $rt;
