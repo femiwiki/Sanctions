@@ -67,11 +67,13 @@ class SanctionsPager extends IndexPager {
 		}
 
 		if ( $this->getUserHasVoteRight() ) {
-			$query['tables']['sub'] = '(' . $subquery . ') AS'; // AS를 따로 쓰지 않으면 정상적으로 작동하지 않습니다.
+			// If 'AS' is not written explicitly, it will not work as expected.
+			$query['tables']['sub'] = '(' . $subquery . ') AS';
 			$query['fields']['voted_from'] = 'stv_id';
 			$query['join_conds'] = [ 'sub' => [ 'LEFT JOIN', 'st_topic = sub.stv_topic' ] ];
 		} else {
-			// 제재 절차 참가 권한이 없을 때는 만료된 제재안은 보지 않습니다.
+			// If the user does not have permission to participate in the sanctions procedure, they will
+			// not see expired sanctions.
 			$query['conds'][] = 'st_expiry > ' . wfTimestamp( TS_MW );
 		}
 
@@ -97,22 +99,25 @@ class SanctionsPager extends IndexPager {
 		$expiry = $sanction->getExpiry();
 		$expired = $sanction->isExpired();
 
-		$process = $sanction->isEmergency() ? '긴급' : '일반';
-		$passStatus = $sanction->isPassed() ? '가결' : '부결';
+		$process = wfMessage(
+			'sanctions-row-label-' . ( $sanction->isEmergency() ? 'emergency' : 'normal' )
+		)->text();
+		$passStatus = wfMessage(
+			'sanctions-row-label-' . ( $sanction->isPassed() ? 'passed' : 'rejected' )
+		)->text();
 
 		$handled = $sanction->isHandled();
 
 		if ( !$expired && !$handled ) {
-			$diff = MWTimestamp::getInstance( $expiry )->diff( MWTimestamp::getInstance() );
-			if ( $diff->d ) {
-				$timeLeftText = $diff->d . '일 ' . $diff->h . '시간 남음';
-			} elseif ( $diff->h ) {
-				$timeLeftText = $diff->h . '시간 남음';
-			} elseif ( $diff->i ) {
-				$timeLeftText = $diff->i . '분 남음';
-			} else {
-				$timeLeftText = $diff->s . '초 남음';
-			}
+			$timeLeftText = $this->getLanguage()->formatTimePeriod(
+				MWTimestamp::getInstance( $expiry )->getTimestamp()
+				- MWTimestamp::getInstance()->getTimestamp(),
+				[
+					'noabbrevs' => true,
+					'avoid' => 'avoidseconds'
+				]
+			);
+			$timeLeftText = wfMessage( 'sanctions-row-label-expiry', $timeLeftText )->text();
 		}
 
 		$target = $sanction->getTarget();
@@ -139,21 +144,21 @@ class SanctionsPager extends IndexPager {
 		$userLinkTitle = Title::newFromText(
 			strtok( $this->getTitle(), '/' )
 			. '/' . $target->getName()
-		); // @todo 다른 방법 찾기
+		); // @todo Use better way?
 
-		$rowTitle = implode( [
+		$rowTitle = wfMessage( 'sanctions-topic-title', [
 			linker::link(
 				$userLinkTitle,
 				$targetNameForDiplay,
 				[ 'class' => 'sanction-target' ]
 			),
-			' 님에 대한 ',
 			linker::link(
 				$topicTitle,
-				$isForInsultingName ? '부적절한 사용자명 변경 건의' : '편집 차단 건의',
+				wfMessage( 'sanctions-type-' . ( $isForInsultingName ? 'insulting-name' : 'block' ) )
+					->text(),
 				[ 'class' => 'sanction-type' ]
 			)
-		] );
+		] )->text();
 
 		$class = 'sanction';
 		$class .= ( $isMySanction ? ' my-sanction' : '' )
@@ -173,7 +178,7 @@ class SanctionsPager extends IndexPager {
 			$out .= Html::rawelement(
 				'div',
 				[ 'class' => 'sanction-expired' ],
-				'처리 대기중'
+				wfMessage( 'sanctions-row-label-pending' )->text()
 			);
 			$out .= Html::rawelement(
 				'div',
@@ -185,7 +190,12 @@ class SanctionsPager extends IndexPager {
 			$out .= Html::rawelement(
 				'div',
 				[ 'class' => 'sanction-vote-status' ],
-				$isMySanction ? '내 제재안' : ( $isVoted ? '참여함' : '참여 전' )
+				$isMySanction ?
+					wfMessage( 'sanctions-row-label-my-sanction' )->text() :
+					( $isVoted ?
+						wfMessage( 'sanctions-row-label-voted' )->text() :
+						wfMessage( 'sanctions-row-label-not-voted' )->text()
+					)
 			);
 		}
 		if ( !$expired && !$handled ) {
@@ -222,12 +232,12 @@ class SanctionsPager extends IndexPager {
 	 * @return string
 	 */
 	public function getEmptyBody() {
-		$text = '제재안이 없습니다.';
+		$text = wfMessage( 'sanctions-empty' )->text();
 
 		if ( $this->targetName == null ) {
-			$text = '현재 의결 중인 제재안이 없습니다.';
+			$text = wfMessage( 'sanctions-empty-now' )->text();
 		} else {
-			$text = '현재 의결 중인 ' . $this->targetName . '님에 대한 제재안이 없습니다.';
+			$text = wfMessage( 'sanctions-empty-about-now', $this->targetName )->text();
 		}
 		return Html::rawelement(
 			'div',
@@ -251,7 +261,7 @@ class SanctionsPager extends IndexPager {
 			'class' => 'sanction-process-toggle'
 			],
 			Html::submitButton(
-				'전환',
+				wfMessage( 'sanctions-row-button-toggle-emergency' )->text(),
 				[ 'class' => 'sanction-process-toggle-button' ],
 				[ 'mw-ui-progressive' ]
 			) .
@@ -287,7 +297,7 @@ class SanctionsPager extends IndexPager {
 			'class' => 'sanction-exectute-form'
 			],
 			Html::submitButton(
-				'처리',
+				wfMessage( 'sanctions-row-button-execute' )->text(),
 				[ 'class' => 'sanction-exectute-button' ],
 				[ 'mw-ui-progressive' ]
 			) .

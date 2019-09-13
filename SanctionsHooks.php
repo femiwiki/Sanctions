@@ -5,7 +5,7 @@ use Flow\Exception\InvalidInputException;
 
 class SanctionsHooks {
 	/**
-	 * 데이터베이스 테이블을 만듭니다.
+	 * Create tables in the database
 	 *
 	 * @param DatabaseUpdater|null $updater
 	 * @throws MWException
@@ -24,36 +24,34 @@ class SanctionsHooks {
 	}
 
 	/**
-	 * 제재안 관련 workflow 페이지들에 여러 처리를 합니다.
-	 *
 	 * @param OutputPage $out
 	 * @return bool
 	 */
 	public static function onFlowAddModules( OutputPage $out ) {
 		$title = $out->getTitle();
-		$specialSanctionTitle = SpecialPage::getTitleFor( 'Sanctions' ); // 특수:제재안목록
-		$discussionPageName = wfMessage( 'sanctions-discussion-page-name' )->text(); // 페미위키토론:제재안에 대한 의결
+		$specialSanctionTitle = SpecialPage::getTitleFor( 'Sanctions' ); // Special:Sanctions
+		$discussionPageName = wfMessage( 'sanctions-discussion-page-name' )->text(); // ProjectTalk:foobar
 
 		if ( $title == null ) {
 			return true;
 		}
 
-		// 제재안 목록 토론 페이지의 처리
+		// The Flow board for sanctions
 		if ( $title->getFullText() == $discussionPageName ) {
-			// url에 "redirect=no"가 붙어오지 않았다면 리다이렉트합니다. 근데 왜 이걸 따로 안 하면 무조건 리다이렉트가 되는 건지?
+			// Flow does not support redirection, so implement it.
+			// See https://phabricator.wikimedia.org/T102300
 			$request = RequestContext::getMain()->getRequest();
 			$redirect = $request->getVal( 'redirect' );
 			if ( !$redirect || $redirect == 'no ' ) {
 				$out->redirect( $specialSanctionTitle->getLocalURL( $query ) );
 			}
 
-			// CSS와 JavaScript를 적용합니다.
 			$out->addModules( 'ext.sanctions.flow-board' );
 
 			return true;
 		}
 
-		// 제재안 topic의 처리
+		// Each Flow topic
 		$uuid = null;
 		try {
 			$uuid = UUID::create( strtolower( $title->getText() ) );
@@ -61,45 +59,43 @@ class SanctionsHooks {
 			return true;
 		}
 
-		// UUID가 적절하지 않은 경우에 종료합니다.
+		// Do nothing when UUID is invalid
 		if ( !$uuid ) {
 			return true;
 		}
 
-		// 이 topic이 제재안과 관련된 것이 아니라면 종료합니다.
+		// Do nothing when the topic is not about sanction
 		$sanction = Sanction::newFromUUID( $uuid );
 		if ( $sanction === false ) {
 			return true;
 		}
 
-		// CSS와 JavaScript를 적용합니다.
 		$out->addModules( 'ext.sanctions.flow-topic' );
 
-		// 만료되지 않은 제재안이라면 새 표가 있는지 체크합니다. 이는 주제 요약을 갱신하기위함이며
-		// 원래는 이 hook 말고 ArticleSaveComplete나 RevisionInsertComplete에서 실행하고
-		// 싶었지만 flow 게시글을 작성할 때는 작동하지 않아 불가했습니다.
 		if ( !$sanction->isExpired() ) {
 			$sanction->checkNewVotes();
 		}
-		// else @todo 만료 표시
+		// else @todo mark as expired
 
 		return true;
 	}
 
-	// (토론|기여)
+	// (talk|contribs)
 	public static function onUserToolLinksEdit( $userId, $userText, &$items ) {
 		global $wgUser;
 		if ( $wgUser == null || !SanctionsUtils::hasVoteRight( $wgUser ) ) {
 			return true;
 		}
 
-		$specialSanctionTitle = SpecialPage::getTitleFor( 'Sanctions', $userText );
-		$items[] = Linker::link( $specialSanctionTitle, '제재안' );
+		$items[] = Linker::link(
+			SpecialPage::getTitleFor( 'Sanctions', $userText ),
+			wfMessage( 'sanctions-link-on-user-tool' )->text()
+		);
 		return true;
 	}
 
 	/**
-	 * (편집) (편집 취소)
+	 * (edit) (undo) (thank)
 	 * @param Revesion $newRev Revision object of the "new" revision
 	 * @param array &$links Array of HTML links
 	 * @param Revision $oldRev Revision object of the "old" revision (may be null)
@@ -118,8 +114,10 @@ class SanctionsHooks {
 		$ids .= $newRev->getId();
 
 		$titleText = $newRev->getUserText() . '/' . $ids;
-		$specialSanctionTitle = SpecialPage::getTitleFor( 'Sanctions', $titleText );
-		$links[] = Linker::link( $specialSanctionTitle, '이 편집을 근거로 제재 건의' );
+		$links[] = Linker::link(
+			SpecialPage::getTitleFor( 'Sanctions', $titleText ),
+			wfMessage( 'sanctions-link-on-diff' )->text()
+	);
 
 		return true;
 	}
@@ -137,8 +135,10 @@ class SanctionsHooks {
 		}
 
 		$titleText = $rev->getUserText() . '/' . $rev->getId();
-		$specialSanctionTitle = SpecialPage::getTitleFor( 'Sanctions', $titleText );
-		$links[] = Linker::link( $specialSanctionTitle, '이 편집을 근거로 제재 건의' );
+		$links[] = Linker::link(
+			SpecialPage::getTitleFor( 'Sanctions', $titleText ),
+			wfMessage( 'sanctions-link-on-history' )->text()
+		);
 
 		return true;
 	}
@@ -155,7 +155,7 @@ class SanctionsHooks {
 			$toolbox = wfArrayInsertAfter(
 				$toolbox,
 				[ 'sanctions' => [
-					'text' => '제재안 목록',
+					'text' => wfMessage( 'sanctions-link-on-user-page' )->text(),
 					'href' => Skin::makeSpecialUrlSubpage( 'Sanctions', $rootUser ),
 					'id' => 't-sanctions'
 				] ],
@@ -173,7 +173,7 @@ class SanctionsHooks {
 	public static function onContributionsToolLinks( $id, $title, &$tools, $sp ) {
 		$tools['sanctions'] = $sp->getLinkRenderer()->makeKnownLink(
 				SpecialPage::getTitleFor( 'Sanctions', User::newFromId( $id ) ),
-				'제재안 목록'
+				wfMessage( 'sanctions-link-on-user-contributes' )->text()
 			);
 	}
 }

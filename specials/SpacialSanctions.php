@@ -32,7 +32,10 @@ class SpacialSanctions extends SpecialPage {
 		// 대상자가 있다면 제목을 변경하고 전체 목록을 보는 링크를 추가합니다.
 		if ( $this->mTargetName != null ) {
 			$output->setPageTitle( $this->msg( 'sanctions-title-with-target', $this->mTargetName ) );
-			$output->setSubTitle( '< ' . Linker::link( $this->getTitle(), '모든 제재안 보기' ) );
+			$output->setSubTitle( '< ' . Linker::link(
+				$this->getTitle(),
+				wfMessage( 'sanctions-show-all-sanctions-link' )->text()
+			) );
 		}
 
 		$pager = new SanctionsPager( $this->getContext(), $this->mTargetName );
@@ -44,16 +47,14 @@ class SpacialSanctions extends SpecialPage {
 			$output->addHTML( $this->makeForm() );
 		} else {
 			if ( $this->getUser()->isAnon() ) {
-				$message = '다음의 이유로 제재 절차 참여를 위한 조건이 맞지 않습니다. [[페미위키:제재 정책]]을 참고해 주세요.';
+				$message = wfMessage( 'sanctions-unable-create-new' )->text();
 			} else {
-				$message = '다음의 이유로 현재 ' .
-					$this->getUser()->getName() .
-					' 님께서는 제재 절차에 참여할 수 없습니다. [[페미위키:제재 정책]]을 참고해 주세요.' .
-					PHP_EOL;
+				$message = wfMessage( 'sanctions-unable-create-new-logged-in', $this->getUser()->getName() )
+					->text();
 			}
 
 			if ( count( $reason ) > 0 ) {
-				$message .= '* ' . implode( PHP_EOL . '* ', $reason );
+				$message .= PHP_EOL . '* ' . implode( PHP_EOL . '* ', $reason );
 			}
 
 			$output->addWikiTextAsInterface( $message );
@@ -98,7 +99,7 @@ class SpacialSanctions extends SpecialPage {
 		if ( count( $parts ) == 1 ) { return;
 		}
 
-		// newRivisionId 구하기
+		// Fetch newRivisionId
 		$newRevisionId = $parts[ count( $parts ) - 1 ];
 
 		$newRevision = Revision::newFromId( $newRevisionId );
@@ -107,7 +108,7 @@ class SpacialSanctions extends SpecialPage {
 			return;
 		}
 
-		// oldRivisionId 구하기
+		// Fetch oldRivisionId
 		if ( count( $parts ) == 3 ) {
 			$oldRevisionId = $parts[1];
 			$oldRevision = Revision::newFromId( $oldRevisionId );
@@ -197,7 +198,8 @@ class SpacialSanctions extends SpecialPage {
 				$user = $this->getUser();
 				$targetName = $request->getVal( 'target' );
 				$forInsultingName = $request->getBool( 'forInsultingName' );
-				$content = $request->getVal( 'content' ) ? : '내용이 입력되지 않았습니다.';
+				$content = $request->getVal( 'content' ) ?:
+					wfMessage( 'sanctions-topic-no-description' )->text();
 
 				if ( !$targetName ) {
 					list( $query['showResult'], $query['errorCode'] ) = [ true, 100 ];
@@ -310,29 +312,31 @@ class SpacialSanctions extends SpecialPage {
 	 * @param int $errorCode
 	 * @param UUID $uuid
 	 * @param string $targetName
-	 * @return string 오류 메시지
+	 * @return string Error Message
 	 */
 	protected static function makeErrorMessage( $errorCode, $uuid, $targetName ) {
 		$link = $uuid ? Linker::link( Sanction::newFromUUID( $uuid )->getTopic() ) : '';
 		switch ( $errorCode ) {
 		case 0:
-			return '토큰에 문제가 있습니다.';
+			return wfMessage( "sanctions-submit-error-invalid-token" )->text();
 		case 1:
-			return '권한이 없습니다.';
+			return wfMessage( "sanctions-submit-error-no-permission" )->text();
 		case 2:
-			return '제재안 작성에 실패하였습니다.';
+			return wfMessage( "sanctions-submit-error-failed-to-add-topic" )->text();
 		case 3:
-			return '절차 전환에 실패하였습니다.';
+			return wfMessage( "sanctions-submit-error-failed-to-toggle-process" )->text();
 		case 4:
-			return '제재안 집행에 실패하였습니다.';
+			return wfMessage( "sanctions-submit-error-failed-to-execute" )->text();
 		case 100:
-			return '사용자명을 입력하지 않았습니다.';
+			return wfMessage( "sanctions-submit-error-no-username" )->text();
 		case 101:
-			return $targetName . '이라는 이름의 사용자가 존재하지 않습니다.';
+			return wfMessage( "sanctions-submit-error-invaild-username", $targetName )->text();
 		case 102:
-			return $targetName . ' 님에 대한 부적절한 사용자명 변경 건의(' . $link . ')가 이미 존재합니다.';
+			return wfMessage(
+					"sanctions-submit-error-insulting-report-already-exist", [ $targetName, $link ]
+				)->text();
 		default:
-			return 'Error Code ' . $errorCode;
+			return wfMessage( "sanctions-submit-error-other", $errorCode )->text();
 		}
 	}
 
@@ -340,21 +344,21 @@ class SpacialSanctions extends SpecialPage {
 	 * @param int $code
 	 * @param UUID $uuid
 	 * @param string $targetName
-	 * @return string 메시지
+	 * @return string Message
 	 */
 	protected static function makeMessage( $code, $uuid, $targetName ) {
 		$link = $uuid ? Linker::link( Sanction::newFromUUID( $uuid )->getTopic() ) : '';
 		switch ( $code ) {
 		case 0:
-			return '제재안(' . $link . ')을 만들었습니다.';
+			return wfMessage( "sanctions-submit-massage-added-topic", $link )->text();
 		case 1:
-			return '제재안(' . $link . ')을 긴급 절차로 바꾸었습니다.';
+			return wfMessage( "sanctions-submit-massage-switched-emergency", $link )->text();
 		case 2:
-			return '제재안(' . $link . ')을 일반 절차로 바꾸었습니다.';
+			return wfMessage( "sanctions-submit-massage-switched-normal", $link )->text();
 		case 3:
-			return '제재안(' . $link . ')을 처리하였습니다.';
+			return wfMessage( "sanctions-submit-massage-executed-sanction", $link )->text();
 		default:
-			return 'Code ' . $code;
+			return wfMessage( "sanctions-submit-massage-other", $code )->text();
 		}
 	}
 
@@ -376,13 +380,13 @@ class SpacialSanctions extends SpecialPage {
 			'action' => $this->getTitle()->getFullURL(),
 			'id' => 'sanctionsForm'
 			],
-			'대상: ' .
+			wfMessage( 'sanctions-form-target' )->text().
 			Xml::input(
 				'target', 10, $this->mTargetName, [ 'class' => 'mw-ui-input-inline' ]
 			) .
 			' ' .
 			Xml::checkLabel(
-				'부적절한 사용자명',
+				wfMessage( 'sanctions-form-for-insulting-name' )->text(),
 				'forInsultingName',
 				'forInsultingName',
 				$this->mNewRevisionId == null && $this->mTargetName != null,
@@ -423,11 +427,16 @@ class SpacialSanctions extends SpecialPage {
 
 		$rt = '';
 		if ( $oldRevisionId != null ) {
-			$rt = '* [[특수:차이/' . $oldRevisionId . '/' . $newRevisionId . '|' .
-				$newRevision->getTitle()->getFullText() . ' 문서의 편집]]';
+			$rt = wfMessage( 'sanctions-topic-diff', [
+				$oldRevisionId,
+				$newRevisionId,
+				$newRevision->getTitle()->getFullText()
+			] )->inContentLanguage()->text();
 		} else {
-			$rt = '* [[특수:넘겨주기/revision/' . $newRevisionId . '|' .
-				$newRevision->getTitle()->getFullText() . ' 문서(새글)]]';
+			$rt = wfMessage( 'sanctions-topic-revision', [
+				$newRevisionId,
+				$newRevision->getTitle()->getFullText()
+			] )->inContentLanguage()->text();
 		}
 
 		return $rt;

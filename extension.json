@@ -32,7 +32,8 @@
       "styles": ["styles/flow-board.less"]
     },
     "ext.sanctions.flow-topic": {
-      "scripts": ["ext.flowTopic.js"]
+      "scripts": ["ext.flowTopic.js"],
+      "messages": ["sanctions-voting-help-message"]
     }
   },
   "ResourceFileModulePaths": {
