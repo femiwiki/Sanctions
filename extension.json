@@ -42,6 +42,8 @@
   },
   "Hooks": {
     "LoadExtensionSchemaUpdates": "SanctionsHooks::onLoadExtensionSchemaUpdates",
+    "AbortEmailNotification": "SanctionsHooks::onAbortEmailNotification",
+    "BeforeEchoEventInsert": "SanctionsHooks::onBeforeEchoEventInsert",
     "UserToolLinksEdit": "SanctionsHooks::onUserToolLinksEdit",
     "DiffRevisionTools": "SanctionsHooks::onDiffRevisionTools",
     "HistoryRevisionTools": "SanctionsHooks::onHistoryRevisionTools",
