@@ -81,7 +81,7 @@
   "sanctions-reason-unsatisfying-verification-edits": "최근 $1일 간 편집 수가 $2번으로 $3보다 적음",
   "sanctions-reason-blocked": "차단되어 있음",
   "sanctions-reason-recently-blocked": "차단이 풀린 $1으로부터 $2일이 경과하지 않음",
-  "sanctions-link-on-user-tool": "이 편집을 근거로 제재 건의",
+  "sanctions-link-on-user-tool": "제재안",
   "sanctions-link-on-diff": "이 편집을 근거로 제재 건의",
   "sanctions-link-on-history": "이 편집을 근거로 제재 건의",
   "sanctions-link-on-user-contributes": "제재안 목록",
