@@ -948,9 +948,9 @@ class Sanction {
 
 			$reason = []; // Empty if present
 			if ( $this->getAuthor()->getId() == $userId ) {
-				$content = wfMessage( 'sanctions-topic-reply-no-count' )->inContentLanguage()->text() .
+				$content = wfMessage( 'sanctions-topic-auto-reply-no-count' )->inContentLanguage()->text() .
 					PHP_EOL . '* ' .
-					wfMessage( 'sanctions-topic-reply-unable-self-voting' )->inContentLanguage()->text();
+					wfMessage( 'sanctions-topic-auto-reply-unable-self-voting' )->inContentLanguage()->text();
 				try {
 					$this->replyTo( $row->rev_id, $content );
 				} catch ( Flow\Exception\DataModelException $e ) {
@@ -961,7 +961,7 @@ class Sanction {
 				unset( $votes[$userId] );
 				continue;
 			} elseif ( !SanctionsUtils::hasVoteRight( User::newFromId( $userId ), $reason ) ) {
-				$content = wfMessage( 'sanctions-topic-reply-no-count' )->inContentLanguage()->text() .
+				$content = wfMessage( 'sanctions-topic-auto-reply-no-count' )->inContentLanguage()->text() .
 					PHP_EOL . '* ' . implode( PHP_EOL . '* ', $reason );
 				try {
 					$this->replyTo( $row->rev_id, $content );
