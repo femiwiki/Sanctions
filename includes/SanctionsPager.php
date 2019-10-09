@@ -293,8 +293,7 @@ class SanctionsPager extends IndexPager {
 			'form',
 			[
 			'method' => 'post',
-			'action' => $this->getContext()->getTitle()->getFullURL(),
-			'class' => 'sanction-exectute-form'
+			'action' => $this->getContext()->getTitle()->getFullURL()
 			],
 			Html::submitButton(
 				wfMessage( 'sanctions-row-button-execute' )->text(),

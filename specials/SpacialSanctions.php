@@ -401,7 +401,7 @@ class SpacialSanctions extends SpecialPage {
 			) .
 			Html::submitButton(
 				$this->msg( 'sanctions-submit' )->text(),
-				[ 'id' => 'submit-button' ], [ 'mw-ui-progressive' ]
+				[ 'class' => 'submit-button' ], [ 'mw-ui-progressive' ]
 			) .
 			Html::hidden(
 				'token',
