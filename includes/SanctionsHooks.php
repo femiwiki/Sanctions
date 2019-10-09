@@ -160,6 +160,11 @@ class SanctionsHooks {
 			->inContentLanguage()->text();
 		$vars['wgSanctionsDisagreeTemplate'] = wfMessage( 'sanctions-template-disagree' )
 			->inContentLanguage()->text();
+		$vars['wgSanctionsInsultingNameTopicTitle'] = wfMessage( 'sanctions-type-insulting-name' )
+			->inContentLanguage()->text();
+		$vars['wgSanctionsMaxBlockPeriod'] = (int)wfMessage( 'sanctions-max-block-period' )
+			->inContentLanguage()->text();
+
 		return true;
 	}
 

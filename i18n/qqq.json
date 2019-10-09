@@ -86,5 +86,11 @@
   "sanctions-link-on-history": "Text for link to sanction displayed on history page.",
   "sanctions-link-on-user-contributes": "Text for link to sanction displayed on user contirubutes page",
   "sanctions-link-on-user-page": "Text for link to sanction displayed on user page",
-  "sanctions-voting-help-message": "Wikitext displayed as a sanction help."
+	"sanctions-template-agree": "Template name used to vote",
+  "sanctions-template-disagree": "Template name used to vote",
+	"sanctions-ve-vote-agree-tool-title": "Title text for the agree tool on Structured Discussions's VisualEditor toolbar.",
+	"sanctions-ve-vote-disagree-tool-title": "Title text for the disagree tool on Structured Discussions's VisualEditor toolbar.",
+  "sanctions-ve-agree-days-inspector-title": "Title text for day selector inspector",
+  "sanctions-ve-agree-days-inspector-remove-label": "Text of remove button on Structured Discussions's choose expiration panel (inspector) in the VisualEditor.",
+  "sanctions-ve-agree-days-inspector-invalid-value": "Error message. Parameters:\n$1: Entered value."
 }

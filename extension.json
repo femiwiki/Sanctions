@@ -1,7 +1,7 @@
 {
 	"name": "Sanctions",
 	"version": "1.0.2",
-	"author": ["Lens"],
+	"author": [ "Lens" ],
 	"url": "https://github.com/femiwiki/sanctions",
 	"descriptionmsg": "sanctions-desc",
 	"license-name": "GPL-2.0-or-later",
@@ -13,7 +13,7 @@
 			"Flow": "*"
 		}
 	},
-	"AvailableRights": ["sanctions-execute"],
+	"AvailableRights": [ "sanctions-execute" ],
 	"AutoloadClasses": {
 		"SpacialSanctions": "specials/SpacialSanctions.php",
 		"SanctionsPager": "includes/SanctionsPager.php",
@@ -23,17 +23,43 @@
 	},
 	"ResourceModules": {
 		"ext.sanctions.special.sanctions.styles": {
-			"styles": ["styles/spacial-sanctions.less"]
+			"styles": [ "styles/spacial-sanctions.less" ]
 		},
 		"ext.sanctions.special.sanctions": {
-			"scripts": ["ext.sanctions.specialSanctions.js"]
+			"scripts": [ "ext.sanctions.specialSanctions.js" ]
 		},
 		"ext.sanctions.flow-board": {
-			"styles": ["styles/flow-board.less"]
+			"scripts": [ "ext.flowBoard.js" ],
+			"styles": [ "styles/flow-board.less" ],
+			"dependencies": [ "ext.sanctions.dm" ]
 		},
 		"ext.sanctions.flow-topic": {
-			"scripts": ["ext.flowTopic.js"],
-			"messages": ["sanctions-voting-help-message"]
+			"scripts": [ "ext.flowTopic.js" ],
+			"dependencies": [ "ext.sanctions.dm" ]
+		},
+		"ext.sanctions.dm": {
+			"scripts": [
+				"sanctions/mw.sanctions.js",
+				"visualeditor/mw.sanctions.ve.js",
+				"visualeditor/ui/mw.sanctions.ve.ui.js",
+				"visualeditor/ui/inspectors/mw.sanctions.ve.ui.AgreeInspector.js",
+				"visualeditor/ui/tools/mw.sanctions.ve.ui.AgreeWithDaysTool.js",
+				"visualeditor/ui/commands/mw.sanctions.ve.ui.AgreeCommand.js",
+				"visualeditor/ui/commands/mw.sanctions.ve.ui.DisagreeCommand.js",
+				"visualeditor/ui/tools/mw.sanctions.ve.ui.AgreeTool.js",
+				"visualeditor/ui/tools/mw.sanctions.ve.ui.DisagreeTool.js"
+			],
+			"messages": [
+				"sanctions-ve-vote-agree-tool-title",
+				"sanctions-ve-vote-disagree-tool-title",
+				"sanctions-ve-agree-days-inspector-title",
+				"sanctions-ve-agree-days-inspector-remove-label",
+				"sanctions-ve-agree-days-inspector-invalid-value"
+			],
+			"dependencies": [
+				"ext.visualEditor.core",
+				"ext.flow.visualEditor"
+			]
 		}
 	},
 	"ResourceFileModulePaths": {
@@ -44,6 +70,7 @@
 		"LoadExtensionSchemaUpdates": "SanctionsHooks::onLoadExtensionSchemaUpdates",
 		"AbortEmailNotification": "SanctionsHooks::onAbortEmailNotification",
 		"BeforeEchoEventInsert": "SanctionsHooks::onBeforeEchoEventInsert",
+		"ResourceLoaderGetConfigVars": "SanctionsHooks::onResourceLoaderGetConfigVars",
 		"UserToolLinksEdit": "SanctionsHooks::onUserToolLinksEdit",
 		"DiffRevisionTools": "SanctionsHooks::onDiffRevisionTools",
 		"HistoryRevisionTools": "SanctionsHooks::onHistoryRevisionTools",
@@ -55,7 +82,7 @@
 		"Sanctions": "SpacialSanctions"
 	},
 	"MessagesDirs": {
-		"Sanctions": ["i18n"]
+		"Sanctions": [ "i18n" ]
 	},
 	"ExtensionMessagesFiles": {
 		"SanctionsAlias": "Sanctions.alias.php",

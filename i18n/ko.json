@@ -86,5 +86,11 @@
   "sanctions-link-on-history": "이 편집을 근거로 제재 건의",
   "sanctions-link-on-user-contributes": "제재안 목록",
   "sanctions-link-on-user-page": "제재안 목록",
-  "sanctions-voting-help-message": "<pre><strong>도움말</strong>\n다음과 같이 쓴 경우에 집계됩니다:\n<code>{{찬성|3}}</code>, <code>{{찬성}}</code>, <code>{{반대}}</code>\n부적절한 사용자명 변경 건의에는 <code>{{찬성}}</code>, <code>{{반대}}</code>만을 사용할 수 있습니다.</pre>"
+  "sanctions-template-agree": "찬성",
+  "sanctions-template-disagree": "반대",
+	"sanctions-ve-vote-agree-tool-title": "찬성하기",
+	"sanctions-ve-vote-disagree-tool-title": "반대하기",
+	"sanctions-ve-agree-days-inspector-title": "기한",
+  "sanctions-ve-agree-days-inspector-remove-label": "제거",
+  "sanctions-ve-agree-days-inspector-invalid-value": "$1 입력은 올바른 값이 아닙니다."
 }

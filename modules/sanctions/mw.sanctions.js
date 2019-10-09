@@ -1,0 +1,1 @@
+mw.sanctions = mw.sanctions || {};
