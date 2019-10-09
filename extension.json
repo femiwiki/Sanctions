@@ -18,7 +18,7 @@
 		"SpacialSanctions": "specials/SpacialSanctions.php",
 		"SanctionsPager": "includes/SanctionsPager.php",
 		"Sanction": "includes/Sanction.php",
-		"SanctionsHooks": "SanctionsHooks.php",
+		"SanctionsHooks": "includes/SanctionsHooks.php",
 		"SanctionsUtils": "includes/SanctionsUtils.php"
 	},
 	"ResourceModules": {

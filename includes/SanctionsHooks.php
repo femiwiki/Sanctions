@@ -99,14 +99,15 @@ class SanctionsHooks {
 	public static function onFlowAddModules( OutputPage $out ) {
 		$title = $out->getTitle();
 		$specialSanctionTitle = SpecialPage::getTitleFor( 'Sanctions' ); // Special:Sanctions
-		$discussionPageName = wfMessage( 'sanctions-discussion-page-name' )->text(); // ProjectTalk:foobar
+		$discussionPageName = wfMessage( 'sanctions-discussion-page-name' )
+			->inContentLanguage()->text(); // ProjectTalk:foobar
 
 		if ( $title == null ) {
 			return true;
 		}
 
 		// The Flow board for sanctions
-		if ( $title->getFullText() == $discussionPageName ) {
+		if ( $title->equals( Title::newFromText( $discussionPageName ) ) ) {
 			// Flow does not support redirection, so implement it.
 			// See https://phabricator.wikimedia.org/T102300
 			$request = RequestContext::getMain()->getRequest();
@@ -146,6 +147,19 @@ class SanctionsHooks {
 		}
 		// else @todo mark as expired
 
+		return true;
+	}
+
+	/**
+	 * export static key and id to JavaScript
+	 * @param array &$vars Array of variables to be added into the output of the startup module.
+	 * @return true
+	 */
+	public static function onResourceLoaderGetConfigVars( &$vars ) {
+		$vars['wgSanctionsAgreeTemplate'] = wfMessage( 'sanctions-template-agree' )
+			->inContentLanguage()->text();
+		$vars['wgSanctionsDisagreeTemplate'] = wfMessage( 'sanctions-template-disagree' )
+			->inContentLanguage()->text();
 		return true;
 	}
 
