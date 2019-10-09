@@ -24,7 +24,7 @@
 <h2>설정</h2>
 <p>위키의 다음 문서를 수정하여 설정을 변경할 수 있습니다.</p>
 <dl>
-    <di>미디어위키:sanctions-discussion-page-name</di><dd>제재안 게시 문서 이름입니다. 기본값 "페미위키토론:제재안에 대한 의결".</dd>
+    <di>미디어위키:sanctions-discussion-page-name</di><dd>제재안 게시 문서 이름입니다. 기본값 "Project Talk:제재안에 대한 의결".</dd>
     <di>미디어위키:sanctions-voting-period</di><dd>의결 기간 일수입니다. Float형 기본값 3.</dd>
     <di>미디어위키:Sanctions-max-block-period</di><dd>제시할 수 있는 최대 제재기간 일수입니다. Float형 기본값 30.</dd>
     <di>미디어위키:sanctions-voting-right-verification-period</di>
