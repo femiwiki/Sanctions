@@ -17,7 +17,7 @@ class SanctionsHooks {
 		if ( $updater->getDB()->getType() == 'mysql' ) {
 			$updater->addExtensionUpdate(
 				[ 'addTable', 'sanctions',
-				"$dir/sanctions.tables.sql", true ]
+				"$dir/../sql/sanctions.tables.sql", true ]
 			);
 		} // @todo else
 		return true;
