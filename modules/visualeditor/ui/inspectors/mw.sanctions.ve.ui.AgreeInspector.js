@@ -148,11 +148,18 @@
 		// Properties
 		overlay = this.manager.getOverlay();
 
-		this.expirationInput = new OO.ui.NumberInputWidget( {
-			input: { value: null },
-			min: 1,
-			max: mw.config.get( 'wgSanctionsMaxBlockPeriod' ),
-			$overlay: overlay ? overlay.$element : this.$frame
+		this.expirationInput = new OO.ui.TextInputWidget( {
+			$overlay: overlay ? overlay.$element : this.$frame,
+			value: '',
+			// The next line is commented out as error is raised on Firefox.
+			// See https://github.com/femiwiki/Sanctions/issues/61
+			// type: 'number',
+			validate: function ( value ) {
+				if ( value <= mw.config.get( 'wgSanctionsMaxBlockPeriod' ) ) {
+					return true;
+				}
+				return false;
+			}
 		} );
 
 		// Initialization
