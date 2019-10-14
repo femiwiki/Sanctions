@@ -69,7 +69,7 @@
 	"sanctions-topic-summary-reason-more-than-three-and-not-agreed": "참가자가 3명 이상이고 ⅔ 미만인 $1명이 찬성",
 	"sanctions-topic-summary-deadline": "의결 종료 예정 시각: $1",
 	"sanctions-topic-auto-reply-no-count": "이 의견은 다음 이유로 집계되지 않습니다.",
-	"sanctions-topic-auto-reply-unable-self-voting": "자신의 제재안에 표결할 수 없습니다.",
+	"sanctions-topic-auto-reply-unable-self-agree": "자신의 제재안에는 반대만 할 수 있습니다.",
 	"sanctions-log-take-temporary-measure": "[[주제:$1|제재안]]의 긴급 절차 전환",
 	"sanctions-log-remove-temporary-measure": "[[주제:$1|제재안]] 일반 절차 전환에 따른 임시 조치 해제",
 	"sanctions-log-take-measure": "[[주제:$1|제재안]]의 가결",

@@ -69,7 +69,7 @@
 	"sanctions-topic-summary-reason-more-than-three-and-not-agreed": "Used in topic summary. Parameters:\n* $1 - number of people agree the sanction",
 	"sanctions-topic-summary-deadline": "Used in topic summary. $1 Parameters:\n* $1 - The localized time.",
 	"sanctions-topic-auto-reply-no-count": "Used as a header in an automatic reply notifies above reply is not counted.",
-	"sanctions-topic-auto-reply-unable-self-voting": "Used in an automatic reply that attempt to vote and the writer is same of the sanction.",
+	"sanctions-topic-auto-reply-unable-self-agree": "Used in an automatic reply to a agreement comment that written by the writer of the sanction itself.",
 	"sanctions-log-take-temporary-measure": "Text for reason of the log. Parameters:\n* $1 - UUID of the topic",
 	"sanctions-log-remove-temporary-measure": "Text for reason of the log. Parameters:\n* $1 - UUID of the topic",
 	"sanctions-log-take-measure": "Text for reason of the log. Parameters:\n* $1 - UUID of the topic",

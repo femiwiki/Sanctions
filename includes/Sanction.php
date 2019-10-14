@@ -950,7 +950,7 @@ class Sanction {
 			if ( $this->getAuthor()->getId() == $userId ) {
 				$content = wfMessage( 'sanctions-topic-auto-reply-no-count' )->inContentLanguage()->text() .
 					PHP_EOL . '* ' .
-					wfMessage( 'sanctions-topic-auto-reply-unable-self-voting' )->inContentLanguage()->text();
+					wfMessage( 'sanctions-topic-auto-reply-unable-self-agree' )->inContentLanguage()->text();
 				try {
 					$this->replyTo( $row->rev_id, $content );
 				} catch ( Flow\Exception\DataModelException $e ) {
