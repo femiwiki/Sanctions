@@ -100,14 +100,14 @@ class Sanction {
 		$blocks = $loader->getBlocks();
 		$action = 'new-topic';
 		$params = [
-		'topiclist' => [
-		'page' => $discussionPageName,
-		'token' => $user->getEditToken(),
-		'action' => 'flow',
-		'submodule' => 'new-topic',
-		'topic' => $topicTitle,
-		'content' => $content
-		]
+			'topiclist' => [
+				'page' => $discussionPageName,
+				'token' => $user->getEditToken(),
+				'action' => 'flow',
+				'submodule' => 'new-topic',
+				'topic' => $topicTitle,
+				'content' => $content
+			]
 		];
 		$context = RequestContext::getMain();
 		$blocksToCommit = $loader->handleSubmit(
@@ -135,12 +135,12 @@ class Sanction {
 
 		$uuid = UUID::create( $topicId )->getBinary();
 		$data = [
-		'st_author' => $authorId,
-		'st_target' => $targetId,
-		'st_topic' => $uuid,
-		'st_expiry' => $expiry,
-		'st_original_name' => $forInsultingName ? $targetName : '',
-		'st_last_update_timestamp' => $now
+			'st_author' => $authorId,
+			'st_target' => $targetId,
+			'st_topic' => $uuid,
+			'st_expiry' => $expiry,
+			'st_original_name' => $forInsultingName ? $targetName : '',
+			'st_last_update_timestamp' => $now
 		];
 
 		$db = wfGetDB( DB_MASTER );
@@ -195,8 +195,8 @@ class Sanction {
 		$db->update(
 			'sanctions',
 			[
-			'st_emergency' => $emergency ? 1 : 0,
-			'st_last_update_timestamp' => $now
+				'st_emergency' => $emergency ? 1 : 0,
+				'st_last_update_timestamp' => $now
 			],
 			[ 'st_id' => $id ]
 		);
@@ -413,8 +413,8 @@ class Sanction {
 		$res = $db->update(
 			'sanctions',
 			[
-			'st_expiry' => wfTimestamp( TS_MW ),
-			'st_last_update_timestamp' => $now
+				'st_expiry' => wfTimestamp( TS_MW ),
+				'st_last_update_timestamp' => $now
 			],
 			[ 'st_id' => $this->mId ]
 		);
@@ -453,8 +453,8 @@ class Sanction {
 		$res = $db->update(
 			'sanctions',
 			[
-			'st_handled' => 1,
-			'st_last_update_timestamp' => $now
+				'st_handled' => 1,
+				'st_last_update_timestamp' => $now
 			],
 			[ 'st_id' => $id ]
 		);
@@ -472,16 +472,16 @@ class Sanction {
 		$row = $db->selectRow(
 			'flow_revision',
 			[
-			'*'
+				'*'
 			],
 			[
-			'rev_type_id' => $this->mTopic->getBinary(),
-			'rev_type' => 'post-summary'
+				'rev_type_id' => $this->mTopic->getBinary(),
+				'rev_type' => 'post-summary'
 			],
 			__METHOD__,
 			[
-			'LIMIT' => 1,
-			'ORDER BY' => 'rev_id DESC'
+				'LIMIT' => 1,
+				'ORDER BY' => 'rev_id DESC'
 			]
 		);
 		if ( $row != null ) {
@@ -497,15 +497,15 @@ class Sanction {
 		$blocks = $loader->getBlocks();
 		$action = 'edit-topic-summary';
 		$params = [
-		'topicsummary' => [
-		'page' => $topicTitleText,
-		'token' => self::getBot()->getEditToken(),
-		'action' => 'flow',
-		'submodule' => 'edit-topic-summary',
-		'prev_revision' => isset( $previousIdText ) ? $previousIdText : null,
-		'summary' => $this->getSanctionSummary(),
-		'format' => 'wikitext'
-		]
+			'topicsummary' => [
+				'page' => $topicTitleText,
+				'token' => self::getBot()->getEditToken(),
+				'action' => 'flow',
+				'submodule' => 'edit-topic-summary',
+				'prev_revision' => isset( $previousIdText ) ? $previousIdText : null,
+				'summary' => $this->getSanctionSummary(),
+				'format' => 'wikitext'
+			]
 		];
 		$context = clone RequestContext::getMain();
 
@@ -770,7 +770,7 @@ class Sanction {
 				'sanctions_vote',
 				'*',
 				[
-				'stv_topic' => $this->mTopic->getBinary()
+					'stv_topic' => $this->mTopic->getBinary()
 				]
 			);
 			// Convert the wrapped result to an array
@@ -823,9 +823,9 @@ class Sanction {
 			'sanctions',
 			'*',
 			[
-			'st_target' => $targetId,
-			"st_original_name <> ''",
-			'st_expiry > ' . wfTimestamp( TS_MW )
+				'st_target' => $targetId,
+				"st_original_name <> ''",
+				'st_expiry > ' . wfTimestamp( TS_MW )
 			]
 		);
 		if ( $row !== false ) {
@@ -841,7 +841,7 @@ class Sanction {
 			'sanctions',
 			'st_id',
 			[
-			'st_handled' => 0,
+				'st_handled' => 0,
 			]
 		);
 
@@ -866,8 +866,8 @@ class Sanction {
 			'flow_workflow',
 			'workflow_last_update_timestamp',
 			[
-			'workflow_id' => $uuid->getBinary(),
-			'workflow_type' => 'topic'
+				'workflow_id' => $uuid->getBinary(),
+				'workflow_type' => 'topic'
 			]
 		);
 		$id = $this->mId;
@@ -875,7 +875,7 @@ class Sanction {
 			'sanctions',
 			'st_last_update_timestamp',
 			[
-			'st_id' => $id
+				'st_id' => $id
 			]
 		);
 		if ( $topicLastUpdate <= $sanctionLastUpdate ) {
@@ -886,25 +886,25 @@ class Sanction {
 		// @todo All revisions is not required
 		$res = $db->select(
 			[
-			'flow_workflow',
-			'flow_tree_node',
-			'flow_tree_revision',
-			'flow_revision'
+				'flow_workflow',
+				'flow_tree_node',
+				'flow_tree_revision',
+				'flow_revision'
 			],
 			[
-			'rev_id',
-			'rev_user_id',
-			'rev_content'
+				'rev_id',
+				'rev_user_id',
+				'rev_content'
 			],
 			[
-			'workflow_id' => $uuid->getBinary()
+				'workflow_id' => $uuid->getBinary()
 			],
 			__METHOD__,
 			[ 'DISTINCT' ],
 			[
-			'flow_tree_node' => [ 'INNER JOIN', 'workflow_id = tree_ancestor_id' ],
-			'flow_tree_revision' => [ 'INNER JOIN', 'tree_descendant_id = tree_rev_descendant_id' ],
-			'flow_revision' => [ 'INNER JOIN', 'tree_rev_id = rev_id' ],
+				'flow_tree_node' => [ 'INNER JOIN', 'workflow_id = tree_ancestor_id' ],
+				'flow_tree_revision' => [ 'INNER JOIN', 'tree_descendant_id = tree_rev_descendant_id' ],
+				'flow_revision' => [ 'INNER JOIN', 'tree_rev_id = rev_id' ],
 			]
 		);
 
@@ -939,10 +939,10 @@ class Sanction {
 			$db->update(
 				'flow_revision',
 				[
-				'rev_content' => $newContent
+					'rev_content' => $newContent
 				],
 				[
-				'rev_id' => $row->rev_id
+					'rev_id' => $row->rev_id
 				]
 			);
 
@@ -984,8 +984,8 @@ class Sanction {
 
 			// save to the array
 			$votes[$userId] = [
-			'stv_period' => $period,
-			'stv_last_update_timestamp' => $timestamp
+				'stv_period' => $period,
+				'stv_last_update_timestamp' => $timestamp
 			];
 		}
 
@@ -998,22 +998,22 @@ class Sanction {
 			$previous = $db->selectRow(
 				'sanctions_vote',
 				[
-				'stv_period',
-				'stv_last_update_timestamp'
+					'stv_period',
+					'stv_last_update_timestamp'
 				],
 				[
-				'stv_topic' => $uuid->getBinary(),
-				'stv_user' => $userId
+					'stv_topic' => $uuid->getBinary(),
+					'stv_user' => $userId
 				]
 			);
 			if ( $previous == false ) {
 				$db->insert(
 					'sanctions_vote',
 					[
-					 'stv_topic' => $uuid->getBinary(),
-					 'stv_user' => $userId,
-					 'stv_period' => $vote['stv_period'],
-					 'stv_last_update_timestamp' => $vote['stv_last_update_timestamp']
+						'stv_topic' => $uuid->getBinary(),
+						'stv_user' => $userId,
+						'stv_period' => $vote['stv_period'],
+						'stv_last_update_timestamp' => $vote['stv_last_update_timestamp']
 					]
 				);
 				$dbIsTouched = true;
@@ -1024,12 +1024,12 @@ class Sanction {
 				$db->update(
 					'sanctions_vote',
 					[
-					'stv_period' => $vote['stv_period'],
-					'stv_last_update_timestamp' => $vote['stv_last_update_timestamp'],
+						'stv_period' => $vote['stv_period'],
+						'stv_last_update_timestamp' => $vote['stv_last_update_timestamp'],
 					],
 					[
-					'stv_topic' => $uuid->getBinary(),
-					'stv_user' => $userId
+						'stv_topic' => $uuid->getBinary(),
+						'stv_user' => $userId
 					]
 				);
 				$dbIsTouched = true;
@@ -1041,10 +1041,10 @@ class Sanction {
 			$db->update(
 				'sanctions',
 				[
-				'st_last_update_timestamp' => $sanctionLastUpdate
+					'st_last_update_timestamp' => $sanctionLastUpdate
 				],
 				[
-				'st_id' => $id
+					'st_id' => $id
 				]
 			);
 			$this->onVotesChanged();
@@ -1068,15 +1068,15 @@ class Sanction {
 		$blocks = $loader->getBlocks();
 		$action = 'reply';
 		$params = [
-		'topic' => [
-		'page' => $topicTitleText,
-		'token' => self::getBot()->getEditToken(),
-		'action' => 'flow',
-		'submodule' => 'reply',
-		'replyTo' => $to,
-		'content' => $content,
-		'format' => 'wikitext'
-		]
+			'topic' => [
+				'page' => $topicTitleText,
+				'token' => self::getBot()->getEditToken(),
+				'action' => 'flow',
+				'submodule' => 'reply',
+				'replyTo' => $to,
+				'content' => $content,
+				'format' => 'wikitext'
+			]
 		];
 		$context = RequestContext::getMain();
 		$context->setUser( self::getBot() );
@@ -1224,13 +1224,13 @@ class Sanction {
 				'page',
 				[ 'page_namespace', 'page_title' ],
 				[
-				'page_namespace' => [ NS_USER, NS_USER_TALK ],
-				$dbr->makeList(
-					[
-					'page_title ' . $dbr->buildLike( $oldUserPageTitle->getDBkey() . '/', $dbr->anyString() ),
-					'page_title = ' . $dbr->addQuotes( $oldUserPageTitle->getDBkey() ),
-					], LIST_OR
-				),
+					'page_namespace' => [ NS_USER, NS_USER_TALK ],
+					$dbr->makeList(
+						[
+							'page_title ' . $dbr->buildLike( $oldUserPageTitle->getDBkey() . '/', $dbr->anyString() ),
+							'page_title = ' . $dbr->addQuotes( $oldUserPageTitle->getDBkey() ),
+						], LIST_OR
+					),
 				],
 				__METHOD__
 			);
