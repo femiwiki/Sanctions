@@ -646,7 +646,8 @@ class Sanction {
 		$count = count( $votes );
 
 		// If there is no vote, it is 0 days.
-		if ( $count === 0 ) { return 0;
+		if ( $count === 0 ) {
+			return 0;
 		}
 
 		$sumPeriod = 0;
@@ -654,7 +655,8 @@ class Sanction {
 		$maxBlockPeriod = (float)wfMessage( 'sanctions-max-block-period' )->text();
 		foreach ( $votes as $userId => $period ) {
 			$sumPeriod += $period > $maxBlockPeriod ? $maxBlockPeriod : $period;
-			if ( $period > 0 ) { $agree++;
+			if ( $period > 0 ) {
+				$agree++;
 			}
 		}
 
@@ -697,7 +699,8 @@ class Sanction {
 
 		$agree = 0;
 		foreach ( $votes as $userId => $period ) {
-			if ( $period > 0 ) { $agree++;
+			if ( $period > 0 ) {
+				$agree++;
 			}
 		}
 
@@ -854,8 +857,9 @@ class Sanction {
 	 * @return bool
 	 */
 	public function checkNewVotes() {
-		// Do not check closed sanctions.
-		if ( $this->isExpired() ) { return false;
+		// Do not check the closed sanction.
+		if ( $this->isExpired() ) {
+			return false;
 		}
 
 		$uuid = $this->getTopicUUID();
@@ -882,7 +886,7 @@ class Sanction {
 			return false;
 		}
 
-		// Get all revisions for all ripples created on this sanctions topic.
+		// Get all revisions for all comments created on this sanctions topic.
 		// @todo All revisions is not required
 		$res = $db->select(
 			[
@@ -915,7 +919,7 @@ class Sanction {
 			$userId = $row->rev_user_id;
 			$content = $row->rev_content;
 
-			// Check the post includes a vote. We use tags to identify votes.
+			// Filter out posts does not includes vote. We use tags to identify a vote.
 			$period = 0;
 			$agreeRegex = '/<span class="sanction-vote-agree-period">(\d+)<\/span>/';
 			$hasPeriod = preg_match( $agreeRegex, $content, $matches );
@@ -932,6 +936,7 @@ class Sanction {
 				continue;
 			}
 
+			// Append "is counted" mark
 			$newContent = $row->rev_content . Html::rawelement(
 				'span',
 				[ 'class' => 'sanction-vote-counted' ]
@@ -990,7 +995,8 @@ class Sanction {
 		}
 
 		// Do nothing ff there is no valid vote.
-		if ( !count( $votes ) ) { return false;
+		if ( !count( $votes ) ) {
+			return false;
 		}
 
 		$dbIsTouched = false;
@@ -1291,7 +1297,8 @@ class Sanction {
 
 		$success = $block->insert();
 
-		if ( !$success ) { return false;
+		if ( !$success ) {
+			return false;
 		}
 
 		$logParams = [];
