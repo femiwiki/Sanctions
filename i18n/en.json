@@ -57,7 +57,7 @@
 	"sanctions-topic-title": "$2 of $1",
 	"sanctions-topic-summary-status-label": "Status: $1",
 	"sanctions-topic-summary-status-passed": "Passed",
-	"sanctions-topic-summary-status-rejectd": "Rejected",
+	"sanctions-topic-summary-status-rejected": "Rejected",
 	"sanctions-topic-summary-status-immediate-rejection": "Immediately rejection",
 	"sanctions-topic-summary-result-prediction-format": "$1 (prediction)",
 	"sanctions-topic-summary-result-prediction": "$1 to block $2 day(s)",

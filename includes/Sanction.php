@@ -538,17 +538,17 @@ class Sanction {
 		$passed = $this->isPassed();
 
 		if ( $count == 0 ) {
-			$statusText = wfMessage( 'sanctions-topic-summary-status-rejectd' );
+			$statusText = wfMessage( 'sanctions-topic-summary-status-rejected' );
 			$reasonText = wfMessage( 'sanctions-topic-summary-reason-no-participants' );
 		} elseif ( $count < 3 ) {
 			if ( $count == 1 && array_key_exists( $this->mAuthor->getId(), $this->mVotes ) ) {
-				$statusText = wfMessage( 'sanctions-topic-summary-status-rejectd' );
+				$statusText = wfMessage( 'sanctions-topic-summary-status-rejected' );
 				$reasonText = wfMessage( 'sanctions-topic-summary-reason-canceled-by-author' );
 			} elseif ( $agree == $count ) {
 				$statusText = wfMessage( 'sanctions-topic-summary-status-passed' );
 				$reasonText = wfMessage( 'sanctions-topic-summary-reason-less-than-three-and-all-agreed' );
 			} else {
-				$statusText = wfMessage( 'sanctions-topic-summary-status-rejectd' );
+				$statusText = wfMessage( 'sanctions-topic-summary-status-rejected' );
 				$reasonText = wfMessage( 'sanctions-topic-summary-reason-less-than-three-and-not-all-agreed' );
 			}
 		} else {
@@ -560,7 +560,7 @@ class Sanction {
 				$statusText = wfMessage( 'sanctions-topic-summary-status-passed' );
 				$reasonText = wfMessage( 'sanctions-topic-summary-reason-more-than-three-and-agreed' );
 			} else {
-				$statusText = wfMessage( 'sanctions-topic-summary-status-rejectd' );
+				$statusText = wfMessage( 'sanctions-topic-summary-status-rejected' );
 				$reasonText = wfMessage( 'sanctions-topic-summary-reason-more-than-three-and-not-agreed' );
 			}
 		}

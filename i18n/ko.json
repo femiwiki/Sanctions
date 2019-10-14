@@ -57,7 +57,7 @@
 	"sanctions-topic-title": "$1 님에 대한 $2",
 	"sanctions-topic-summary-status-label": "상태: $1",
 	"sanctions-topic-summary-status-passed": "가결",
-	"sanctions-topic-summary-status-rejectd": "부결",
+	"sanctions-topic-summary-status-rejected": "부결",
 	"sanctions-topic-summary-status-immediate-rejection": "즉시 부결",
 	"sanctions-topic-summary-result-prediction-format": "$1 가능",
 	"sanctions-topic-summary-result-prediction": "$2일 차단으로 $1",

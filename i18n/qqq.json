@@ -57,7 +57,7 @@
 	"sanctions-topic-title": "Used as topic title for sanction. Parameters:\n* $1 - username\n* $2 - Type of the sanction",
 	"sanctions-topic-summary-status-label": "Used in topic summary. Parameters:\n* $1 - Status",
 	"sanctions-topic-summary-status-passed": "Status of sanction used in topic summary.",
-	"sanctions-topic-summary-status-rejectd": "Status of sanction used in topic summary.",
+	"sanctions-topic-summary-status-rejected": "Status of sanction used in topic summary.",
 	"sanctions-topic-summary-status-immediate-rejection": "Status of sanction used in topic summary.",
 	"sanctions-topic-summary-result-prediction-format": "Used in topic summary. Parameters:\n* $1 - expectation",
 	"sanctions-topic-summary-result-prediction": "Used in topic summary. Parameters:\n* $1 - expected result of sanction\n* $2 - Expected block expiry",
