@@ -386,7 +386,8 @@ class Sanction {
 		$agree = $this->mAgreeVote;
 		$count = $this->mVoteNumber;
 
-		if ( $count - $agree >= 3 ) {
+		if ( $count - $agree >= 3
+			|| ( $count == 1 && array_key_exists( $this->mAuthor->getId(), $this->mVotes ) ) ) {
 			return true;
 		}
 	}
@@ -540,7 +541,10 @@ class Sanction {
 			$statusText = wfMessage( 'sanctions-topic-summary-status-rejectd' );
 			$reasonText = wfMessage( 'sanctions-topic-summary-reason-no-participants' );
 		} elseif ( $count < 3 ) {
-			if ( $agree == $count ) {
+			if ( $count == 1 && array_key_exists( $this->mAuthor->getId(), $this->mVotes ) ) {
+				$statusText = wfMessage( 'sanctions-topic-summary-status-rejectd' );
+				$reasonText = wfMessage( 'sanctions-topic-summary-reason-canceled-by-author' );
+			} elseif ( $agree == $count ) {
 				$statusText = wfMessage( 'sanctions-topic-summary-status-passed' );
 				$reasonText = wfMessage( 'sanctions-topic-summary-reason-less-than-three-and-all-agreed' );
 			} else {

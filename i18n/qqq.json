@@ -62,6 +62,7 @@
 	"sanctions-topic-summary-result-prediction-format": "Used in topic summary. Parameters:\n* $1 - expectation",
 	"sanctions-topic-summary-result-prediction": "Used in topic summary. Parameters:\n* $1 - expected result of sanction\n* $2 - Expected block expiry",
 	"sanctions-topic-summary-reason-no-participants": "Used in topic summary when there is not any participant.",
+	"sanctions-topic-summary-reason-canceled-by-author": "Used in topic summary when the author of the sanction canceled it.",
 	"sanctions-topic-summary-reason-immediate-rejection": "Used in topic summary.",
 	"sanctions-topic-summary-reason-less-than-three-and-all-agreed": "Used in topic summary.",
 	"sanctions-topic-summary-reason-less-than-three-and-not-all-agreed": "Used in topic summary.",
