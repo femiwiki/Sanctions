@@ -947,7 +947,7 @@ class Sanction {
 			);
 
 			$reason = []; // Empty if present
-			if ( $this->getAuthor()->getId() == $userId ) {
+			if ( $this->getAuthor()->getId() == $userId && $period > 0 ) {
 				$content = wfMessage( 'sanctions-topic-auto-reply-no-count' )->inContentLanguage()->text() .
 					PHP_EOL . '* ' .
 					wfMessage( 'sanctions-topic-auto-reply-unable-self-agree' )->inContentLanguage()->text();
