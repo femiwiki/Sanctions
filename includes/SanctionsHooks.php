@@ -20,6 +20,10 @@ class SanctionsHooks {
 				"$dir/../sql/sanctions.tables.sql", true ]
 			);
 		} // @todo else
+
+		require_once "$dir/../maintenance/SanctionsCreateTemplates.php";
+		$updater->addPostDatabaseUpdateMaintenance( 'SanctionsCreateTemplates' );
+
 		return true;
 	}
 
@@ -156,9 +160,9 @@ class SanctionsHooks {
 	 * @return true
 	 */
 	public static function onResourceLoaderGetConfigVars( &$vars ) {
-		$vars['wgSanctionsAgreeTemplate'] = wfMessage( 'sanctions-template-agree' )
+		$vars['wgSanctionsAgreeTemplate'] = wfMessage( 'sanctions-agree-template-title' )
 			->inContentLanguage()->text();
-		$vars['wgSanctionsDisagreeTemplate'] = wfMessage( 'sanctions-template-disagree' )
+		$vars['wgSanctionsDisagreeTemplate'] = wfMessage( 'sanctions-disagree-template-title' )
 			->inContentLanguage()->text();
 		$vars['wgSanctionsInsultingNameTopicTitle'] = wfMessage( 'sanctions-type-insulting-name' )
 			->inContentLanguage()->text();
