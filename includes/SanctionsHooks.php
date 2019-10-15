@@ -112,8 +112,8 @@ class SanctionsHooks {
 			// See https://phabricator.wikimedia.org/T102300
 			$request = RequestContext::getMain()->getRequest();
 			$redirect = $request->getVal( 'redirect' );
-			if ( !$redirect || $redirect == 'no ' ) {
-				$out->redirect( $specialSanctionTitle->getLocalURL( $query ) );
+			if ( !$redirect || $redirect == 'no' ) {
+				$out->redirect( $specialSanctionTitle->getLocalURL() );
 			}
 
 			$out->addModules( 'ext.sanctions.flow-board' );
