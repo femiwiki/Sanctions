@@ -116,7 +116,7 @@ class SanctionsHooks {
 			// See https://phabricator.wikimedia.org/T102300
 			$request = RequestContext::getMain()->getRequest();
 			$redirect = $request->getVal( 'redirect' );
-			if ( !$redirect || $redirect == 'no' ) {
+			if ( !$redirect || $redirect !== 'no' ) {
 				$out->redirect( $specialSanctionTitle->getLocalURL() );
 			}
 
