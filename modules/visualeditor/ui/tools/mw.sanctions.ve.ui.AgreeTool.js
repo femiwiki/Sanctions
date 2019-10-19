@@ -29,7 +29,7 @@
 	// Static
 	mw.sanctions.ve.ui.AgreeTool.static.commandName = 'sanctions-agree';
 	mw.sanctions.ve.ui.AgreeTool.static.name = 'sanctions-agree';
-	mw.sanctions.ve.ui.AgreeTool.static.icon = 'add';
+	mw.sanctions.ve.ui.AgreeTool.static.icon = 'support';
 	mw.sanctions.ve.ui.AgreeTool.static.group = 'textStyle';
 	mw.sanctions.ve.ui.AgreeTool.static.title = OO.ui.deferMsg( 'sanctions-ve-vote-agree-tool-title' );
 

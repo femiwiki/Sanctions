@@ -29,7 +29,7 @@
 	// Static
 	mw.sanctions.ve.ui.AgreeWithDaysTool.static.commandName = 'sanctions-agreewithdays';
 	mw.sanctions.ve.ui.AgreeWithDaysTool.static.name = 'sanctions-agreewithdays';
-	mw.sanctions.ve.ui.AgreeWithDaysTool.static.icon = 'add';
+	mw.sanctions.ve.ui.AgreeWithDaysTool.static.icon = 'support';
 	mw.sanctions.ve.ui.AgreeWithDaysTool.static.title = OO.ui.deferMsg( 'sanctions-ve-vote-agree-tool-title' );
 
 	mw.sanctions.ve.ui.AgreeWithDaysTool.static.template = mw.sanctions.ve.ui.AgreeInspector.static.template;

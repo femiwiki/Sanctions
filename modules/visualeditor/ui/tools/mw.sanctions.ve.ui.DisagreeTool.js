@@ -22,7 +22,7 @@
 	// Static
 	mw.sanctions.ve.ui.DisagreeTool.static.commandName = 'sanctions-disagree';
 	mw.sanctions.ve.ui.DisagreeTool.static.name = 'sanctions-disagree';
-	mw.sanctions.ve.ui.DisagreeTool.static.icon = 'subtract';
+	mw.sanctions.ve.ui.DisagreeTool.static.icon = 'oppose';
 	mw.sanctions.ve.ui.DisagreeTool.static.title = OO.ui.deferMsg( 'sanctions-ve-vote-disagree-tool-title' );
 
 	ve.ui.toolFactory.register( mw.sanctions.ve.ui.DisagreeTool );

@@ -31,15 +31,19 @@
 		"ext.sanctions.flow-board": {
 			"scripts": [ "ext.flowBoard.js" ],
 			"styles": [ "styles/flow-board.less" ],
-			"dependencies": [ "ext.sanctions.dm" ]
+			"dependencies": [ "ext.sanctions.visualEditor" ]
 		},
 		"ext.sanctions.flow-topic": {
 			"scripts": [ "ext.flowTopic.js" ],
-			"dependencies": [ "ext.sanctions.dm" ]
+			"dependencies": [ "ext.sanctions.visualEditor" ]
 		},
-		"ext.sanctions.dm": {
+		"ext.sanctions": {
 			"scripts": [
-				"sanctions/mw.sanctions.js",
+				"sanctions/mw.sanctions.js"
+			]
+		},
+		"ext.sanctions.visualEditor": {
+			"scripts": [
 				"visualeditor/mw.sanctions.ve.js",
 				"visualeditor/ui/mw.sanctions.ve.ui.js",
 				"visualeditor/ui/inspectors/mw.sanctions.ve.ui.AgreeInspector.js",
@@ -58,8 +62,30 @@
 			],
 			"dependencies": [
 				"ext.visualEditor.core",
-				"ext.flow.visualEditor"
+				"ext.flow.visualEditor",
+				"ext.sanctions",
+				"ext.sanctions.visualEditor.icons"
 			]
+		},
+		"ext.sanctions.visualEditor.icons": {
+			"class": "ResourceLoaderImageModule",
+			"selectorWithoutVariant": ".oo-ui-icon-{name}",
+			"selectorWithVariant": ".oo-ui-image-{variant}.oo-ui-icon-{name}",
+			"variants": {
+				"progressive": {
+					"color": "#36c"
+				}
+			},
+			"images": {
+				"support": {
+					"file": "visualeditor/ui/images/support.svg",
+					"variants": [ "progressive" ]
+				},
+				"oppose": {
+					"file": "visualeditor/ui/images/oppose.svg",
+					"variants": [ "progressive" ]
+				}
+			}
 		}
 	},
 	"ResourceFileModulePaths": {
