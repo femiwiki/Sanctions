@@ -52,7 +52,7 @@
 	"sanctions-row-label-voted": "Voted",
 	"sanctions-row-label-not-voted": "Not voted",
 	"sanctions-row-label-expiry": "$1 remains",
-	"sanctions-row-button-execute": "처리",
+	"sanctions-row-button-execute": "Execute",
 	"sanctions-row-button-toggle-emergency": "Change priority",
 	"sanctions-topic-title": "$2 of $1",
 	"sanctions-topic-summary-status-label": "Status: $1",
