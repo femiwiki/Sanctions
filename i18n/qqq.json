@@ -1,8 +1,10 @@
 {
 	"@metadata": {
-		"authors": []
+		"authors": [
+			"렌즈"
+		]
 	},
-	"sanctions-desc": "{{desc|name=Flow|url=https://www.mediawiki.org/wiki/Special:MyLanguage/Extension:Sanctions}}",
+	"sanctions-desc": "{{desc|name=Sanctions|url=https://www.mediawiki.org/wiki/Special:MyLanguage/Extension:Sanctions}}",
 	"sanctions-voting-period": "{{notranslate}}",
 	"sanctions-voting-right-verification-period": "{{notranslate}}",
 	"sanctions-voting-right-verification-edits": "{{notranslate}}",
