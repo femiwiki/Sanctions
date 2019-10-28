@@ -5,6 +5,11 @@
 		]
 	},
 	"sanctions-desc": "جعل المستخدمين يتعاملون مع العقوبات",
+	"sanctions-voting-period": "3",
+	"sanctions-voting-right-verification-period": "20",
+	"sanctions-voting-right-verification-edits": "3",
+	"sanctions-max-block-period": "30",
+	"sanctions-autoblock": "1",
 	"sanctions-discussion-page-name": "نقاش المشروع:العقوبات",
 	"sanctions-bot-name": "عقوبة",
 	"sanctions-type-insulting-name": "الإبلاغ عن اسم مستخدم مهين",

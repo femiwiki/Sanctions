@@ -1,0 +1,38 @@
+{
+	"@metadata": {
+		"authors": [
+			"Vlad5250"
+		]
+	},
+	"sanctions-voting-period": "3",
+	"sanctions-voting-right-verification-period": "20",
+	"sanctions-voting-right-verification-edits": "3",
+	"sanctions-max-block-period": "30",
+	"sanctions-autoblock": "1",
+	"sanctions-form-target": "Цел :",
+	"sanctions-submit": "Поднеси",
+	"sanctions-topic-no-description": "Не е наведен опис.",
+	"sanctions-submit-error-no-username": "Корисничкото име е празно.",
+	"sanctions-submit-error-invaild-username": "Корисникот $1 не постои.",
+	"sanctions-submit-massage-other": "Код $1",
+	"sanctions-row-label-normal": "Нормална",
+	"sanctions-row-label-rejected": "Одбиено",
+	"sanctions-row-label-pending": "Во исчекување",
+	"sanctions-row-label-voted": "Гласано",
+	"sanctions-row-button-execute": "Изврши",
+	"sanctions-topic-title": "$2 од $1",
+	"sanctions-topic-summary-status-label": "Статус: $1",
+	"sanctions-topic-summary-status-rejected": "Одбиено",
+	"sanctions-topic-summary-deadline": "Завршен датум: $1",
+	"sanctions-reason-not-logged-in": "Не сте најавени.",
+	"sanctions-reason-no-edit-permission": "Нема право за уредување.",
+	"sanctions-agree-template-title": "За",
+	"sanctions-disagree-template-title": "Против",
+	"sanctions-agree-template-body": "За",
+	"sanctions-disagree-template-body": "Против",
+	"sanctions-ve-vote-agree-tool-title": "За",
+	"sanctions-ve-vote-disagree-tool-title": "Против",
+	"sanctions-ve-agree-days-inspector-title": "Истек",
+	"sanctions-ve-agree-days-inspector-remove-label": "Отстрани",
+	"sanctions-ve-agree-days-inspector-invalid-value": "„$1“ е неважечки."
+}
