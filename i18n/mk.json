@@ -14,6 +14,7 @@
 	"sanctions-topic-no-description": "Не е наведен опис.",
 	"sanctions-submit-error-no-username": "Корисничкото име е празно.",
 	"sanctions-submit-error-invaild-username": "Корисникот $1 не постои.",
+	"sanctions-submit-error-other": "Код на грешката: $1",
 	"sanctions-submit-massage-other": "Код $1",
 	"sanctions-row-label-normal": "Нормална",
 	"sanctions-row-label-rejected": "Одбиено",

@@ -28,6 +28,7 @@
 	"sanctions-submit": "Enviar",
 	"sanctions-topic-no-description": "Nenhuma descrição fornecida.",
 	"sanctions-topic-revision": "* [[Special:Redirect/revision/$1|$2 (Nova página)]]",
+	"sanctions-topic-diff": "* [[Special:Diff/$1/$2|difs na página $3]]",
 	"sanctions-submit-error-invalid-token": "Token inválido.",
 	"sanctions-submit-error-no-permission": "Não é permitido.",
 	"sanctions-submit-error-failed-to-add-topic": "Falha ao escrever uma sanção.",
