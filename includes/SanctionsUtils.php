@@ -7,6 +7,8 @@ class SanctionsUtils {
 	 * @return bool
 	 */
 	public static function hasVoteRight( User $user, &$reason = false ) {
+		global $wgActorTableSchemaMigrationStage;
+
 		// If the user is not logged in
 		if ( $user->isAnon() ) {
 			if ( $reason !== false ) {
@@ -55,14 +57,38 @@ class SanctionsUtils {
 
 		// There have been more than three contribution histories within the last 20 days (currently
 		// active)
-		$count = $db->selectRowCount(
-			'revision',
-			'*',
-			[
-			'rev_user' => $user->getId(),
-			'rev_timestamp > ' . $twentyDaysAgo
-			]
-		);
+		$count = 0;
+		if ( $wgActorTableSchemaMigrationStage & SCHEMA_COMPAT_READ_OLD ) {
+			$count = $db->selectRowCount(
+				'revision',
+				'*',
+				[
+					'rev_user' => $user->getId(),
+					'rev_timestamp > ' . $twentyDaysAgo
+				]
+			);
+		} else {
+			$count = $db->selectRowCount(
+				[
+					'revision',
+					'revision_actor_temp',
+					'actor',
+					'user',
+				],
+				'user_id',
+				[
+					'user_id' => $user->getId(),
+					'rev_timestamp > ' . $twentyDaysAgo
+				],
+				__METHOD__,
+				[],
+				[
+					'revision_actor_temp' => [ 'LEFT JOIN', [ 'rev_id = revactor_rev' ] ],
+					'actor' => [ 'LEFT JOIN', [ 'revactor_actor = actor_id ' ] ],
+					'user' => [ 'LEFT JOIN', [ 'actor_user = user_id ' ] ],
+				]
+			);
+		}
 		if ( $count < $verificationEdits ) {
 			if ( $reason !== false ) {
 				$reason[] = wfMessage( 'sanctions-reason-unsatisfying-verification-edits', [
