@@ -1,7 +1,8 @@
 {
 	"@metadata": {
 		"authors": [
-			"Ykhwong"
+			"Ykhwong",
+			"렌즈"
 		]
 	},
 	"sanctions-desc": "사용자가 제재안을 관리할 수 있게 합니다",
@@ -81,7 +82,7 @@
 	"sanctions-reason-failed-to-load-registration": "가입일을 불러오는데 실패했습니다.",
 	"sanctions-reason-no-edit-permission": "편집 권한이 없습니다.",
 	"sanctions-reason-unsatisfying-verification-period": "가입한 지 $1일이 경과하지 않음($2에 가입)",
-	"sanctions-reason-unsatisfying-verification-edits": "최근 $1일 간 편집 수가 $2번으로 $3보다 적음",
+	"sanctions-reason-unsatisfying-verification-edits": "최근 $1일 간 편집 수가 $2번으로 $3번보다 적음",
 	"sanctions-reason-blocked": "차단되어 있음",
 	"sanctions-reason-recently-blocked": "차단이 풀린 $1으로부터 $2일이 경과하지 않음",
 	"sanctions-link-on-user-tool": "제재안",
