@@ -969,7 +969,7 @@ class Sanction {
 				}
 				unset( $votes[$userId] );
 				continue;
-			} elseif ( !SanctionsUtils::hasVoteRight( User::newFromId( $userId ), $reason ) ) {
+			} elseif ( !SanctionsUtils::hasVoteRight( User::newFromId( $userId ), $reason, true ) ) {
 				$content = wfMessage( 'sanctions-topic-auto-reply-no-count' )->inContentLanguage()->text() .
 					PHP_EOL . '* ' . implode( PHP_EOL . '* ', $reason );
 				try {

@@ -3,24 +3,26 @@
 class SanctionsUtils {
 	/**
 	 * @param User $user
-	 * @param array &$reason An array of reasons why can't participate.
+	 * @param array &$reasons An array of reasons why can't participate.
+	 * @param bool $contentLang
 	 * @return bool
 	 */
-	public static function hasVoteRight( User $user, &$reason = false ) {
+	public static function hasVoteRight( User $user, &$reasons = false, $contentLang = false ) {
 		global $wgActorTableSchemaMigrationStage;
 
 		// If the user is not logged in
 		if ( $user->isAnon() ) {
-			if ( $reason !== false ) {
-				$reason[] = wfMessage( 'sanctions-reason-not-logged-in' )->text();
+			if ( $reasons !== false ) {
+				self::addReason( wfMessage( 'sanctions-reason-not-logged-in' ), $reasons, $contentLang );
 			}
 			return false;
 		}
 
 		$reg = $user->getRegistration();
 		if ( !$reg ) {
-			if ( $reason !== false ) {
-				$reason[] = wfMessage( 'sanctions-reason-failed-to-load-registration' )->text();
+			if ( $reasons !== false ) {
+				self::addReason( wfMessage( 'sanctions-reason-failed-to-load-registration' ), $reasons,
+					$contentLang );
 			} else {
 				return false;
 			}
@@ -28,26 +30,28 @@ class SanctionsUtils {
 
 		// If the user has not allowed to edit
 		if ( !$user->isAllowed( 'edit' ) ) {
-			if ( $reason !== false ) {
-				$reason[] = wfMessage( 'sanctions-reason-no-edit-permission' )->text();
+			if ( $reasons !== false ) {
+				self::addReason( wfMessage( 'sanctions-reason-no-edit-permission' ), $reasons, $contentLang );
 			} else {
 				return false;
 			}
 		}
 
-		$verificationPeriod = (float)wfMessage( 'sanctions-voting-right-verification-period' )->text();
-		$verificationEdits = (int)wfMessage( 'sanctions-voting-right-verification-edits' )->text();
+		$verificationPeriod = (float)wfMessage( 'sanctions-voting-right-verification-period' )
+			->inContentLanguage()->text();
+		$verificationEdits = (int)wfMessage( 'sanctions-voting-right-verification-edits' )
+			->inContentLanguage()->text();
 
 		$twentyDaysAgo = time() - ( 60 * 60 * 24 * $verificationPeriod );
 		$twentyDaysAgo = wfTimestamp( TS_MW, $twentyDaysAgo );
 
 		// If account has not been created more than 20 days
 		if ( $twentyDaysAgo < $reg ) {
-			if ( $reason !== false ) {
-				$reason[] = wfMessage( 'sanctions-reason-unsatisfying-verification-period', [
+			if ( $reasons !== false ) {
+				self::addReason( wfMessage( 'sanctions-reason-unsatisfying-verification-period', [
 					$verificationPeriod,
 					MWTimestamp::getLocalInstance( $reg )->getTimestamp( TS_ISO_8601 )
-				] )->text();
+				] ), $reasons, $contentLang );
 			} else {
 				return false;
 			}
@@ -90,20 +94,20 @@ class SanctionsUtils {
 			);
 		}
 		if ( $count < $verificationEdits ) {
-			if ( $reason !== false ) {
-				$reason[] = wfMessage( 'sanctions-reason-unsatisfying-verification-edits', [
+			if ( $reasons !== false ) {
+				self::addReason( wfMessage( 'sanctions-reason-unsatisfying-verification-edits', [
 					$verificationPeriod,
 					$count,
 					$verificationEdits
-				] )->text();
+				] ), $reasons, $contentLang );
 			} else {
 				return false;
 			}
 		}
 
 		if ( $user->isBlocked() ) {
-			if ( $reason !== false ) {
-				$reason[] = wfMessage( 'sanctions-reason-blocked' )->text();
+			if ( $reasons !== false ) {
+				self::addReason( wfMessage( 'sanctions-reason-blocked' ), $reasons, $contentLang );
 			} else {
 				return false;
 			}
@@ -119,19 +123,32 @@ class SanctionsUtils {
 				[ 'GROUP BY' => 'ipb_id' ]
 			);
 			if ( $blockExpiry > $twentyDaysAgo ) {
-				if ( $reason !== false ) {
-					$reason[] = wfMessage( 'sanctions-reason-recently-blocked', [
+				if ( $reasons !== false ) {
+					self::addReason( wfMessage( 'sanctions-reason-recently-blocked', [
 						MWTimestamp::getLocalInstance( $blockExpiry )->getTimestamp( TS_ISO_8601 ),
 						$verificationPeriod,
-					] )->text();
+					] ), $reasons, $contentLang );
 				} else {
 					return false;
 				}
 			}
 		}
 
-		if ( $reason !== false ) { return count( $reason ) == 0;
+		if ( $reasons !== false ) {
+			return count( $reasons ) == 0;
 		}
-			return true;
+		return true;
+	}
+
+	/**
+	 * @param Message $msg
+	 * @param array &$reasons
+	 * @param bool $contentLang
+	 */
+	private static function addReason( $msg, &$reasons, $contentLang ) {
+		if ( $contentLang ) {
+			$msg = $msg->inContentLanguage();
+		}
+		$reasons[] = $msg->text();
 	}
 }
