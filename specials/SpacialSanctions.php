@@ -382,7 +382,7 @@ class SpacialSanctions extends SpecialPage {
 			'action' => $this->getTitle()->getFullURL(),
 			'id' => 'sanctionsForm'
 			],
-			wfMessage( 'sanctions-form-target' )->text().
+			wfMessage( 'sanctions-form-target' )->text() .
 			Xml::input(
 				'target', 10, $this->mTargetName, [ 'class' => 'mw-ui-input-inline' ]
 			) .
