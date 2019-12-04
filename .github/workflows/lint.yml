@@ -4,9 +4,6 @@ on: [push]
 
 jobs:
   build:
-    strategy:
-      matrix:
-        php: [7.2, 7.3]
 
     runs-on: ubuntu-latest
 
