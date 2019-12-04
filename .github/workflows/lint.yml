@@ -14,7 +14,9 @@ jobs:
     - uses: actions/checkout@v1
 
     - name: Install dependencies
-      run: composer install --prefer-dist --no-progress --no-suggest --no-interaction
+      run: |
+        composer install --prefer-dist --no-progress --no-suggest --no-interaction
+        yarn install
 
     - name: Run PHP test suite
       run: composer run-script test .
