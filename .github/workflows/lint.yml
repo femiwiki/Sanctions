@@ -1,0 +1,23 @@
+name: Lint
+
+on: [push]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        php: [7.2, 7.3]
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress --no-suggest --no-interaction
+
+    - name: Run PHP test suite
+      run: composer run-script test .
+
+    - name: Run Grunt
+      run: grunt
