@@ -1,0 +1,55 @@
+name: Test
+
+on: [push]
+
+jobs:
+
+  lint:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install dependencies
+      run: |
+        composer install --prefer-dist --no-progress --no-suggest --no-interaction
+        yarn install
+    - run: composer run-script test .
+    - run: grunt
+
+
+  phan:
+    strategy:
+      matrix:
+        mediawiki-version: [REL1_33, REL1_34]
+
+    env:
+      MEDIAWIKI_VERSION: ${{ matrix.mediawiki-version }}
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - run: sudo apt-get update && sudo apt-get install -y php-ast
+      - uses: actions/checkout@v1
+      - run: bash "${GITHUB_WORKSPACE}/.github/workflows/install-mediawiki.sh"
+      - name: Install extensions
+        run: |
+          bash "${GITHUB_WORKSPACE}/.github/workflows/install-extension.sh" Flow
+          bash "${GITHUB_WORKSPACE}/.github/workflows/install-extension.sh" Echo
+          bash "${GITHUB_WORKSPACE}/.github/workflows/install-extension.sh" Renameuser
+      - run: php "${HOME}/mediawiki/extensions/Sanctions/vendor/bin/phan" -d "${HOME}/mediawiki/extensions/Sanctions" -p -m checkstyle
+
+  phpunit:
+    strategy:
+      matrix:
+        mediawiki-version: [REL1_33, REL1_34]
+
+    env:
+      MEDIAWIKI_VERSION: ${{ matrix.mediawiki-version }}
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+      - run: bash "${GITHUB_WORKSPACE}/.github/workflows/install-mediawiki.sh"
+      - run: php "${HOME}/mediawiki/tests/phpunit/phpunit.php"
