@@ -72,7 +72,7 @@ class Sanction {
 	 * @param User $target
 	 * @param bool $forInsultingName
 	 * @param String $content Description of the sanction(written in wikitext)
-	 * @return Sanction
+	 * @return Sanction|bool
 	 */
 	public static function write( $user, $target, $forInsultingName, $content ) {
 		$authorId = $user->getId();
@@ -147,9 +147,8 @@ class Sanction {
 		$db->insert( 'sanctions', $data, __METHOD__ );
 
 		$sanction = new self();
-		$sanction->loadFrom( 'st_topic', $uuid );
 
-		if ( !$sanction ) {
+		if ( $sanction->loadFrom( 'st_topic', $uuid ) ) {
 			return false;
 		}
 
@@ -322,6 +321,7 @@ class Sanction {
 			$blockExpiry = $expiry;
 			self::doBlock( $target, $blockExpiry, $reason, false, $user );
 		}
+		return true;
 	}
 
 	/**
@@ -503,7 +503,7 @@ class Sanction {
 				'token' => self::getBot()->getEditToken(),
 				'action' => 'flow',
 				'submodule' => 'edit-topic-summary',
-				'prev_revision' => isset( $previousIdText ) ? $previousIdText : null,
+				'prev_revision' => $previousIdText,
 				'summary' => $this->getSanctionSummary(),
 				'format' => 'wikitext'
 			]
@@ -635,7 +635,7 @@ class Sanction {
 			$this->mIsEmergency = $row->st_emergency;
 
 			return true;
-		} catch ( InvalidInputException $e ) {
+		} catch ( \MWException $e ) {
 			return false;
 		}
 	}
@@ -955,7 +955,7 @@ class Sanction {
 				]
 			);
 
-			$reason = []; // Empty if present
+			$reasons = []; // Empty if present
 			if ( $this->getAuthor()->getId() == $userId && $period > 0 ) {
 				$content = wfMessage( 'sanctions-topic-auto-reply-no-count' )->inContentLanguage()->text() .
 					PHP_EOL . '* ' .
@@ -969,9 +969,9 @@ class Sanction {
 				}
 				unset( $votes[$userId] );
 				continue;
-			} elseif ( !SanctionsUtils::hasVoteRight( User::newFromId( $userId ), $reason, true ) ) {
+			} elseif ( !SanctionsUtils::hasVoteRight( User::newFromId( $userId ), $reasons, true ) ) {
 				$content = wfMessage( 'sanctions-topic-auto-reply-no-count' )->inContentLanguage()->text() .
-					PHP_EOL . '* ' . implode( PHP_EOL . '* ', $reason );
+					PHP_EOL . '* ' . implode( PHP_EOL . '* ', $reasons ?? [] );
 				try {
 					$this->replyTo( $row->rev_id, $content );
 				} catch ( Flow\Exception\DataModelException $e ) {
@@ -1110,7 +1110,7 @@ class Sanction {
 
 	/**
 	 * @param string $id
-	 * @return bool
+	 * @return Sanction|bool
 	 */
 	public static function newFromId( $id ) {
 		$rt = new self();
@@ -1122,7 +1122,7 @@ class Sanction {
 
 	/**
 	 * @param UUID $UUID
-	 * @return bool
+	 * @return Sanction|bool
 	 */
 	public static function newFromUUID( $UUID ) {
 		if ( $UUID instanceof UUID ) {
@@ -1140,7 +1140,7 @@ class Sanction {
 
 	/**
 	 * @param UUID $vote
-	 * @return Sanction
+	 * @return Sanction|bool
 	 */
 	public static function newFromVoteId( $vote ) {
 		$db = wfGetDB( DB_MASTER );
@@ -1223,7 +1223,7 @@ class Sanction {
 
 		// If this user is renaming his/herself, make sure that Title::moveTo()
 		// doesn't make a bunch of null move edits under the old name!
-		if ( $renamer->getId() === $uid ) {
+		if ( $renamer->getId() === $targetId ) {
 			$renamer->setName( $newName );
 		}
 

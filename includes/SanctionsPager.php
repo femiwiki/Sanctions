@@ -1,8 +1,15 @@
 <?php
 
-
 class SanctionsPager extends IndexPager {
+	/**
+	 * @var bool
+	 */
 	protected $userHasVoteRight = null;
+
+	/**
+	 * @var string
+	 */
+	private $targetName;
 
 	/**
 	 * @param IContextSource $context
@@ -21,13 +28,13 @@ class SanctionsPager extends IndexPager {
 	}
 
 	/**
-	 * @return string
+	 * @return string[]|array[]
 	 */
 	public function getExtraSortFields() {
 		if ( $this->getUserHasVoteRight() ) {
 			return [ 'not_expired', 'my_sanction', 'voted_from', 'st_expiry' ];
 		}
-		return 'st_expiry';
+		return [ 'st_expiry' ];
 	}
 
 	/**
@@ -38,7 +45,7 @@ class SanctionsPager extends IndexPager {
 	}
 
 	/**
-	 * @return string
+	 * @return array
 	 */
 	public function getQueryInfo() {
 		Sanction::checkAllSanctionNewVotes();
@@ -81,7 +88,7 @@ class SanctionsPager extends IndexPager {
 	}
 
 	/**
-	 * @param array $row
+	 * @param array|stdClass $row
 	 * @return string
 	 */
 	public function formatRow( $row ) {
@@ -129,8 +136,8 @@ class SanctionsPager extends IndexPager {
 			$originalName = $sanction->getTargetOriginalName();
 			$length = mb_strlen( $originalName, 'utf-8' );
 			$targetNameForDiplay =
-			mb_substr( $originalName, 0, 1, 'utf-8' )
-			. str_pad( '', $length - 2, '*' );
+				mb_substr( $originalName, 0, 1, 'utf-8' )
+				. str_repeat( '*', $length - 2 );
 
 			if ( $length > 1 ) {
 				$targetNameForDiplay .= iconv_substr( $originalName, $length - 1, $length, 'utf-8' );
@@ -247,7 +254,7 @@ class SanctionsPager extends IndexPager {
 	}
 
 	/**
-	 * @param UUID $sanctionId
+	 * @param int $sanctionId
 	 * @return string
 	 */
 	protected function processToggleButton( $sanctionId ) {
@@ -271,7 +278,7 @@ class SanctionsPager extends IndexPager {
 			) .
 			Html::hidden(
 				'sanctionId',
-				$sanctionId
+				(string)$sanctionId
 			) .
 			Html::hidden(
 				'sanction-action',
@@ -283,7 +290,7 @@ class SanctionsPager extends IndexPager {
 	}
 
 	/**
-	 * @param UUID $sanctionId
+	 * @param int $sanctionId
 	 * @return string
 	 */
 	protected function executeButton( $sanctionId ) {
@@ -306,7 +313,7 @@ class SanctionsPager extends IndexPager {
 			) .
 			Html::hidden(
 				'sanctionId',
-				$sanctionId
+				(string)$sanctionId
 			) .
 			Html::hidden(
 				'sanction-action',

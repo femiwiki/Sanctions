@@ -3,7 +3,7 @@
 class SanctionsUtils {
 	/**
 	 * @param User $user
-	 * @param array &$reasons An array of reasons why can't participate.
+	 * @param string[]|bool &$reasons An array of reasons why can't participate.
 	 * @param bool $contentLang
 	 * @return bool
 	 */
@@ -124,10 +124,10 @@ class SanctionsUtils {
 			);
 			if ( $blockExpiry > $twentyDaysAgo ) {
 				if ( $reasons !== false ) {
-					self::addReason( wfMessage( 'sanctions-reason-recently-blocked', [
-						MWTimestamp::getLocalInstance( $blockExpiry )->getTimestamp( TS_ISO_8601 ),
-						$verificationPeriod,
-					] ), $reasons, $contentLang );
+						self::addReason( wfMessage( 'sanctions-reason-recently-blocked', [
+							MWTimestamp::getLocalInstance( $blockExpiry )->getTimestamp( TS_ISO_8601 ),
+							$verificationPeriod,
+						] ), $reasons, $contentLang );
 				} else {
 					return false;
 				}
