@@ -45,7 +45,7 @@ class SanctionsHooks {
 			// Since we are aborting the notification we need to manually update the watchlist
 			$config = RequestContext::getMain()->getConfig();
 			if ( $config->get( 'EnotifWatchlist' ) || $config->get( 'ShowUpdatedMarker' ) ) {
-				MediaWikiServices::getInstance()->getWatchedItemStore()->updateNotificationTimestamp(
+				\MediaWiki\MediaWikiServices::getInstance()->getWatchedItemStore()->updateNotificationTimestamp(
 					$editor,
 					$title,
 					wfTimestampNow()
@@ -187,10 +187,10 @@ class SanctionsHooks {
 	}
 
 	/**
-	 * (edit) (undo) (thank)
-	 * @param Revesion $newRev Revision object of the "new" revision
+	 * Tools shown as (edit) (undo) (thank)
+	 * @param Revision $newRev object of the "new" revision
 	 * @param array &$links Array of HTML links
-	 * @param Revision $oldRev Revision object of the "old" revision (may be null)
+	 * @param Revision $oldRev object of the "old" revision (may be null)
 	 * @return bool
 	 */
 	public static function onDiffRevisionTools( Revision $newRev, &$links, $oldRev ) {
