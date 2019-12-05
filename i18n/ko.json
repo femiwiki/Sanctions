@@ -65,7 +65,7 @@
 	"sanctions-topic-summary-result-prediction-format": "$1 (예측)",
 	"sanctions-topic-summary-result-prediction": "$2일 차단으로 $1",
 	"sanctions-topic-summary-reason-no-participants": "참가자가 없음",
-	"sanctions-topic-summary-reason-canceled-by-author": "제재안의 만든이에 의해 취소됨.",
+	"sanctions-topic-summary-reason-canceled-by-author": "제재안을 만든 이에 의해 취소됨.",
 	"sanctions-topic-summary-reason-immediate-rejection": "참가자 3명이 전부 반대함",
 	"sanctions-topic-summary-reason-less-than-three-and-all-agreed": "참가자가 3명 미만이고 반대가 없습니다.",
 	"sanctions-topic-summary-reason-less-than-three-and-not-all-agreed": "참가자가 3명 미만이고 반대가 있음",
