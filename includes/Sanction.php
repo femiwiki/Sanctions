@@ -3,6 +3,8 @@
 use Flow\Container;
 use Flow\Model\UUID;
 use MediaWiki\MediaWikiServices;
+use MediaWiki\Block\CompositeBlock;
+use MediaWiki\Block\DatabaseBlock;
 
 class Sanction {
 	/**
@@ -1340,8 +1342,18 @@ class Sanction {
 	protected static function unblock( $target, $withLog = false, $reason = null, $user = null ) {
 		$block = $target->getBlock();
 
-		if ( $block == null || !$block->delete() ) {
-			return false;
+		if ( $block == null ) {
+			if ( $block instanceof CompositeBlock ) {
+				foreach ( $block->getOriginalBlocks() as $originalBlock ) {
+					if ( $originalBlock instanceof DatabaseBlock ) {
+						'@phan-var DatabaseBlock $originalBlock';
+						return $originalBlock->delete();
+					}
+				}
+			} elseif ( $block instanceof DatabaseBlock ) {
+				'@phan-var DatabaseBlock $block';
+				return $block->delete();
+			}
 		}
 
 		// Below's the same thing that is on SpecialUnblock SpecialUnblock.php
