@@ -21,7 +21,7 @@ jobs:
   phan:
     strategy:
       matrix:
-        mediawiki-version: [REL1_33]
+        mediawiki-version: [REL1_34]
 
     env:
       MEDIAWIKI_VERSION: ${{ matrix.mediawiki-version }}
