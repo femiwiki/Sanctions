@@ -3,7 +3,8 @@
 		"authors": [
 			"Alno",
 			"Verdy p",
-			"Wladek92"
+			"Wladek92",
+			"Thibaut120094"
 		]
 	},
 	"sanctions-desc": "Permet aux utilisateurs de gérer les sanctions",
@@ -24,8 +25,8 @@
 	"sanctions-sactions-form-header": "Émettre une nouvelle sanction",
 	"sanctions-unable-create-new": "Vous ne pouvez pas vous impliquer dans le processus de sanction pour un ou plusieurs raisons indiquées ci-dessous. Visitez le [[Project:Block|Projet:Blocage]] pour plus de détails.",
 	"sanctions-unable-create-new-logged-in": "Vous ne pouvez pas vous impliquer dans le processus de sanction pour un ou plusieurs raisons indiquées ci-dessous. Visitez le [[Project:Block|Projet:Blocage]] pour plus de détails.",
-	"sanctions-form-target": "Cible :",
-	"sanctions-form-for-insulting-name": "Est-ce un nom insultant ?",
+	"sanctions-form-target": "Cible :",
+	"sanctions-form-for-insulting-name": "Est-ce un nom insultant ?",
 	"sanctions-content-placeholder": "Entrez le contenu de la sanction.",
 	"sanctions-submit": "Soumettre",
 	"sanctions-topic-no-description": "Aucune description fournie.",
@@ -59,7 +60,7 @@
 	"sanctions-row-button-execute": "Exécuter",
 	"sanctions-row-button-toggle-emergency": "Modifier la priorité",
 	"sanctions-topic-title": "$2 sur $1",
-	"sanctions-topic-summary-status-label": "État : $1",
+	"sanctions-topic-summary-status-label": "État : $1",
 	"sanctions-topic-summary-status-passed": "Passé",
 	"sanctions-topic-summary-status-rejected": "Rejeté",
 	"sanctions-topic-summary-status-immediate-rejection": "Rejet immédiat",
@@ -72,8 +73,8 @@
 	"sanctions-topic-summary-reason-less-than-three-and-not-all-agreed": "Le nombre de participants est inférieur à trois avec rejet.",
 	"sanctions-topic-summary-reason-more-than-three-and-agreed": "Le nombre de participants dépasse trois avec l’accord de $1 d’entre eux (plus des ⅔)",
 	"sanctions-topic-summary-reason-more-than-three-and-not-agreed": "Le nombre de participants dépasse trois avec l’accord de $1 d’entre eux (moins des ⅔)",
-	"sanctions-topic-summary-deadline": "Date de fin : $1",
-	"sanctions-topic-auto-reply-no-count": "La réponse ci-dessus n’est pas comptée car :",
+	"sanctions-topic-summary-deadline": "Date de fin : $1",
+	"sanctions-topic-auto-reply-no-count": "La réponse ci-dessus n’est pas comptée car :",
 	"sanctions-topic-auto-reply-unable-self-agree": "Impossible de voter pour une sanction créée par vous-même.",
 	"sanctions-log-take-temporary-measure": "Élévation de priorité de la [[Topic:$1|sanction]].",
 	"sanctions-log-remove-temporary-measure": "Réduction de priorité de la [[Topic:$1|sanction]].",
@@ -100,5 +101,5 @@
 	"sanctions-ve-vote-disagree-tool-title": "Contre",
 	"sanctions-ve-agree-days-inspector-title": "Expiration",
 	"sanctions-ve-agree-days-inspector-remove-label": "Supprimer",
-	"sanctions-ve-agree-days-inspector-invalid-value": "« $1 » n’est pas valide."
+	"sanctions-ve-agree-days-inspector-invalid-value": "« $1 » n’est pas valide."
 }
