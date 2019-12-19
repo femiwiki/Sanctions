@@ -558,10 +558,11 @@ class Sanction {
 
 			} elseif ( $agree >= $count * 2 / 3 ) {
 				$statusText = wfMessage( 'sanctions-topic-summary-status-passed' );
-				$reasonText = wfMessage( 'sanctions-topic-summary-reason-more-than-three-and-agreed' );
+				$reasonText = wfMessage( 'sanctions-topic-summary-reason-more-than-three-and-agreed', $agree );
 			} else {
 				$statusText = wfMessage( 'sanctions-topic-summary-status-rejected' );
-				$reasonText = wfMessage( 'sanctions-topic-summary-reason-more-than-three-and-not-agreed' );
+				$reasonText = wfMessage( 'sanctions-topic-summary-reason-more-than-three-and-not-agreed',
+					$agree );
 			}
 		}
 
