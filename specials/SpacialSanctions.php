@@ -379,7 +379,7 @@ class SpacialSanctions extends SpecialPage {
 			'form',
 			[
 			'method' => 'post',
-			'action' => $this->getTitle()->getFullURL(),
+			'action' => $this->getPageTitle()->getFullURL(),
 			'id' => 'sanctionsForm'
 			],
 			wfMessage( 'sanctions-form-target' )->text() .
