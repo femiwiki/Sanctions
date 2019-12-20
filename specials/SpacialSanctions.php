@@ -35,7 +35,7 @@ class SpacialSanctions extends SpecialPage {
 		if ( $this->mTargetName != null ) {
 			$output->setPageTitle( $this->msg( 'sanctions-title-with-target', $this->mTargetName ) );
 			$output->setSubTitle( '< ' . Linker::link(
-				$this->getTitle(),
+				$this->getPageTitle(),
 				wfMessage( 'sanctions-show-all-sanctions-link' )->text()
 			) );
 		}
@@ -305,7 +305,7 @@ class SpacialSanctions extends SpecialPage {
 		}
 		}
 
-		$output->redirect( $this->getTitle()->getLocalURL( $query ) );
+		$output->redirect( $this->getPageTitle()->getLocalURL( $query ) );
 
 		return true;
 	}
