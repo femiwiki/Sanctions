@@ -11,7 +11,7 @@ class SanctionsHooks {
 	 * @throws MWException
 	 * @return bool
 	 */
-	public static function onLoadExtensionSchemaUpdates( $updater = null ) {
+	public static function onLoadExtensionSchemaUpdates( DatabaseUpdater $updater = null ) {
 		$dir = __DIR__;
 
 		if ( $updater->getDB()->getType() == 'mysql' ) {
