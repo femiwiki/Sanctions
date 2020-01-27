@@ -1,7 +1,8 @@
 {
 	"@metadata": {
 		"authors": [
-			"렌즈"
+			"렌즈",
+			"Revi"
 		]
 	},
 	"sanctions-desc": "{{desc|name=Sanctions|url=https://www.mediawiki.org/wiki/Special:MyLanguage/Extension:Sanctions}}",
@@ -17,7 +18,7 @@
 	"sanctions-temporary-username": "Temporary replaced account name. Parameters:\n* $1 - An arbitrary number",
 	"sanctions": "{{doc-special|Sanctions}}",
 	"sanctions-empty": "Displayed when there is no sanction.",
-	"sanctions-empty-now": "Displayed when there is no sanction.",
+	"sanctions-empty-now": "Displayed when there is no sanction when the user browse the page.",
 	"sanctions-empty-about-now": "Displayed when there is no sanction about a certain user. Parameters:\n* $1 - the Username searched",
 	"sanctions-sactions-form-header": "Header for new sanction form.",
 	"sanctions-unable-create-new": "Displayed when an anonymous user has tried to participant sanction process.",
