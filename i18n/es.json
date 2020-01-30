@@ -2,7 +2,8 @@
 	"@metadata": {
 		"authors": [
 			"Fitoschido",
-			"MarcoAurelio"
+			"MarcoAurelio",
+			"DannyS712"
 		]
 	},
 	"sanctions-desc": "Permite a los usuarios imponer sanciones",
@@ -14,7 +15,7 @@
 	"sanctions-empty": "No hay sanciones.",
 	"sanctions-empty-now": "No hay ninguna sanción en estos momentos.",
 	"sanctions-empty-about-now": "No hay sanciones sobre $1 en estos momentos.",
-	"sanctions-sactions-form-header": "Imponer una nueva sanción",
+	"sanctions-sactions-form-header": "Crear una nueva sanción",
 	"sanctions-submit": "Enviar",
 	"sanctions-topic-no-description": "No se aporta ninguna descripción.",
 	"sanctions-submit-error-invalid-token": "Ficha no válida.",
