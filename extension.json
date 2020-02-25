@@ -1,7 +1,7 @@
 {
 	"name": "Sanctions",
-	"version": "1.0.2",
-	"author": [ "Lens" ],
+	"version": "1.0.3",
+	"author": "[https://femiwiki.com/ Femiwiki Team]",
 	"url": "https://github.com/femiwiki/sanctions",
 	"descriptionmsg": "sanctions-desc",
 	"license-name": "GPL-2.0-or-later",
