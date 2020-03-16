@@ -34,20 +34,47 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_USER: root
+          MYSQL_PASSWORD: root
+          MYSQL_DATABASE: testwiki
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306/tcp
+
     steps:
-    - run: sudo apt-get update && sudo apt-get install -y php-ast
     - uses: actions/checkout@v1
+
     - name: Setup PHP Action
       uses: shivammathur/setup-php@1.7.2
       with:
         php-version: '7.3'
-    - run: bash "${GITHUB_WORKSPACE}/.github/workflows/install-mediawiki.sh"
+
+    - name: Install PHP extension
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y php-ast
+
+    - name: Start the MySQL service
+      # See https://github.blog/changelog/2020-02-21-github-actions-breaking-change-ubuntu-virtual-environments-will-no-longer-start-the-mysql-service-automatically/
+      run: sudo /etc/init.d/mysql start
+
+    - name: Install MediaWiki
+      run: bash "${GITHUB_WORKSPACE}/.github/workflows/install-mediawiki.sh"
+      env:
+        MYSQL_PORT: ${{ job.services.mysql.ports[3306] }}
+
     - name: Install extensions
       run: |
         bash "${GITHUB_WORKSPACE}/.github/workflows/install-extension.sh" Flow
         bash "${GITHUB_WORKSPACE}/.github/workflows/install-extension.sh" Echo
         bash "${GITHUB_WORKSPACE}/.github/workflows/install-extension.sh" Renameuser
-    - run: php "${HOME}/mediawiki/extensions/Sanctions/vendor/bin/phan" -d "${HOME}/mediawiki/extensions/Sanctions" -p -m checkstyle
+
+    - name: Phan
+      run: php "${HOME}/mediawiki/extensions/Sanctions/vendor/bin/phan" -d "${HOME}/mediawiki/extensions/Sanctions" -p -m checkstyle
 
   phpunit:
     strategy:
@@ -59,11 +86,33 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_USER: root
+          MYSQL_PASSWORD: root
+          MYSQL_DATABASE: testwiki
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306/tcp
+
     steps:
     - uses: actions/checkout@v1
+
     - name: Setup PHP Action
       uses: shivammathur/setup-php@1.7.2
       with:
         php-version: '7.3'
-    - run: bash "${GITHUB_WORKSPACE}/.github/workflows/install-mediawiki.sh"
-    - run: php "${HOME}/mediawiki/tests/phpunit/phpunit.php"
+
+    - name: Start the MySQL service
+      # See https://github.blog/changelog/2020-02-21-github-actions-breaking-change-ubuntu-virtual-environments-will-no-longer-start-the-mysql-service-automatically/
+      run: sudo /etc/init.d/mysql start
+
+    - name: Install MediaWiki
+      run: bash "${GITHUB_WORKSPACE}/.github/workflows/install-mediawiki.sh"
+      env:
+        MYSQL_PORT: ${{ job.services.mysql.ports[3306] }}
+
+    - name: PHPUnit
+      run: php "${HOME}/mediawiki/tests/phpunit/phpunit.php"

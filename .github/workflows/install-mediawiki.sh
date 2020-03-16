@@ -14,6 +14,7 @@ php "${HOME}/mediawiki/maintenance/install.php" \
   --dbname testwiki \
   --dbuser root \
   --dbpass root \
+  --dbport "${MYSQL_PORT}" \
   --scriptpath "/w" \
   testwiki admin
 echo -e "\n\nrequire_once __DIR__ . '/includes/DevelopmentSettings.php';" >> "${HOME}/mediawiki/LocalSettings.php"
