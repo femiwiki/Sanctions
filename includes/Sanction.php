@@ -5,6 +5,7 @@ use Flow\Model\UUID;
 use MediaWiki\MediaWikiServices;
 use MediaWiki\Block\CompositeBlock;
 use MediaWiki\Block\DatabaseBlock;
+use Wikimedia\IPUtils;
 
 class Sanction {
 	/**
@@ -1313,7 +1314,7 @@ class Sanction {
 		// Even if done as below, it comes out in local time.
 		$logParams['5::duration'] = $time->getTimestamp( TS_ISO_8601 );
 		$flags = [ 'nocreate' ];
-		if ( !$block->isAutoblocking() && !IP::isIPAddress( $target ) ) {
+		if ( !$block->isAutoblocking() && !IPUtils::isIPAddress( $target ) ) {
 			// Conditionally added same as SpecialBlock
 			$flags[] = 'noautoblock';
 		}
