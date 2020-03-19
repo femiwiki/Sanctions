@@ -25,8 +25,8 @@ class SanctionsCreateTemplates extends LoggedUpdateMaintenance {
 		return [
 			'sanctions-agree-template-title' => function ( Title $title ) {
 				// get "User:" namespace prefix in wiki language
-				global $wgContLang;
-				$namespaces = $wgContLang->getFormattedNamespaces();
+				$contLang = \MediaWiki\MediaWikiServices::getInstance()->getContentLanguage();
+				$namespaces = $contLang->getFormattedNamespaces();
 
 				// @codingStandardsIgnoreLine
 				return "[[" . $namespaces[NS_FILE] . ":Symbol support vote.svg|17px]]" .
@@ -41,8 +41,8 @@ class SanctionsCreateTemplates extends LoggedUpdateMaintenance {
 			},
 			'sanctions-disagree-template-title' => function ( Title $title ) {
 				// get "User:" namespace prefix in wiki language
-				global $wgContLang;
-				$namespaces = $wgContLang->getFormattedNamespaces();
+				$contLang = \MediaWiki\MediaWikiServices::getInstance()->getContentLanguage();
+				$namespaces = $contLang->getFormattedNamespaces();
 
 				return "[[" . $namespaces[NS_FILE] . ":Symbol oppose vote.svg|17px]]" .
 				"<span class=\"sanction-vote-disagree\"></span>'''" .
