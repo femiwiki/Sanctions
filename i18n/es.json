@@ -1,9 +1,9 @@
 {
 	"@metadata": {
 		"authors": [
+			"DannyS712",
 			"Fitoschido",
-			"MarcoAurelio",
-			"DannyS712"
+			"MarcoAurelio"
 		]
 	},
 	"sanctions-desc": "Permite a los usuarios imponer sanciones",
