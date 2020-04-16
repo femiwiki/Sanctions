@@ -77,7 +77,7 @@
 	"sanctions-log-remove-temporary-measure": "[[Topic:$1|Yaptırımın]] önceliğini düşürmek.",
 	"sanctions-log-take-measure": "[[Topic:$1|Yaptırım]] geçti.",
 	"sanctions-log-immediate-rejection": "[[Topic:$1|Yaptırım]] reddedildi.",
-	"sanctions-reason-not-logged-in": "Giriş yapmadınız.",
+	"sanctions-reason-not-logged-in": "Oturum açık değil.",
 	"sanctions-reason-failed-to-load-registration": "Hesabın kayıt tarihi getirilemedi.",
 	"sanctions-reason-no-edit-permission": "Düzenleme hakkı yok.",
 	"sanctions-reason-unsatisfying-verification-period": "Hesap oluşturulduğundan bu yana $1 geçmedi. ($2 tarihinde oluşturuldu)",
