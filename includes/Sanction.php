@@ -150,7 +150,7 @@ class Sanction {
 
 		$sanction = new self();
 
-		if ( $sanction->loadFrom( 'st_topic', $uuid ) ) {
+		if ( !$sanction->loadFrom( 'st_topic', $uuid ) ) {
 			return false;
 		}
 
@@ -387,6 +387,8 @@ class Sanction {
 	public function needToImmediateRejection() {
 		$agree = $this->mAgreeVote;
 		$count = $this->mVoteNumber;
+
+		wfDebugLog( 'Sanctions', "\n\n\n" . "agree = $agree\ncount = $count" );
 
 		if ( $count - $agree >= 3 ||
 			( $agree == 0 && array_key_exists( $this->mAuthor->getId(), $this->mVotes )
@@ -1291,7 +1293,7 @@ class Sanction {
 			$preventEditOwnUserTalk = true, $user = null ) {
 		$bot = self::getBot();
 
-		$block = new Block();
+		$block = new DatabaseBlock();
 		$block->setTarget( $target );
 		$block->setBlocker( $bot );
 		$block->mReason = $reason;
