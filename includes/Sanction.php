@@ -1343,7 +1343,7 @@ class Sanction {
 	protected static function unblock( $target, $withLog = false, $reason = null, $user = null ) {
 		$block = $target->getBlock();
 
-		if ( $block == null ) {
+		if ( $block != null ) {
 			if ( $block instanceof CompositeBlock ) {
 				foreach ( $block->getOriginalBlocks() as $originalBlock ) {
 					if ( $originalBlock instanceof DatabaseBlock ) {
