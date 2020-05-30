@@ -52,11 +52,6 @@ class Sanction {
 	protected $mVotes = null;
 
 	/**
-	 * @var Database
-	 */
-	protected $mDb;
-
-	/**
 	 * @var bool $mIsPassed, $mVoteNumber and $mAgreeVote are valid when $mCounted is true.
 	 */
 	protected $mCounted = false;
@@ -191,7 +186,7 @@ class Sanction {
 
 		// Update DB
 		$id = $this->mId;
-		$db = $this->getDb();
+		$db = wfGetDB( DB_MASTER );
 		$now = wfTimestamp( TS_MW );
 		$db->update(
 			'sanctions',
@@ -414,7 +409,7 @@ class Sanction {
 		}
 
 		// Write to the database that sanctions have been processed.
-		$db = $this->getDb();
+		$db = wfGetDB( DB_MASTER );
 		$now = wfTimestamp( TS_MW );
 		$res = $db->update(
 			'sanctions',
@@ -454,7 +449,7 @@ class Sanction {
 		$this->updateTopicSummary();
 
 		// Write to DB
-		$db = $this->getDb();
+		$db = wfGetDB( DB_MASTER );
 		$now = wfTimestamp( TS_MW );
 		$res = $db->update(
 			'sanctions',
@@ -474,7 +469,7 @@ class Sanction {
 
 	// @todo If topic summary is already created (because etsprev_revision is empty), it will not work.
 	public function updateTopicSummary() {
-		$db = $this->getDb();
+		$db = wfGetDB( DB_REPLICA );
 		$row = $db->selectRow(
 			'flow_revision',
 			[
@@ -618,7 +613,7 @@ class Sanction {
 
 	// @todo Do not renew $value with a value of $row
 	public function loadFrom( $name, $value ) {
-		$db = $this->getDb();
+		$db = wfGetDB( DB_REPLICA );
 
 		$row = $db->selectRow(
 			'sanctions',
@@ -779,7 +774,7 @@ class Sanction {
 		if ( $this->mVotes === null ) {
 			$this->mVotes = [];
 
-			$db = $this->getDb();
+			$db = wfGetDB( DB_REPLICA );
 			$res = $db->select(
 				'sanctions_vote',
 				'*',
@@ -874,7 +869,8 @@ class Sanction {
 		}
 
 		$uuid = $this->getTopicUUID();
-		$db = $this->getDb();
+		$db = wfGetDB( DB_REPLICA );
+		$writableDb = wfGetDB( DB_MASTER );
 
 		// Ignore if the topic has not changed since the last check.
 		$topicLastUpdate = $db->selectField(
@@ -924,6 +920,7 @@ class Sanction {
 		);
 
 		$votes = [];
+
 		// Count valid/invalid votes first.
 		foreach ( $res as $row ) {
 			$timestamp = UUID::create( $row->rev_id )->getTimestamp();
@@ -952,7 +949,7 @@ class Sanction {
 				'span',
 				[ 'class' => 'sanction-vote-counted' ]
 			);
-			$db->update(
+			$writableDb->update(
 				'flow_revision',
 				[
 					'rev_content' => $newContent
@@ -1024,7 +1021,7 @@ class Sanction {
 				]
 			);
 			if ( $previous == false ) {
-				$db->insert(
+				$writableDb->insert(
 					'sanctions_vote',
 					[
 						'stv_topic' => $uuid->getBinary(),
@@ -1038,7 +1035,7 @@ class Sanction {
 				$previous->stv_last_update_timestamp < $vote['stv_last_update_timestamp'] &&
 				$previous->stv_period != $vote['stv_period']
 			) {
-				$db->update(
+				$writableDb->update(
 					'sanctions_vote',
 					[
 						'stv_period' => $vote['stv_period'],
@@ -1055,7 +1052,7 @@ class Sanction {
 
 		if ( $dbIsTouched ) {
 			// Update the time of the sanction.
-			$db->update(
+			$writableDb->update(
 				'sanctions',
 				[
 					'st_last_update_timestamp' => $sanctionLastUpdate
@@ -1159,16 +1156,6 @@ class Sanction {
 		);
 
 		return self::newFromId( $sanctionId );
-	}
-
-	/**
-	 * @return Database
-	 */
-	protected function getDb() {
-		if ( !$this->mDb ) {
-			$this->mDb = wfGetDB( DB_MASTER );
-		}
-		return $this->mDb;
 	}
 
 	/**
