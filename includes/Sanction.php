@@ -487,9 +487,9 @@ class Sanction {
 				'ORDER BY' => 'rev_id DESC'
 			]
 		);
-		if ( $row != null ) {
-			$previousIdText = UUID::create( $row->rev_id )->getAlphadecimal();
-		}
+		$previousIdText = $row == null
+			? null
+			: UUID::create( $row->rev_id )->getAlphadecimal();
 
 		$factory = Container::get( 'factory.loader.workflow' );
 
