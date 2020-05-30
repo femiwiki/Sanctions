@@ -1173,9 +1173,6 @@ class Sanction {
 	public static function getBot() {
 		$botName = wfMessage( 'sanctions-bot-name' )->inContentLanguage()->text();
 		$bot = User::newSystemUser( $botName, [ 'steal' => true ] );
-		$bot->addGroup( 'sysop' );
-		$bot->addGroup( 'autoconfirmed' );
-		$bot->addGroup( 'bot' );
 
 		return $bot;
 	}
