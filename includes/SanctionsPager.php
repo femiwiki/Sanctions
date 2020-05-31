@@ -49,22 +49,22 @@ class SanctionsPager extends IndexPager {
 	 */
 	public function getQueryInfo() {
 		Sanction::checkAllSanctionNewVotes();
-		$subquery = $this->mDb->selectSQLText(
+		$subquery = $this->mDb->buildSelectSubquery(
 			'sanctions_vote',
 			[ 'stv_id', 'stv_topic' ],
 			[ 'stv_user' => $this->getUser()->getId() ]
 		);
 		$query = [
-		'tables' => [
-		'sanctions'
-		],
-		'fields' => [
-		'st_id',
-		'my_sanction' => 'st_author = ' . $this->getUser()->getId(),
-		'st_expiry',
-		'not_expired' => 'st_expiry > ' . wfTimestamp( TS_MW ),
-		'st_handled'
-		]
+			'tables' => [
+				'sanctions'
+			],
+			'fields' => [
+				'st_id',
+				'my_sanction' => 'st_author = ' . $this->getUser()->getId(),
+				'st_expiry',
+				'not_expired' => 'st_expiry > ' . wfTimestamp( TS_MW ),
+				'st_handled'
+			]
 		];
 
 		if ( $this->targetName ) {
@@ -75,7 +75,7 @@ class SanctionsPager extends IndexPager {
 
 		if ( $this->getUserHasVoteRight() ) {
 			// If 'AS' is not written explicitly, it will not work as expected.
-			$query['tables']['sub'] = '(' . $subquery . ') AS';
+			$query['tables']['sub'] = $subquery . ' AS';
 			$query['fields']['voted_from'] = 'stv_id';
 			$query['join_conds'] = [ 'sub' => [ 'LEFT JOIN', 'st_topic = sub.stv_topic' ] ];
 		} else {
