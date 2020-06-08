@@ -6,8 +6,8 @@ unzip -q "${MEDIAWIKI_VERSION}.zip" && rm "${MEDIAWIKI_VERSION}.zip"
 mv "mediawiki-${MEDIAWIKI_VERSION}" "${HOME}/mediawiki"
 cp -r "$GITHUB_WORKSPACE" "${HOME}/mediawiki/extensions/"
 
-composer install --prefer-dist --no-progress --no-suggest --no-interaction --dev --working-dir "${HOME}/mediawiki"
-composer install --prefer-dist --no-progress --no-suggest --no-interaction --dev --working-dir "${HOME}/mediawiki/extensions/Sanctions"
+composer install --prefer-dist --no-progress --no-interaction --working-dir "${HOME}/mediawiki"
+composer install --prefer-dist --no-progress --no-interaction --working-dir "${HOME}/mediawiki/extensions/Sanctions"
 
 php "${HOME}/mediawiki/maintenance/install.php" \
   --pass admin \
