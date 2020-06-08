@@ -1,7 +1,7 @@
 <?php
 
-use Flow\Model\UUID;
 use Flow\Exception\InvalidInputException;
+use Flow\Model\UUID;
 
 class SanctionsHooks {
 	/**

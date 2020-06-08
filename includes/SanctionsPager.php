@@ -13,7 +13,7 @@ class SanctionsPager extends IndexPager {
 
 	/**
 	 * @param IContextSource $context
-	 * @param string $targetName
+	 * @param string|null $targetName
 	 */
 	public function __construct( $context, $targetName ) {
 		parent::__construct( $context );
@@ -95,13 +95,12 @@ class SanctionsPager extends IndexPager {
 		// foreach($row as $key => $value) echo $key.'-'.$value.'<br/>';
 		// echo '<div style="clear:both;">------------------------------------------------</div>';
 		$sanction = Sanction::newFromId( $row->st_id );
-
-		if ( $this->getUserHasVoteRight() ) {
-			$isVoted = $row->voted_from != null;
-		}
-
 		$author = $sanction->getAuthor();
 		$isMySanction = $author->equals( $this->getUser() );
+
+		if ( $this->getUserHasVoteRight() || $isMySanction ) {
+			$isVoted = $row->voted_from != null;
+		}
 
 		$expiry = $sanction->getExpiry();
 		$expired = $sanction->isExpired();
@@ -117,13 +116,14 @@ class SanctionsPager extends IndexPager {
 
 		if ( !$expired && !$handled ) {
 			$timeLeftText = $this->getLanguage()->formatTimePeriod(
-				MWTimestamp::getInstance( $expiry )->getTimestamp()
-				- MWTimestamp::getInstance()->getTimestamp(),
+				(int)MWTimestamp::getInstance( $expiry )->getTimestamp()
+				- (int)MWTimestamp::getInstance()->getTimestamp(),
 				[
 					'noabbrevs' => true,
 					'avoid' => 'avoidseconds'
 				]
 			);
+
 			$timeLeftText = wfMessage( 'sanctions-row-label-expiry', $timeLeftText )->text();
 		}
 
@@ -173,7 +173,7 @@ class SanctionsPager extends IndexPager {
 		. ( $sanction->isEmergency() ? ' emergency' : '' )
 		. ( $expired ? ' expired' : '' )
 		. ( $handled ? ' handled' : '' );
-		if ( $this->getUserHasVoteRight() && !$isMySanction ) {
+		if ( isset( $isVoted ) ) {
 			$class .= $isVoted ? ' voted' : ' not-voted';
 		}
 
@@ -193,7 +193,7 @@ class SanctionsPager extends IndexPager {
 				$passStatus
 			);
 		}
-		if ( $this->getUserHasVoteRight() || $isMySanction ) {
+		if ( isset( $isVoted ) ) {
 			$out .= Html::rawelement(
 				'div',
 				[ 'class' => 'sanction-vote-status' ],
@@ -205,11 +205,11 @@ class SanctionsPager extends IndexPager {
 					)
 			);
 		}
-		if ( !$expired && !$handled ) {
+		if ( isset( $timeLeftText ) ) {
 			$out .= Html::rawelement(
 				'div',
 				[ 'class' => 'sanction-timeLeft' ],
-				$timeLeftText
+				$timeLeftText ?: ''
 			);
 		}
 		if ( $expired && $this->getUserHasVoteRight() && !$handled ) {

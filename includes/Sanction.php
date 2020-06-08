@@ -2,9 +2,9 @@
 
 use Flow\Container;
 use Flow\Model\UUID;
-use MediaWiki\MediaWikiServices;
 use MediaWiki\Block\CompositeBlock;
 use MediaWiki\Block\DatabaseBlock;
+use MediaWiki\MediaWikiServices;
 
 class Sanction {
 	/**
@@ -559,11 +559,12 @@ class Sanction {
 
 			} elseif ( $agree >= $count * 2 / 3 ) {
 				$statusText = wfMessage( 'sanctions-topic-summary-status-passed' );
-				$reasonText = wfMessage( 'sanctions-topic-summary-reason-more-than-three-and-agreed', $agree );
+				$reasonText = wfMessage( 'sanctions-topic-summary-reason-more-than-three-and-agreed',
+					(string)$agree );
 			} else {
 				$statusText = wfMessage( 'sanctions-topic-summary-status-rejected' );
 				$reasonText = wfMessage( 'sanctions-topic-summary-reason-more-than-three-and-not-agreed',
-					$agree );
+					(string)$agree );
 			}
 		}
 
@@ -576,7 +577,7 @@ class Sanction {
 				$statusText = wfMessage(
 					'sanctions-topic-summary-result-prediction',
 					$statusText,
-					$period
+					(string)$period
 				)->inContentLanguage()->text();
 			}
 		}
@@ -822,7 +823,7 @@ class Sanction {
 	 * Find out if there is an inappropriate username change suggestion for the user.
 	 *
 	 * @param User $user
-	 * @return bool
+	 * @return Sanction|null
 	 */
 	public static function existingSanctionForInsultingNameOf( $user ) {
 		$db = wfGetDB( DB_MASTER );
@@ -1125,7 +1126,7 @@ class Sanction {
 	}
 
 	/**
-	 * @param UUID $UUID
+	 * @param UUID|string $UUID
 	 * @return Sanction|bool
 	 */
 	public static function newFromUUID( $UUID ) {

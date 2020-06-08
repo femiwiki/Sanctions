@@ -16,7 +16,7 @@
 	},
 	"AvailableRights": [ "sanctions-execute" ],
 	"AutoloadClasses": {
-		"SpacialSanctions": "specials/SpacialSanctions.php",
+		"SpacialSanctions": "includes/specials/SpacialSanctions.php",
 		"SanctionsPager": "includes/SanctionsPager.php",
 		"Sanction": "includes/Sanction.php",
 		"SanctionsHooks": "includes/SanctionsHooks.php",

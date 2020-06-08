@@ -1,11 +1,27 @@
 <?php
 
+use Flow\Model\UUID;
 
 class SpacialSanctions extends SpecialPage {
-	protected $mTargetName = null;
-	protected $mTargetId = null;
-	protected $mOldRevisionId = null;
-	protected $mNewRevisionId = null;
+	/**
+	 * @var string
+	 */
+	protected $mTargetName;
+
+	/**
+	 * @var int
+	 */
+	protected $mTargetId;
+
+	/**
+	 * @var int|null
+	 */
+	protected $mOldRevisionId;
+
+	/**
+	 * @var int
+	 */
+	protected $mNewRevisionId;
 
 	public function __construct() {
 		parent::__construct( 'Sanctions' );
@@ -13,6 +29,7 @@ class SpacialSanctions extends SpecialPage {
 
 	/**
 	 * @param string $subpage
+	 * @suppress SecurityCheck-XSS
 	 */
 	public function execute( $subpage ) {
 		$output = $this->getOutput();
@@ -25,7 +42,6 @@ class SpacialSanctions extends SpecialPage {
 		// Request가 있었다면 처리합니다. (리다이렉트할 경우 true를 반환합니다)
 		if ( $this->handleRequestsIfExist( $output ) ) {
 			return;
-
 		}
 
 		$output->addModuleStyles( 'ext.sanctions.special.sanctions.styles' );
@@ -40,7 +56,7 @@ class SpacialSanctions extends SpecialPage {
 			) );
 		}
 
-		$pager = new SanctionsPager( $this->getContext(), $this->mTargetName );
+		$pager = new SanctionsPager( $this->getContext(), (string)$this->mTargetName );
 		$pager->doQuery();
 		$output->addHTML( $pager->getBody() );
 
@@ -55,7 +71,7 @@ class SpacialSanctions extends SpecialPage {
 					->text();
 			}
 
-			if ( count( $reason ) > 0 ) {
+			if ( is_array( $reason ) && count( $reason ) > 0 ) {
 				$message .= PHP_EOL . '* ' . implode( PHP_EOL . '* ', $reason );
 			}
 
@@ -69,40 +85,45 @@ class SpacialSanctions extends SpecialPage {
 	private function setParameter( $subpage ) {
 		$parts = explode( '/', $subpage, 3 );
 
-		$targetName = null;
-		$oldRevisionId = null;
-		$newRevisionId = null;
+		$targetName = '';
+		$oldRevisionId = 0;
+		$newRevisionId = 0;
 
 		switch ( count( $parts ) ) {
 		case 0:
 			return;
 		case 1:
-			$targetName = $parts[0];
+			$targetName = (string)$parts[0];
 			break;
 		case 2:
-			$targetName = $parts[0];
-			$newRevisionId = $parts[1];
+			$targetName = (string)$parts[0];
+			$newRevisionId = (int)$parts[1];
 			break;
 		case 3:
-			list( $targetName, $oldRevisionId, $newRevisionId ) = $parts;
+			$targetName = (string)$parts[0];
+			$oldRevisionId = (int)$parts[1];
+			$newRevisionId = (int)$parts[2];
 			break;
 		}
 
 		$target = User::newFromName( $targetName );
-		if ( !$target ) { return;
+		if ( !$target ) {
+			return;
 		}
 		$targetId = $target->getId();
-		if ( !$targetId ) { return;
+		if ( !$targetId ) {
+			return;
 		}
 
 		$this->mTargetName = $targetName;
 		$this->mTargetId = $targetId;
 
-		if ( count( $parts ) == 1 ) { return;
+		if ( count( $parts ) == 1 ) {
+			return;
 		}
 
 		// Fetch newRivisionId
-		$newRevisionId = $parts[ count( $parts ) - 1 ];
+		$newRevisionId = (int)$parts[ count( $parts ) - 1 ];
 
 		$newRevision = Revision::newFromId( $newRevisionId );
 		if ( !$newRevision ) {
@@ -112,7 +133,7 @@ class SpacialSanctions extends SpecialPage {
 
 		// Fetch oldRivisionId
 		if ( count( $parts ) == 3 ) {
-			$oldRevisionId = $parts[1];
+			$oldRevisionId = (int)$parts[1];
 			$oldRevision = Revision::newFromId( $oldRevisionId );
 			if ( !$oldRevision ) {
 				if ( $newRevision->getPrevious() ) {
@@ -134,7 +155,9 @@ class SpacialSanctions extends SpecialPage {
 	}
 
 	/**
-	 * @return true를 반환하면 다른 내용을 보여주지 않습니다.
+	 * @param OutputPage $output
+	 * @return bool true를 반환하면 다른 내용을 보여주지 않습니다.
+	 * @suppress SecurityCheck-XSS
 	 */
 	private function handleRequestsIfExist( $output ) {
 		$request = $this->getRequest();
@@ -147,7 +170,7 @@ class SpacialSanctions extends SpecialPage {
 						'div',
 						[ 'class' => 'sanction-execute-result' ],
 						self::makeErrorMessage(
-							$request->getVal( 'errorCode' ),
+							(int)$request->getVal( 'errorCode' ),
 							$request->getVal( 'uuid' ),
 							$request->getVal( 'targetName' )
 						)
@@ -159,7 +182,7 @@ class SpacialSanctions extends SpecialPage {
 						'div',
 						[ 'class' => 'sanction-execute-result' ],
 						self::makeMessage(
-							$request->getVal( 'code' ),
+							(int)$request->getVal( 'code' ),
 							$request->getVal( 'uuid' ),
 							$request->getVal( 'targetName' )
 						)
@@ -312,7 +335,7 @@ class SpacialSanctions extends SpecialPage {
 
 	/**
 	 * @param int $errorCode
-	 * @param UUID $uuid
+	 * @param UUID|string $uuid
 	 * @param string $targetName
 	 * @return string Error Message
 	 */
@@ -338,13 +361,13 @@ class SpacialSanctions extends SpecialPage {
 					"sanctions-submit-error-insulting-report-already-exist", [ $targetName, $link ]
 				)->text();
 		default:
-			return wfMessage( "sanctions-submit-error-other", $errorCode )->text();
+			return wfMessage( "sanctions-submit-error-other", (string)$errorCode )->text();
 		}
 	}
 
 	/**
 	 * @param int $code
-	 * @param UUID $uuid
+	 * @param UUID|string $uuid
 	 * @param string $targetName
 	 * @return string Message
 	 */
@@ -360,22 +383,25 @@ class SpacialSanctions extends SpecialPage {
 		case 3:
 			return wfMessage( "sanctions-submit-massage-executed-sanction", $link )->text();
 		default:
-			return wfMessage( "sanctions-submit-massage-other", $code )->text();
+			return wfMessage( "sanctions-submit-massage-other", (string)$code )->text();
 		}
 	}
 
+	/**
+	 * @return string
+	 */
 	protected function makeForm() {
 		$content = '';
 
 		$content .= $this->makeDiffLink();
 
 		$out = '';
-		$out .= Xml::element(
+		$out .= Html::rawelement(
 			'h2',
 			[],
 			$this->msg( 'sanctions-sactions-form-header' )->text()
 		);
-		$out .= Xml::tags(
+		$out .= Html::rawelement(
 			'form',
 			[
 			'method' => 'post',
@@ -383,8 +409,8 @@ class SpacialSanctions extends SpecialPage {
 			'id' => 'sanctionsForm'
 			],
 			wfMessage( 'sanctions-form-target' )->text() .
-			Xml::input(
-				'target', 10, $this->mTargetName, [ 'class' => 'mw-ui-input-inline' ]
+			Html::input(
+				'target', (string)10, $this->mTargetName, [ 'class' => 'mw-ui-input-inline' ]
 			) .
 			' ' .
 			Xml::checkLabel(
@@ -421,7 +447,8 @@ class SpacialSanctions extends SpecialPage {
 	protected function makeDiffLink() {
 		$newRevisionId = $this->mNewRevisionId;
 
-		if ( $newRevisionId == null ) { return '';
+		if ( $newRevisionId == null ) {
+			return '';
 		}
 
 		$newRevision = Revision::newFromId( $newRevisionId );
@@ -430,13 +457,13 @@ class SpacialSanctions extends SpecialPage {
 		$rt = '';
 		if ( $oldRevisionId != null ) {
 			$rt = wfMessage( 'sanctions-topic-diff', [
-				$oldRevisionId,
-				$newRevisionId,
+				(string)$oldRevisionId,
+				(string)$newRevisionId,
 				$newRevision->getTitle()->getFullText()
 			] )->inContentLanguage()->text();
 		} else {
 			$rt = wfMessage( 'sanctions-topic-revision', [
-				$newRevisionId,
+				(string)$newRevisionId,
 				$newRevision->getTitle()->getFullText()
 			] )->inContentLanguage()->text();
 		}

@@ -49,8 +49,8 @@ class SanctionsUtils {
 		if ( $twentyDaysAgo < $reg ) {
 			if ( $reasons !== false ) {
 				self::addReason( wfMessage( 'sanctions-reason-unsatisfying-verification-period', [
-					$verificationPeriod,
-					MWTimestamp::getLocalInstance( $reg )->getTimestamp( TS_ISO_8601 )
+					(string)$verificationPeriod,
+					MWTimestamp::getLocalInstance( (string)$reg )->getTimestamp( TS_ISO_8601 )
 				] ), $reasons, $contentLang );
 			} else {
 				return false;
@@ -96,9 +96,9 @@ class SanctionsUtils {
 		if ( $count < $verificationEdits ) {
 			if ( $reasons !== false ) {
 				self::addReason( wfMessage( 'sanctions-reason-unsatisfying-verification-edits', [
-					$verificationPeriod,
-					$count,
-					$verificationEdits
+					(string)$verificationPeriod,
+					(string)$count,
+					(string)$verificationEdits
 				] ), $reasons, $contentLang );
 			} else {
 				return false;
@@ -126,7 +126,7 @@ class SanctionsUtils {
 				if ( $reasons !== false ) {
 						self::addReason( wfMessage( 'sanctions-reason-recently-blocked', [
 							MWTimestamp::getLocalInstance( $blockExpiry )->getTimestamp( TS_ISO_8601 ),
-							$verificationPeriod,
+							(string)$verificationPeriod,
 						] ), $reasons, $contentLang );
 				} else {
 					return false;
