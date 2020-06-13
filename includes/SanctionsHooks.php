@@ -237,7 +237,7 @@ class SanctionsHooks {
 
 	/**
 	 * @param Skin $skin Skin object
-	 * @param array[] &$Sidebar An array of arrays of sidebar items.
+	 * @param array[] &$sidebar An array of arrays of sidebar items.
 	 */
 	public static function onSidebarBeforeOutput( Skin $skin, array &$sidebar ) {
 		$user = $skin->getRelevantUser();
