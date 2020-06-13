@@ -101,7 +101,7 @@
 		"UserToolLinksEdit": "SanctionsHooks::onUserToolLinksEdit",
 		"DiffRevisionTools": "SanctionsHooks::onDiffRevisionTools",
 		"HistoryRevisionTools": "SanctionsHooks::onHistoryRevisionTools",
-		"BaseTemplateToolbox": "SanctionsHooks::onBaseTemplateToolbox",
+		"SidebarBeforeOutput": "SanctionsHooks::onSidebarBeforeOutput",
 		"ContributionsToolLinks": "SanctionsHooks::onContributionsToolLinks",
 		"FlowAddModules": "SanctionsHooks::onFlowAddModules"
 	},
