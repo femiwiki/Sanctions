@@ -248,8 +248,8 @@ class SanctionsHooks {
 
 		$rootUser = $user->getName();
 
-		$sanctionsLink = [ 
-			'sanctions' => [ 
+		$sanctionsLink = [
+			'sanctions' => [
 				'text' => $skin->msg( 'sanctions-link-on-user-page' )->text(),
 				'href' => $skin::makeSpecialUrlSubpage( 'Sanctions', $rootUser ),
 				'id' => 't-sanctions'
