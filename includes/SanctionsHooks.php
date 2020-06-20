@@ -259,8 +259,9 @@ class SanctionsHooks {
 		if ( !isset( $sidebar['TOOLBOX'] ) ) {
 			$sidebar['TOOLBOX'] = [];
 		}
+
 		$toolbox = $sidebar['TOOLBOX'];
-		
+
 		$sidebar['TOOLBOX'] = wfArrayInsertAfter(
 			$toolbox,
 			$sanctionsLink,
