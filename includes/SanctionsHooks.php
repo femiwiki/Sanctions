@@ -243,7 +243,7 @@ class SanctionsHooks {
 		$user = $skin->getRelevantUser();
 
 		if ( !$user ) {
-		   return;
+			return;
 		}
 
 		$rootUser = $user->getName();
