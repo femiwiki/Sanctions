@@ -236,24 +236,37 @@ class SanctionsHooks {
 	}
 
 	/**
-	 * @param BaseTemplate $baseTemplate The BaseTemplate base skin template.
-	 * @param array &$toolbox An array of toolbox items.
+	 * @param Skin $skin Skin object
+	 * @param array[] &$sidebar An array of arrays of sidebar items.
 	 */
-	public static function onBaseTemplateToolbox( BaseTemplate $baseTemplate, array &$toolbox ) {
-		$user = $baseTemplate->getSkin()->getRelevantUser();
-		if ( $user ) {
-			$rootUser = $user->getName();
+	public static function onSidebarBeforeOutput( Skin $skin, array &$sidebar ) {
+		$user = $skin->getRelevantUser();
 
-			$toolbox = wfArrayInsertAfter(
-				$toolbox,
-				[ 'sanctions' => [
-					'text' => wfMessage( 'sanctions-link-on-user-page' )->text(),
-					'href' => Skin::makeSpecialUrlSubpage( 'Sanctions', $rootUser ),
-					'id' => 't-sanctions'
-				] ],
-				isset( $toolbox['blockip'] ) ? 'blockip' : 'log'
-			);
+		if ( !$user ) {
+			return;
 		}
+
+		$rootUser = $user->getName();
+
+		$sanctionsLink = [
+			'sanctions' => [
+				'text' => $skin->msg( 'sanctions-link-on-user-page' )->text(),
+				'href' => $skin::makeSpecialUrlSubpage( 'Sanctions', $rootUser ),
+				'id' => 't-sanctions'
+			]
+		];
+
+		if ( !isset( $sidebar['TOOLBOX'] ) ) {
+			$sidebar['TOOLBOX'] = [];
+		}
+
+		$toolbox = $sidebar['TOOLBOX'];
+
+		$sidebar['TOOLBOX'] = wfArrayInsertAfter(
+			$toolbox,
+			$sanctionsLink,
+			isset( $toolbox['blockip'] ) ? 'blockip' : 'log'
+		);
 	}
 
 	/**
