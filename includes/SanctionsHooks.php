@@ -257,16 +257,16 @@ class SanctionsHooks {
 		];
 
 		if ( !isset( $sidebar['TOOLBOX'] ) ) {
-			$sidebar['TOOLBOX'] = [];
+			$sidebar['TOOLBOX'] = $sanctionsLink;
+		} else {
+			$toolbox = $sidebar['TOOLBOX'];
+
+			$sidebar['TOOLBOX'] = wfArrayInsertAfter(
+				$toolbox,
+				$sanctionsLink,
+				isset( $toolbox['blockip'] ) ? 'blockip' : 'log'
+			);
 		}
-
-		$toolbox = $sidebar['TOOLBOX'];
-
-		$sidebar['TOOLBOX'] = wfArrayInsertAfter(
-			$toolbox,
-			$sanctionsLink,
-			isset( $toolbox['blockip'] ) ? 'blockip' : 'log'
-		);
 	}
 
 	/**
