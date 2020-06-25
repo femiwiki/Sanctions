@@ -401,6 +401,7 @@ class SpacialSanctions extends SpecialPage {
 			[],
 			$this->msg( 'sanctions-sactions-form-header' )->text()
 		);
+
 		$out .= Html::rawelement(
 			'form',
 			[
@@ -408,17 +409,20 @@ class SpacialSanctions extends SpecialPage {
 			'action' => $this->getPageTitle()->getFullURL(),
 			'id' => 'sanctionsForm'
 			],
-			wfMessage( 'sanctions-form-target' )->text() .
-			Html::input(
-				'target', (string)10, $this->mTargetName, [ 'class' => 'mw-ui-input-inline' ]
-			) .
-			' ' .
-			Xml::checkLabel(
-				wfMessage( 'sanctions-form-for-insulting-name' )->text(),
-				'forInsultingName',
-				'forInsultingName',
-				$this->mNewRevisionId == null && $this->mTargetName != null,
-				[]
+			Html::rawelement( 'p', [],
+				wfMessage( 'sanctions-form-target' )->text() .
+				Html::input( 'target', $this->mTargetName, 'text', [
+						'class' => 'mw-ui-input-inline',
+						'size' => 10
+				] ) .
+				' ' .
+				Xml::checkLabel(
+					wfMessage( 'sanctions-form-for-insulting-name' )->text(),
+					'forInsultingName',
+					'forInsultingName',
+					$this->mNewRevisionId == null && $this->mTargetName != null,
+					[]
+				)
 			) .
 			Xml::textarea(
 				'content',
