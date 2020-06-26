@@ -72,7 +72,7 @@ class SanctionsHooks {
 	 * @param bool &$confirmed Whether or not the email address is confirmed
 	 * @return bool|void True or no return value to continue or false to abort
 	 */
-	public function onEmailConfirmed( $user, &$confirmed ) {
+	public static function onEmailConfirmed( $user, &$confirmed ) {
 		if ( !self::isSanctionBot( $user ) ) {
 			return true;
 		}
