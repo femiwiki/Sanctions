@@ -97,6 +97,7 @@
 		"LoadExtensionSchemaUpdates": "SanctionsHooks::onLoadExtensionSchemaUpdates",
 		"AbortEmailNotification": "SanctionsHooks::onAbortEmailNotification",
 		"BeforeEchoEventInsert": "SanctionsHooks::onBeforeEchoEventInsert",
+		"EmailConfirmed": "SanctionsHooks::onEmailConfirmed",
 		"ResourceLoaderGetConfigVars": "SanctionsHooks::onResourceLoaderGetConfigVars",
 		"UserToolLinksEdit": "SanctionsHooks::onUserToolLinksEdit",
 		"DiffRevisionTools": "SanctionsHooks::onDiffRevisionTools",
