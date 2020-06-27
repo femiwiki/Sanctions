@@ -10,6 +10,9 @@ require_once getenv( 'MW_INSTALL_PATH' ) !== false
  *
  * @ingroup Maintenance
  */
+
+use MediaWiki\MediaWikiServices;
+
 class SanctionsCreateTemplates extends LoggedUpdateMaintenance {
 	/**
 	 * Returns an array of templates to be created (= pages in NS_TEMPLATE)
@@ -25,8 +28,7 @@ class SanctionsCreateTemplates extends LoggedUpdateMaintenance {
 		return [
 			'sanctions-agree-template-title' => function ( Title $title ) {
 				// get "User:" namespace prefix in wiki language
-				$contLang = \MediaWiki\MediaWikiServices::getInstance()->getContentLanguage();
-				$namespaces = $contLang->getFormattedNamespaces();
+				$namespaces = MediaWikiServices::getInstance()->getContentLanguage()->getFormattedNamespaces();
 
 				// @codingStandardsIgnoreLine
 				return "[[" . $namespaces[NS_FILE] . ":Symbol support vote.svg|17px]]" .
@@ -41,8 +43,7 @@ class SanctionsCreateTemplates extends LoggedUpdateMaintenance {
 			},
 			'sanctions-disagree-template-title' => function ( Title $title ) {
 				// get "User:" namespace prefix in wiki language
-				$contLang = \MediaWiki\MediaWikiServices::getInstance()->getContentLanguage();
-				$namespaces = $contLang->getFormattedNamespaces();
+				$namespaces = MediaWikiServices::getInstance()->getContentLanguage()->getFormattedNamespaces();
 
 				return "[[" . $namespaces[NS_FILE] . ":Symbol oppose vote.svg|17px]]" .
 				"<span class=\"sanction-vote-disagree\"></span>'''" .

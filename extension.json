@@ -7,7 +7,7 @@
 	"license-name": "AGPL-3.0-or-later",
 	"type": "specialpage",
 	"requires": {
-		"MediaWiki": ">= 1.34.0",
+		"MediaWiki": ">= 1.35.0",
 		"extensions": {
 			"Echo": "*",
 			"Flow": "*",
