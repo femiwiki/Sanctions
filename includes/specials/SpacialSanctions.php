@@ -44,6 +44,7 @@ class SpacialSanctions extends SpecialPage {
 			return;
 		}
 
+		$output->addModuleStyles( 'mediawiki.special' );
 		$output->addModuleStyles( 'ext.sanctions.special.sanctions.styles' );
 		$output->addModules( 'ext.sanctions.special.sanctions' );
 

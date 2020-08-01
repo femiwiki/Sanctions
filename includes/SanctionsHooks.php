@@ -272,7 +272,7 @@ class SanctionsHooks {
 			]
 		];
 
-		if ( !isset( $sidebar['TOOLBOX'] ) ) {
+		if ( !isset( $sidebar['TOOLBOX'] ) || !$sidebar['TOOLBOX'] ) {
 			$sidebar['TOOLBOX'] = $sanctionsLink;
 		} else {
 			$toolbox = $sidebar['TOOLBOX'];
