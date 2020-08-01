@@ -23,7 +23,7 @@ jobs:
       run: |
         composer install --prefer-dist --no-progress --no-interaction
         yarn install
-    - run: composer run-script test .
+    - run: composer run-script test
     - run: grunt
 
 
