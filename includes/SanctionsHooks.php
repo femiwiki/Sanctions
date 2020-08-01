@@ -190,8 +190,8 @@ class SanctionsHooks {
 
 	// (talk|contribs)
 	public static function onUserToolLinksEdit( $userId, $userText, &$items ) {
-		global $wgUser;
-		if ( $wgUser == null || !SanctionsUtils::hasVoteRight( $wgUser ) ) {
+		$user = RequestContext::getMain()->getUser();
+		if ( $user == null || !SanctionsUtils::hasVoteRight( $user ) ) {
 			return true;
 		}
 
@@ -210,8 +210,8 @@ class SanctionsHooks {
 	 * @return bool
 	 */
 	public static function onDiffRevisionTools( Revision $newRev, &$links, $oldRev ) {
-		global $wgUser;
-		if ( $wgUser == null || !SanctionsUtils::hasVoteRight( $wgUser ) ) {
+		$user = RequestContext::getMain()->getUser();
+		if ( $user == null || !SanctionsUtils::hasVoteRight( $user ) ) {
 			return true;
 		}
 
@@ -236,9 +236,8 @@ class SanctionsHooks {
 	 * @return bool
 	 */
 	public static function onHistoryRevisionTools( $rev, &$links ) {
-		global $wgUser;
-
-		if ( $wgUser == null || !SanctionsUtils::hasVoteRight( $wgUser ) ) {
+		$user = RequestContext::getMain()->getUser();
+		if ( $user == null || !SanctionsUtils::hasVoteRight( $user ) ) {
 			return true;
 		}
 
