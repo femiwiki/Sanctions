@@ -203,29 +203,28 @@ class SanctionsHooks {
 	}
 
 	/**
-	 * Tools shown as (edit) (undo) (thank)
-	 * @param Revision $newRev object of the "new" revision
-	 * @param array &$links Array of HTML links
-	 * @param Revision $oldRev object of the "old" revision (may be null)
-	 * @return bool
+	 * @param RevisionRecord $newRevRecord New revision
+	 * @param string[] &$links Array of HTML links
+	 * @param RevisionRecord|null $oldRevRecord Old revision (may be null)
+	 * @param UserIdentity $userIdentity Current user
+	 * @return bool|void True or no return value to continue or false to abort
 	 */
-	public static function onDiffRevisionTools( Revision $newRev, &$links, $oldRev ) {
-		$user = RequestContext::getMain()->getUser();
-		if ( $user == null || !SanctionsUtils::hasVoteRight( $user ) ) {
+	public static function onDiffTools( $newRevRecord, &$links, $oldRevRecord, $userIdentity ) {
+		if ( $userIdentity == null || !SanctionsUtils::hasVoteRight( $userIdentity ) ) {
 			return true;
 		}
 
 		$ids = '';
-		if ( $oldRev != null ) {
-			$ids .= $oldRev->getId() . '/';
+		if ( $oldRevRecord != null ) {
+			$ids .= $oldRevRecord->getId() . '/';
 		}
-		$ids .= $newRev->getId();
+		$ids .= $newRevRecord->getId();
 
-		$titleText = $newRev->getUserText() . '/' . $ids;
+		$titleText = $newRevRecord->getUser()->getName() . '/' . $ids;
 		$links[] = Linker::link(
 			SpecialPage::getTitleFor( 'Sanctions', $titleText ),
 			wfMessage( 'sanctions-link-on-diff' )->text()
-	);
+		);
 
 		return true;
 	}

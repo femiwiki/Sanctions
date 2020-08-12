@@ -100,7 +100,7 @@
 		"EmailConfirmed": "SanctionsHooks::onEmailConfirmed",
 		"ResourceLoaderGetConfigVars": "SanctionsHooks::onResourceLoaderGetConfigVars",
 		"UserToolLinksEdit": "SanctionsHooks::onUserToolLinksEdit",
-		"DiffRevisionTools": "SanctionsHooks::onDiffRevisionTools",
+		"DiffTools": "SanctionsHooks::onDiffTools",
 		"HistoryRevisionTools": "SanctionsHooks::onHistoryRevisionTools",
 		"SidebarBeforeOutput": "SanctionsHooks::onSidebarBeforeOutput",
 		"ContributionsToolLinks": "SanctionsHooks::onContributionsToolLinks",
