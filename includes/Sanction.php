@@ -1285,12 +1285,12 @@ class Sanction {
 		$block = new DatabaseBlock();
 		$block->setTarget( $target );
 		$block->setBlocker( $bot );
-		$block->mReason = $reason;
+		$block->setReason( $reason );
 		$block->isHardblock( true );
 		$block->isAutoblocking( boolval( wfMessage( 'sanctions-autoblock' )->text() ) );
 		$block->prevents( 'createaccount', true );
 		$block->prevents( 'editownusertalk', $preventEditOwnUserTalk );
-		$block->mExpiry = $expiry;
+		$block->setExpiry( $expiry );
 
 		$success = $block->insert();
 
