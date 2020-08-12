@@ -230,17 +230,19 @@ class SanctionsHooks {
 	}
 
 	/**
-	 * @param Revision $rev Revision object
-	 * @param array &$links Array of HTML links
-	 * @return bool
+	 * @param RevisionRecord $revRecord
+	 * @param string[] &$links Array of HTML links
+	 * @param RevisionRecord|null $prevRevRecord RevisionRecord object, next in line
+	 *   in page history, or null
+	 * @param UserIdentity $userIdentity Current user
+	 * @return bool|void True or no return value to continue or false to abort
 	 */
-	public static function onHistoryRevisionTools( $rev, &$links ) {
-		$user = RequestContext::getMain()->getUser();
-		if ( $user == null || !SanctionsUtils::hasVoteRight( $user ) ) {
+	public static function onHistoryTools( $revRecord, &$links, $prevRevRecord, $userIdentity ) {
+		if ( $userIdentity == null || !SanctionsUtils::hasVoteRight( $userIdentity ) ) {
 			return true;
 		}
 
-		$titleText = $rev->getUserText() . '/' . $rev->getId();
+		$titleText = $revRecord->getUser()->getName() . '/' . $revRecord->getId();
 		$links[] = Linker::link(
 			SpecialPage::getTitleFor( 'Sanctions', $titleText ),
 			wfMessage( 'sanctions-link-on-history' )->text()

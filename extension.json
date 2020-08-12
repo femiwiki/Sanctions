@@ -101,7 +101,7 @@
 		"ResourceLoaderGetConfigVars": "SanctionsHooks::onResourceLoaderGetConfigVars",
 		"UserToolLinksEdit": "SanctionsHooks::onUserToolLinksEdit",
 		"DiffTools": "SanctionsHooks::onDiffTools",
-		"HistoryRevisionTools": "SanctionsHooks::onHistoryRevisionTools",
+		"HistoryTools": "SanctionsHooks::onHistoryTools",
 		"SidebarBeforeOutput": "SanctionsHooks::onSidebarBeforeOutput",
 		"ContributionsToolLinks": "SanctionsHooks::onContributionsToolLinks",
 		"FlowAddModules": "SanctionsHooks::onFlowAddModules"
