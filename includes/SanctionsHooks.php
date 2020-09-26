@@ -2,6 +2,8 @@
 
 use Flow\Exception\InvalidInputException;
 use Flow\Model\UUID;
+use MediaWiki\Revision\RevisionRecord;
+use MediaWiki\User\UserIdentity;
 
 class SanctionsHooks {
 	/**
@@ -210,7 +212,7 @@ class SanctionsHooks {
 	 * @return bool|void True or no return value to continue or false to abort
 	 */
 	public static function onDiffTools( $newRevRecord, &$links, $oldRevRecord, $userIdentity ) {
-		if ( $userIdentity == null || !SanctionsUtils::hasVoteRight( $userIdentity ) ) {
+		if ( !SanctionsUtils::hasVoteRight( User::newFromIdentity( $userIdentity ) ) ) {
 			return true;
 		}
 
@@ -238,7 +240,7 @@ class SanctionsHooks {
 	 * @return bool|void True or no return value to continue or false to abort
 	 */
 	public static function onHistoryTools( $revRecord, &$links, $prevRevRecord, $userIdentity ) {
-		if ( $userIdentity == null || !SanctionsUtils::hasVoteRight( $userIdentity ) ) {
+		if ( !SanctionsUtils::hasVoteRight( User::newFromIdentity( $userIdentity ) ) ) {
 			return true;
 		}
 
