@@ -10,7 +10,7 @@ composer install --prefer-dist --no-progress --no-interaction --working-dir "${H
 composer install --prefer-dist --no-progress --no-interaction --working-dir "${HOME}/mediawiki/extensions/Sanctions"
 
 php "${HOME}/mediawiki/maintenance/install.php" \
-  --pass admin \
+  --pass password_for_testing \
   --dbname testwiki \
   --dbuser root \
   --dbpass root \
