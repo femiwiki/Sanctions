@@ -154,12 +154,12 @@ class SanctionsPager extends IndexPager {
 		); // @todo Use better way?
 
 		$rowTitle = wfMessage( 'sanctions-topic-title', [
-			linker::link(
+			Linker::link(
 				$userLinkTitle,
 				$targetNameForDiplay,
 				[ 'class' => 'sanction-target' ]
 			),
-			linker::link(
+			Linker::link(
 				$topicTitle,
 				wfMessage( 'sanctions-type-' . ( $isForInsultingName ? 'insulting-name' : 'block' ) )
 					->text(),
