@@ -1,6 +1,8 @@
 <?php
 
 use Flow\Model\UUID;
+use MediaWiki\MediaWikiServices;
+use MediaWiki\Revision\RevisionLookup;
 
 class SpacialSanctions extends SpecialPage {
 	/**
@@ -23,8 +25,15 @@ class SpacialSanctions extends SpecialPage {
 	 */
 	protected $mNewRevisionId;
 
+	/**
+	 * @var RevisionLookup
+	 */
+	protected $revLookup;
+
 	public function __construct() {
 		parent::__construct( 'Sanctions' );
+
+		$this->revLookup = MediaWikiServices::getInstance()->getRevisionLookup();
 	}
 
 	/**
@@ -84,6 +93,8 @@ class SpacialSanctions extends SpecialPage {
 	 * @param string $subpage
 	 */
 	private function setParameter( $subpage ) {
+		$revLookup = $this->revLookup;
+
 		$parts = explode( '/', $subpage, 3 );
 
 		$targetName = '';
@@ -123,29 +134,31 @@ class SpacialSanctions extends SpecialPage {
 			return;
 		}
 
-		// Fetch newRivisionId
+		// Fetch newRevisionId
 		$newRevisionId = (int)$parts[ count( $parts ) - 1 ];
 
-		$newRevision = Revision::newFromId( $newRevisionId );
+		$newRevision = $revLookup->getRevisionById( $newRevisionId );
 		if ( !$newRevision ) {
 			$newRevisionId = null;
 			return;
 		}
 
-		// Fetch oldRivisionId
+		// Fetch oldRevisionId
 		if ( count( $parts ) == 3 ) {
 			$oldRevisionId = (int)$parts[1];
-			$oldRevision = Revision::newFromId( $oldRevisionId );
+			$oldRevision = $revLookup->getRevisionById( $oldRevisionId );
 			if ( !$oldRevision ) {
-				if ( $newRevision->getPrevious() ) {
-					$oldRevisionId = $newRevision->getPrevious()->getId();
+				$preRev = $revLookup->getPreviousRevision( $newRevision );
+				if ( $preRev ) {
+					$oldRevisionId = $preRev->getId();
 				} else {
 					$oldRevisionId = null;
 				}
 			}
 		} else {
-			if ( $newRevision->getPrevious() ) {
-				$oldRevisionId = $newRevision->getPrevious()->getId();
+			$preRev = $revLookup->getPreviousRevision( $newRevision );
+			if ( $preRev ) {
+				$oldRevisionId = $preRev->getId();
 			} else {
 				$oldRevisionId = null;
 			}
@@ -456,7 +469,7 @@ class SpacialSanctions extends SpecialPage {
 			return '';
 		}
 
-		$newRevision = Revision::newFromId( $newRevisionId );
+		$newRevision = $this->revLookup->getRevisionById( $newRevisionId );
 		$oldRevisionId = $this->mOldRevisionId;
 
 		$rt = '';
@@ -464,12 +477,12 @@ class SpacialSanctions extends SpecialPage {
 			$rt = wfMessage( 'sanctions-topic-diff', [
 				(string)$oldRevisionId,
 				(string)$newRevisionId,
-				$newRevision->getTitle()->getFullText()
+				(string)$newRevision->getPageAsLinkTarget()
 			] )->inContentLanguage()->text();
 		} else {
 			$rt = wfMessage( 'sanctions-topic-revision', [
 				(string)$newRevisionId,
-				$newRevision->getTitle()->getFullText()
+				(string)$newRevision->getPageAsLinkTarget()
 			] )->inContentLanguage()->text();
 		}
 
