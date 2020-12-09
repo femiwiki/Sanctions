@@ -16,7 +16,7 @@ jobs:
       uses: shivammathur/setup-php@v2
       with:
         php-version: '7.3'
-          tools: composer:v1
+        tools: composer:v1
     - name: Downgrade composer to v1
       run: sudo composer self-update --stable
 
