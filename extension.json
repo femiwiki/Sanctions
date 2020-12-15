@@ -20,7 +20,8 @@
 		"SanctionsPager": "includes/SanctionsPager.php",
 		"Sanction": "includes/Sanction.php",
 		"SanctionsHooks": "includes/SanctionsHooks.php",
-		"SanctionsUtils": "includes/SanctionsUtils.php"
+		"SanctionsUtils": "includes/SanctionsUtils.php",
+		"ProposedPresentationModel": "includes/notifications/ProposedPresentationModel.php"
 	},
 	"ResourceModules": {
 		"ext.sanctions.special.sanctions.styles": {
@@ -97,6 +98,7 @@
 		"LoadExtensionSchemaUpdates": "SanctionsHooks::onLoadExtensionSchemaUpdates",
 		"AbortEmailNotification": "SanctionsHooks::onAbortEmailNotification",
 		"BeforeEchoEventInsert": "SanctionsHooks::onBeforeEchoEventInsert",
+		"BeforeCreateEchoEvent": "SanctionsHooks::onBeforeCreateEchoEvent",
 		"EmailConfirmed": "SanctionsHooks::onEmailConfirmed",
 		"ResourceLoaderGetConfigVars": "SanctionsHooks::onResourceLoaderGetConfigVars",
 		"UserToolLinksEdit": "SanctionsHooks::onUserToolLinksEdit",
@@ -108,6 +110,10 @@
 	},
 	"SpecialPages": {
 		"Sanctions": "SpacialSanctions"
+	},
+	"DefaultUserOptions": {
+		"echo-subscriptions-web-sanctions-against-me": true,
+		"echo-subscriptions-email-sanctions-against-me": true
 	},
 	"MessagesDirs": {
 		"Sanctions": [ "i18n" ]

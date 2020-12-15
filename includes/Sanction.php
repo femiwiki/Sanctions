@@ -153,6 +153,17 @@ class Sanction {
 		if ( !$sanction->updateTopicSummary() ) {
 			// @todo
 		}
+
+		EchoEvent::create( [
+			'type' => 'sanctions-proposed',
+			'title' => $sanction->getTopic(),
+			'extra' => [
+				'target-id' => $targetId,
+				'is-for-insulting-name' => $forInsultingName,
+			],
+			'agent' => $user,
+		] );
+
 		return $sanction;
 	}
 
