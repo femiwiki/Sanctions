@@ -1,6 +1,12 @@
 <?php
 
-class SanctionsUtils {
+namespace MediaWiki\Extension\Sanctions;
+
+use Message;
+use MWTimestamp;
+use User;
+
+class Utils {
 	/**
 	 * @param User $user
 	 * @param string[]|bool &$reasons An array of reasons why can't participate.
@@ -145,7 +151,7 @@ class SanctionsUtils {
 	 * @param array &$reasons
 	 * @param bool $contentLang
 	 */
-	private static function addReason( $msg, &$reasons, $contentLang ) {
+	private static function addReason( Message $msg, &$reasons, $contentLang ) {
 		if ( $contentLang ) {
 			$msg = $msg->inContentLanguage();
 		}

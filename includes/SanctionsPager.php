@@ -1,5 +1,17 @@
 <?php
 
+namespace MediaWiki\Extension\Sanctions;
+
+use Html;
+use IContextSource;
+use IndexPager;
+use Linker;
+use MWTimestamp;
+use stdClass;
+use Title;
+use User;
+use Xml;
+
 class SanctionsPager extends IndexPager {
 	/**
 	 * @var bool
@@ -15,7 +27,7 @@ class SanctionsPager extends IndexPager {
 	 * @param IContextSource $context
 	 * @param string|null $targetName
 	 */
-	public function __construct( $context, $targetName ) {
+	public function __construct( IContextSource $context, ?string $targetName ) {
 		parent::__construct( $context );
 		$this->targetName = $targetName;
 	}
@@ -329,7 +341,7 @@ class SanctionsPager extends IndexPager {
 	 */
 	protected function getUserHasVoteRight() {
 		if ( $this->userHasVoteRight === null ) {
-			$this->userHasVoteRight = SanctionsUtils::hasVoteRight( $this->getUser() );
+			$this->userHasVoteRight = Utils::hasVoteRight( $this->getUser() );
 		}
 		return $this->userHasVoteRight;
 	}

@@ -1,11 +1,24 @@
 <?php
 
+namespace MediaWiki\Extension\Sanctions;
+
+use DatabaseUpdater;
+use EchoEvent;
 use Flow\Exception\InvalidInputException;
 use Flow\Model\UUID;
+use Linker;
+use MediaWiki\MediaWikiServices;
 use MediaWiki\Revision\RevisionRecord;
 use MediaWiki\User\UserIdentity;
+use MWException;
+use OutputPage;
+use RequestContext;
+use Skin;
+use SpecialPage;
+use Title;
+use User;
 
-class SanctionsHooks {
+class Hooks {
 	/**
 	 * Create tables in the database
 	 *
@@ -42,22 +55,18 @@ class SanctionsHooks {
 	 * @param Title $title
 	 * @return bool false to abort email notification
 	 */
-	public static function onAbortEmailNotification( $editor, $title ) {
+	public static function onAbortEmailNotification( User $editor, Title $title ) {
 		if ( $title->getContentModel() === CONTENT_MODEL_FLOW_BOARD ) {
 			// Since we are aborting the notification we need to manually update the watchlist
 			$config = RequestContext::getMain()->getConfig();
 			if ( $config->get( 'EnotifWatchlist' ) || $config->get( 'ShowUpdatedMarker' ) ) {
-				\MediaWiki\MediaWikiServices::getInstance()->getWatchedItemStore()->updateNotificationTimestamp(
+				MediaWikiServices::getInstance()->getWatchedItemStore()->updateNotificationTimestamp(
 					$editor,
 					$title,
 					wfTimestampNow()
 				);
 			}
 			return false;
-		}
-
-		if ( !$editor instanceof User ) {
-			return true;
 		}
 
 		if ( self::isSanctionBot( $editor ) ) {
@@ -74,7 +83,7 @@ class SanctionsHooks {
 	 * @param bool &$confirmed Whether or not the email address is confirmed
 	 * @return bool|void True or no return value to continue or false to abort
 	 */
-	public static function onEmailConfirmed( $user, &$confirmed ) {
+	public static function onEmailConfirmed( User $user, bool &$confirmed ) {
 		if ( !self::isSanctionBot( $user ) ) {
 			return true;
 		}
@@ -124,7 +133,7 @@ class SanctionsHooks {
 			'category' => 'sanctions-against-me',
 			'group' => 'negative',
 			'section' => 'alert',
-			'presentation-model' => ProposedPresentationModel::class,
+			'presentation-model' => \MediaWiki\Extension\Sanctions\Notifications\ProposedPresentationModel::class,
 			'user-locators' => [ [ 'EchoUserLocator::locateFromEventExtra', [ 'target-id' ] ] ],
 		];
 	}
@@ -216,7 +225,7 @@ class SanctionsHooks {
 	// (talk|contribs)
 	public static function onUserToolLinksEdit( $userId, $userText, &$items ) {
 		$user = RequestContext::getMain()->getUser();
-		if ( $user == null || !SanctionsUtils::hasVoteRight( $user ) ) {
+		if ( $user == null || !Utils::hasVoteRight( $user ) ) {
 			return true;
 		}
 
@@ -234,8 +243,9 @@ class SanctionsHooks {
 	 * @param UserIdentity $userIdentity Current user
 	 * @return bool|void True or no return value to continue or false to abort
 	 */
-	public static function onDiffTools( $newRevRecord, &$links, $oldRevRecord, $userIdentity ) {
-		if ( !SanctionsUtils::hasVoteRight( User::newFromIdentity( $userIdentity ) ) ) {
+	public static function onDiffTools( RevisionRecord $newRevRecord, array &$links, ?RevisionRecord $oldRevRecord,
+			UserIdentity $userIdentity ) {
+		if ( !Utils::hasVoteRight( User::newFromIdentity( $userIdentity ) ) ) {
 			return true;
 		}
 
@@ -263,7 +273,7 @@ class SanctionsHooks {
 	 * @return bool|void True or no return value to continue or false to abort
 	 */
 	public static function onHistoryTools( $revRecord, &$links, $prevRevRecord, $userIdentity ) {
-		if ( !SanctionsUtils::hasVoteRight( User::newFromIdentity( $userIdentity ) ) ) {
+		if ( !Utils::hasVoteRight( User::newFromIdentity( $userIdentity ) ) ) {
 			return true;
 		}
 
