@@ -99,5 +99,9 @@
 	"sanctions-ve-vote-disagree-tool-title": "반대하기",
 	"sanctions-ve-agree-days-inspector-title": "기한",
 	"sanctions-ve-agree-days-inspector-remove-label": "제거",
-	"sanctions-ve-agree-days-inspector-invalid-value": "$1 입력은 올바른 값이 아닙니다."
+	"sanctions-ve-agree-days-inspector-invalid-value": "$1 입력은 올바른 값이 아닙니다.",
+	"echo-category-title-sanctions-against-me": "나에 대한 제재안",
+	"sanctions-pref-tooltip-sanctions-against-me": "나에 대한 제재안이 발의됐거나 집행되었을 때 내게 알립니다.",
+	"notification-header-sanctions-proposed-against-insulting-name": "{{GENDER:$2|내}} 사용자명에 대한 변경 건의가 있습니다.",
+	"notification-header-sanctions-proposed": "{{GENDER:$2|나에}} 대한 편집 차단 건의가 있습니다."
 }

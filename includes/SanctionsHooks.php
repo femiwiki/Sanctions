@@ -107,6 +107,29 @@ class SanctionsHooks {
 	}
 
 	/**
+	 * Defining the events for this extension
+	 *
+	 * @param array &$notifs
+	 * @param array &$categories
+	 * @param array &$icons
+	 */
+	public static function onBeforeCreateEchoEvent( &$notifs, &$categories, &$icons ) {
+		$categories['sanctions-against-me'] = [
+			'priority' => 1,
+			'no-dismiss' => [ 'web' ],
+			'tooltip' => 'sanctions-pref-tooltip-sanctions-against-me',
+		];
+
+		$notifs['sanctions-proposed'] = [
+			'category' => 'sanctions-against-me',
+			'group' => 'negative',
+			'section' => 'alert',
+			'presentation-model' => ProposedPresentationModel::class,
+			'user-locators' => [ [ 'EchoUserLocator::locateFromEventExtra', [ 'target-id' ] ] ],
+		];
+	}
+
+	/**
 	 * @param User $user
 	 * @return bool
 	 */

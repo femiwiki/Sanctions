@@ -98,5 +98,9 @@
 	"sanctions-ve-vote-disagree-tool-title": "Oppose",
 	"sanctions-ve-agree-days-inspector-title": "Expiration",
 	"sanctions-ve-agree-days-inspector-remove-label": "Remove",
-	"sanctions-ve-agree-days-inspector-invalid-value": "\"$1\" is not valid."
+	"sanctions-ve-agree-days-inspector-invalid-value": "\"$1\" is not valid.",
+	"echo-category-title-sanctions-against-me": "Sanction against me",
+	"sanctions-pref-tooltip-sanctions-against-me": "Notify me when a sanction against me is proposed or issued.",
+	"notification-header-sanctions-proposed-against-insulting-name": "A sanction against {{GENDER:$2|your}} username have been proposed.",
+	"notification-header-sanctions-proposed": "A sanction against {{GENDER:$2|your}} future edit have been proposed."
 }

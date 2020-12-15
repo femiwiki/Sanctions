@@ -99,5 +99,9 @@
 	"sanctions-ve-vote-disagree-tool-title": "Title text for the disagree tool on Structured Discussions's VisualEditor toolbar.",
 	"sanctions-ve-agree-days-inspector-title": "Title text for day selector inspector",
 	"sanctions-ve-agree-days-inspector-remove-label": "Text of remove button on Structured Discussions's choose expiration panel (inspector) in the VisualEditor.",
-	"sanctions-ve-agree-days-inspector-invalid-value": "Error message. Parameters:\n$1: Entered value."
+	"sanctions-ve-agree-days-inspector-invalid-value": "Error message. Parameters:\n$1: Entered value.",
+	"echo-category-title-sanctions-against-me": "{{doc-echo-category-title|tooltip=sanctions-pref-tooltip-sanctions-against-me}}",
+	"sanctions-pref-tooltip-sanctions-against-me": "{{doc-echo-pref-tooltip|title=echo-category-title-sanctions-against-me}}",
+	"notification-header-sanctions-proposed-against-insulting-name": "Header text for a notification when a sanction against your username have been proposed.",
+	"notification-header-sanctions-proposed": "Header text for a notification when a sanction against your future edit have been proposed."
 }
