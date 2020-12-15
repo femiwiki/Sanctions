@@ -15,13 +15,8 @@
 		}
 	},
 	"AvailableRights": [ "sanctions-execute" ],
-	"AutoloadClasses": {
-		"SpacialSanctions": "includes/specials/SpacialSanctions.php",
-		"SanctionsPager": "includes/SanctionsPager.php",
-		"Sanction": "includes/Sanction.php",
-		"SanctionsHooks": "includes/SanctionsHooks.php",
-		"SanctionsUtils": "includes/SanctionsUtils.php",
-		"ProposedPresentationModel": "includes/notifications/ProposedPresentationModel.php"
+	"AutoloadNamespaces": {
+		"MediaWiki\\Extension\\Sanctions\\": "includes/"
 	},
 	"ResourceModules": {
 		"ext.sanctions.special.sanctions.styles": {
@@ -95,21 +90,21 @@
 		"remoteExtPath": "Sanctions/modules"
 	},
 	"Hooks": {
-		"LoadExtensionSchemaUpdates": "SanctionsHooks::onLoadExtensionSchemaUpdates",
-		"AbortEmailNotification": "SanctionsHooks::onAbortEmailNotification",
-		"BeforeEchoEventInsert": "SanctionsHooks::onBeforeEchoEventInsert",
-		"BeforeCreateEchoEvent": "SanctionsHooks::onBeforeCreateEchoEvent",
-		"EmailConfirmed": "SanctionsHooks::onEmailConfirmed",
-		"ResourceLoaderGetConfigVars": "SanctionsHooks::onResourceLoaderGetConfigVars",
-		"UserToolLinksEdit": "SanctionsHooks::onUserToolLinksEdit",
-		"DiffTools": "SanctionsHooks::onDiffTools",
-		"HistoryTools": "SanctionsHooks::onHistoryTools",
-		"SidebarBeforeOutput": "SanctionsHooks::onSidebarBeforeOutput",
-		"ContributionsToolLinks": "SanctionsHooks::onContributionsToolLinks",
-		"FlowAddModules": "SanctionsHooks::onFlowAddModules"
+		"LoadExtensionSchemaUpdates": "MediaWiki\\Extension\\Sanctions\\Hooks::onLoadExtensionSchemaUpdates",
+		"AbortEmailNotification": "MediaWiki\\Extension\\Sanctions\\Hooks::onAbortEmailNotification",
+		"BeforeEchoEventInsert": "MediaWiki\\Extension\\Sanctions\\Hooks::onBeforeEchoEventInsert",
+		"BeforeCreateEchoEvent": "MediaWiki\\Extension\\Sanctions\\Hooks::onBeforeCreateEchoEvent",
+		"EmailConfirmed": "MediaWiki\\Extension\\Sanctions\\Hooks::onEmailConfirmed",
+		"ResourceLoaderGetConfigVars": "MediaWiki\\Extension\\Sanctions\\Hooks::onResourceLoaderGetConfigVars",
+		"UserToolLinksEdit": "MediaWiki\\Extension\\Sanctions\\Hooks::onUserToolLinksEdit",
+		"DiffTools": "MediaWiki\\Extension\\Sanctions\\Hooks::onDiffTools",
+		"HistoryTools": "MediaWiki\\Extension\\Sanctions\\Hooks::onHistoryTools",
+		"SidebarBeforeOutput": "MediaWiki\\Extension\\Sanctions\\Hooks::onSidebarBeforeOutput",
+		"ContributionsToolLinks": "MediaWiki\\Extension\\Sanctions\\Hooks::onContributionsToolLinks",
+		"FlowAddModules": "MediaWiki\\Extension\\Sanctions\\Hooks::onFlowAddModules"
 	},
 	"SpecialPages": {
-		"Sanctions": "SpacialSanctions"
+		"Sanctions": "MediaWiki\\Extension\\Sanctions\\SpacialSanctions"
 	},
 	"DefaultUserOptions": {
 		"echo-subscriptions-web-sanctions-against-me": true,

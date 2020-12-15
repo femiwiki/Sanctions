@@ -1,5 +1,10 @@
 <?php
 
+namespace MediaWiki\Extension\Sanctions\Notifications;
+
+use EchoEventPresentationModel;
+use Message;
+
 class ProposedPresentationModel extends EchoEventPresentationModel {
 
 	public function canRender() {
@@ -24,7 +29,7 @@ class ProposedPresentationModel extends EchoEventPresentationModel {
 	/**
 	 * @return Message
 	 */
-	public function getHeaderMessage() {
+	public function getHeaderMessage() : Message {
 		$event = $this->event;
 		if ( $event->getExtraParam( 'is-for-insulting-name' ) ) {
 			$msg = $this->getMessageWithAgent( 'notification-header-sanctions-proposed-against-insulting-name' );

@@ -1,8 +1,16 @@
 <?php
 
+namespace MediaWiki\Extension\Sanctions;
+
 use Flow\Model\UUID;
+use Html;
+use Linker;
 use MediaWiki\MediaWikiServices;
 use MediaWiki\Revision\RevisionLookup;
+use OutputPage;
+use SpecialPage;
+use User;
+use Xml;
 
 class SpacialSanctions extends SpecialPage {
 	/**
@@ -71,7 +79,7 @@ class SpacialSanctions extends SpecialPage {
 		$output->addHTML( $pager->getBody() );
 
 		$reason = [];
-		if ( SanctionsUtils::hasVoteRight( $this->getUser(), $reason ) ) {
+		if ( Utils::hasVoteRight( $this->getUser(), $reason ) ) {
 			$output->addHTML( $this->makeForm() );
 		} else {
 			if ( $this->getUser()->isAnon() ) {
@@ -320,7 +328,7 @@ class SpacialSanctions extends SpecialPage {
 			case 'execute':
 				// 결과에 따른 제재안 집행
 				$user = $this->getUser();
-				if ( !SanctionsUtils::hasVoteRight( $user ) ) {
+				if ( !Utils::hasVoteRight( $user ) ) {
 					list( $query['showResult'], $query['errorCode'] ) = [ true, 1 ];
 					// '권한이 없습니다.'
 					break;

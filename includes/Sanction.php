@@ -1,10 +1,23 @@
 <?php
 
+namespace MediaWiki\Extension\Sanctions;
+
+use EchoEvent;
 use Flow\Container;
+use Flow\Exception\DataModelException;
 use Flow\Model\UUID;
+use Hooks;
+use Html;
+use ManualLogEntry;
 use MediaWiki\Block\CompositeBlock;
 use MediaWiki\Block\DatabaseBlock;
 use MediaWiki\MediaWikiServices;
+use MovePage;
+use MWTimestamp;
+use RenameuserSQL;
+use RequestContext;
+use Title;
+use User;
 use Wikimedia\IPUtils;
 
 class Sanction {
@@ -57,6 +70,9 @@ class Sanction {
 	 */
 	protected $mCounted = false;
 
+	/**
+	 * @var bool
+	 */
 	protected $mIsPassed;
 
 	protected $mVoteNumber;
@@ -69,10 +85,10 @@ class Sanction {
 	 * @param User $user Who impose the sanction
 	 * @param User $target
 	 * @param bool $forInsultingName
-	 * @param String $content Description of the sanction(written in wikitext)
+	 * @param string $content Description of the sanction(written in wikitext)
 	 * @return Sanction|bool
 	 */
-	public static function write( $user, $target, $forInsultingName, $content ) {
+	public static function write( User $user, User $target, $forInsultingName, $content ) {
 		$authorId = $user->getId();
 
 		$targetId = $target->getId();
@@ -979,19 +995,19 @@ class Sanction {
 					wfMessage( 'sanctions-topic-auto-reply-unable-self-agree' )->inContentLanguage()->text();
 				try {
 					$this->replyTo( $row->rev_id, $content );
-				} catch ( Flow\Exception\DataModelException $e ) {
+				} catch ( DataModelException $e ) {
 					// @todo
 					// If someone modifies comments with no suggestions and adds suggestions, an error occurs
 					// because the bot cannot attach a ripple directly below them.
 				}
 				unset( $votes[$userId] );
 				continue;
-			} elseif ( !SanctionsUtils::hasVoteRight( User::newFromId( $userId ), $reasons, true ) ) {
+			} elseif ( !Utils::hasVoteRight( User::newFromId( $userId ), $reasons, true ) ) {
 				$content = wfMessage( 'sanctions-topic-auto-reply-no-count' )->inContentLanguage()->text() .
 					PHP_EOL . '* ' . implode( PHP_EOL . '* ', $reasons ?? [] );
 				try {
 					$this->replyTo( $row->rev_id, $content );
-				} catch ( Flow\Exception\DataModelException $e ) {
+				} catch ( DataModelException $e ) {
 					// @todo
 					// If someone modifies comments with no suggestions and adds suggestions, an error occurs
 					// because the bot cannot attach a ripple directly below them.
@@ -1358,7 +1374,7 @@ class Sanction {
 		}
 
 		// Below's the same thing that is on SpecialUnblock SpecialUnblock.php
-		if ( $block->getType() == Block::TYPE_AUTO ) {
+		if ( $block->getType() == DatabaseBlock::TYPE_AUTO ) {
 			$page = Title::makeTitle( NS_USER, '#' . $block->getId() );
 		} else {
 			$page = $block->getTarget() instanceof User
