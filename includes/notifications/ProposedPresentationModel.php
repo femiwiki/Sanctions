@@ -17,12 +17,12 @@ class ProposedPresentationModel extends EchoEventPresentationModel {
 	 * @return array
 	 */
 	public function getPrimaryLink() {
-		$link = $this->getPageLink( $this->event->getTitle(), null, true );
+		$link = $this->getPageLink( $this->event->getTitle(), '', true );
 		return $link;
 	}
 
 	/**
-	 * @return string
+	 * @return Message
 	 */
 	public function getHeaderMessage() {
 		$event = $this->event;
