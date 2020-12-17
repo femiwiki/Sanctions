@@ -18,6 +18,9 @@
 	"AutoloadNamespaces": {
 		"MediaWiki\\Extension\\Sanctions\\": "includes/"
 	},
+	"AutoloadClasses": {
+		"SanctionsCreateTemplates": "maintenance/SanctionsCreateTemplates.php"
+	},
 	"ResourceModules": {
 		"ext.sanctions.special.sanctions.styles": {
 			"styles": [ "styles/spacial-sanctions.less" ]

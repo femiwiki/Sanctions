@@ -1,14 +1,6 @@
 <?php
 
-namespace MediaWiki\Extension\Sanctions;
-
-use Article;
-use LoggedUpdateMaintenance;
 use MediaWiki\MediaWikiServices;
-use MWException;
-use Status;
-use Title;
-use WikitextContent;
 
 require_once getenv( 'MW_INSTALL_PATH' ) !== false
 	? getenv( 'MW_INSTALL_PATH' ) . '/maintenance/Maintenance.php'
@@ -123,5 +115,5 @@ class SanctionsCreateTemplates extends LoggedUpdateMaintenance {
 	}
 }
 
-$maintClass = 'SanctionsCreateTemplates';
+$maintClass = SanctionsCreateTemplates::class;
 require_once RUN_MAINTENANCE_IF_MAIN;
