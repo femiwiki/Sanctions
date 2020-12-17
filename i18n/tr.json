@@ -1,7 +1,8 @@
 {
 	"@metadata": {
 		"authors": [
-			"BaRaN6161 TURK"
+			"BaRaN6161 TURK",
+			"MuratTheTurkish"
 		]
 	},
 	"sanctions-desc": "Kullanıcıların yaptırımları ele almasına izin verin",
@@ -85,8 +86,8 @@
 	"sanctions-reason-blocked": "Engelleniyor",
 	"sanctions-reason-recently-blocked": "Engellenmeyen $1'den $2 gün geçmiyor",
 	"sanctions-link-on-user-tool": "Yaptırımlar",
-	"sanctions-link-on-diff": "Buna dayanarak yeni bir yaptırım uygulayın",
-	"sanctions-link-on-history": "Buna dayanarak yeni bir yaptırım uygulayın",
+	"sanctions-link-on-diff": "Buna göre yeni bir yaptırım önerin",
+	"sanctions-link-on-history": "Buna göre yeni bir yaptırım önerin",
 	"sanctions-link-on-user-contributes": "Yaptırımlar",
 	"sanctions-link-on-user-page": "Yaptırımlar",
 	"sanctions-agree-template-title": "Destek",
@@ -98,5 +99,9 @@
 	"sanctions-ve-vote-disagree-tool-title": "Karşıt",
 	"sanctions-ve-agree-days-inspector-title": "Bitiş",
 	"sanctions-ve-agree-days-inspector-remove-label": "Kaldır",
-	"sanctions-ve-agree-days-inspector-invalid-value": "\"$1\" geçerli değil."
+	"sanctions-ve-agree-days-inspector-invalid-value": "\"$1\" geçerli değil.",
+	"echo-category-title-sanctions-against-me": "Bana karşı yaptırım",
+	"sanctions-pref-tooltip-sanctions-against-me": "Bana karşı bir yaptırım önerildiğinde veya verildiğinde bana bildir.",
+	"notification-header-sanctions-proposed-against-insulting-name": "Kullanıcı {{GENDER:$2|adınıza}} bir yaptırım önerildi.",
+	"notification-header-sanctions-proposed": "Gelecekteki {{GENDER:$2|düzenlemenize}} bir yaptırım önerildi."
 }

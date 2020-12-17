@@ -89,8 +89,8 @@
 	"sanctions-reason-blocked": "Vous êtes bloqué{{GENDER:||e}}",
 	"sanctions-reason-recently-blocked": "$2 jours ne se sont pas écoulés depuis le déblocage le $1",
 	"sanctions-link-on-user-tool": "Sanctions",
-	"sanctions-link-on-diff": "Émettre une nouvelle sanction en se basant sur ceci",
-	"sanctions-link-on-history": "Émettre une nouvelle sanction en se basant sur ceci",
+	"sanctions-link-on-diff": "Proposer une nouvelle sanction en se basant sur ceci",
+	"sanctions-link-on-history": "Proposer une nouvelle sanction en se basant sur ceci",
 	"sanctions-link-on-user-contributes": "Sanctions",
 	"sanctions-link-on-user-page": "Sanctions",
 	"sanctions-agree-template-title": "Pour",
@@ -102,5 +102,9 @@
 	"sanctions-ve-vote-disagree-tool-title": "Contre",
 	"sanctions-ve-agree-days-inspector-title": "Expiration",
 	"sanctions-ve-agree-days-inspector-remove-label": "Supprimer",
-	"sanctions-ve-agree-days-inspector-invalid-value": "« $1 » n’est pas valide."
+	"sanctions-ve-agree-days-inspector-invalid-value": "« $1 » n’est pas valide.",
+	"echo-category-title-sanctions-against-me": "Sanction contre moi",
+	"sanctions-pref-tooltip-sanctions-against-me": "Me notifier lorsqu'une sanction contre moi a été proposée ou émise.",
+	"notification-header-sanctions-proposed-against-insulting-name": "Une sanction contre {{GENDER:$2|votre}} nom d'utilisateur a été proposée.",
+	"notification-header-sanctions-proposed": "Une sanction contre {{GENDER:$2|vos}} modifications futures a été proposée."
 }
