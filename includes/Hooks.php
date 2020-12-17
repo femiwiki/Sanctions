@@ -13,6 +13,7 @@ use MediaWiki\User\UserIdentity;
 use MWException;
 use OutputPage;
 use RequestContext;
+use SanctionsCreateTemplates;
 use Skin;
 use SpecialPage;
 use Title;
@@ -37,7 +38,7 @@ class Hooks {
 		} // @todo else
 
 		require_once "$dir/../maintenance/SanctionsCreateTemplates.php";
-		$updater->addPostDatabaseUpdateMaintenance( 'SanctionsCreateTemplates' );
+		$updater->addPostDatabaseUpdateMaintenance( SanctionsCreateTemplates::class );
 
 		return true;
 	}
