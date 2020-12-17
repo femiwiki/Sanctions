@@ -1,5 +1,6 @@
 <?php
 
+use MediaWiki\Extension\Sanctions\Sanction;
 use MediaWiki\MediaWikiServices;
 
 require_once getenv( 'MW_INSTALL_PATH' ) !== false
