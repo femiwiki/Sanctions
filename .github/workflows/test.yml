@@ -48,9 +48,9 @@ jobs:
     strategy:
       matrix:
         stage:
-          # - phpunit-unit
+          - phpunit-unit
           - phpunit
-          # - phpunit-standalone
+          - phpunit-standalone
           - npm-test
           - composer-test
           # - qunit
@@ -100,7 +100,7 @@ jobs:
       if: steps.cache.outputs.cache-hit != 'true'
       run: |
         cd /home/runner/quibble
-        git clone --recurse-submodules -b "${MEDIAWIKI_VERSION}" --depth 1 https://gerrit.wikimedia.org/r/mediawiki/core src
+        git clone -b "${MEDIAWIKI_VERSION}" --depth 1 https://gerrit.wikimedia.org/r/mediawiki/core src
         git clone --recurse-submodules -b "${MEDIAWIKI_VERSION}" --depth 1 https://gerrit.wikimedia.org/r/mediawiki/skins/Vector src/skins/Vector
         for dep in $DEPENDENCIES; do
           git clone --recurse-submodules -b "${MEDIAWIKI_VERSION}" --depth 1 "https://gerrit.wikimedia.org/r/${dep}" src/"$(echo $dep | cut -d'/' -f2,3)"
