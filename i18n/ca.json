@@ -2,6 +2,7 @@
 	"@metadata": {
 		"authors": [
 			"Jlrb+",
+			"Mguix",
 			"Xavier Dengra"
 		]
 	},
@@ -66,7 +67,7 @@
 	"sanctions-topic-summary-reason-more-than-three-and-agreed": "El nombre de participants és superior a tres amb acord de $1 (superior a 2/3)",
 	"sanctions-topic-summary-deadline": "Data de fi: $1",
 	"sanctions-topic-auto-reply-no-count": "La resposta anterior no es té en compte perquè:",
-	"sanctions-topic-auto-reply-unable-self-agree": "No pots votar a una sanció elevada per tu mateix.",
+	"sanctions-topic-auto-reply-unable-self-agree": "No es pot votar una sanció feta per tu mateix.",
 	"sanctions-log-take-temporary-measure": "Eleva la prioritat de [[Topic:$1|sanction]].",
 	"sanctions-log-remove-temporary-measure": "Redueix la prioritat de [[Topic:$1|sanction]].",
 	"sanctions-log-take-measure": "[[Topic:$1|Sanction]] aprovat.",
