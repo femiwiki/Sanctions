@@ -1,4 +1,4 @@
-name: Test
+name: Quibble
 
 on:
   - push
@@ -6,123 +6,136 @@ on:
 
 jobs:
 
-  lint:
-
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v1
-    - name: Setup PHP Action
-      uses: shivammathur/setup-php@v2
-      with:
-        php-version: '7.3'
-        tools: composer:v1
-    - name: Downgrade composer to v1
-      run: sudo composer self-update --stable
-
-    - name: Install dependencies
-      run: |
-        composer install --prefer-dist --no-progress --no-interaction
-        yarn install
-    - run: composer run-script test
-    - run: grunt
-
-
-  phan:
-    strategy:
-      matrix:
-        mediawiki-version: [REL1_35]
+  quibble:
 
     env:
-      MEDIAWIKI_VERSION: ${{ matrix.mediawiki-version }}
+      MEDIAWIKI_VERSION: master
+      DOCKER_REGISTRY: docker-registry.wikimedia.org
+      DOCKER_IMAGE: releng/quibble-stretch-php73
 
-    runs-on: ubuntu-latest
+      # includes deps of deps
+      # @todo auto generate below by inspecting https://raw.githubusercontent.com/wikimedia/integration-config/master/zuul/parameter_functions.py
+      DEPENDENCIES: >-
+        mediawiki/extensions/Echo
+        mediawiki/extensions/Flow
+        mediawiki/extensions/Renameuser
+        mediawiki/extensions/AbuseFilter
+        mediawiki/extensions/AntiSpoof
+        mediawiki/extensions/CentralAuth
+        mediawiki/extensions/CheckUser
+        mediawiki/extensions/Cite
+        mediawiki/extensions/CodeEditor
+        mediawiki/extensions/ConfirmEdit
+        mediawiki/extensions/EventLogging
+        mediawiki/extensions/EventStreamConfig
+        mediawiki/extensions/FlaggedRevs
+        mediawiki/extensions/GuidedTour
+        mediawiki/extensions/LiquidThreads
+        mediawiki/extensions/MassMessage
+        mediawiki/extensions/MobileApp
+        mediawiki/extensions/MobileFrontend
+        mediawiki/extensions/ParserFunctions
+        mediawiki/extensions/Scribunto
+        mediawiki/extensions/SyntaxHighlight_GeSHi
+        mediawiki/extensions/TemplateData
+        mediawiki/extensions/TitleBlacklist
+        mediawiki/extensions/UserMerge
+        mediawiki/extensions/VisualEditor
+        mediawiki/extensions/WikiEditor
+        mediawiki/extensions/WikimediaEvents
+        mediawiki/skins/MinervaNeue
 
-    services:
-      mysql:
-        image: mysql:8
-        env:
-          MYSQL_USER: root
-          MYSQL_PASSWORD: root
-          MYSQL_DATABASE: testwiki
-          MYSQL_ROOT_PASSWORD: root
-        ports:
-          - 3306/tcp
-
-    steps:
-    - uses: actions/checkout@v1
-
-    - name: Setup PHP Action
-      uses: shivammathur/setup-php@v2
-      with:
-        php-version: '7.3'
-        tools: composer:v1
-    - name: Downgrade composer to v1
-      run: sudo composer self-update --stable
-
-    - name: Install PHP extension
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y php-ast
-
-    - name: Start the MySQL service
-      # See https://github.blog/changelog/2020-02-21-github-actions-breaking-change-ubuntu-virtual-environments-will-no-longer-start-the-mysql-service-automatically/
-      run: sudo /etc/init.d/mysql start
-
-    - name: Install MediaWiki
-      run: bash "${GITHUB_WORKSPACE}/.github/workflows/install-mediawiki.sh"
-      env:
-        MYSQL_PORT: ${{ job.services.mysql.ports[3306] }}
-
-    - name: Install extensions
-      run: |
-        bash "${GITHUB_WORKSPACE}/.github/workflows/install-extension.sh" Flow
-        bash "${GITHUB_WORKSPACE}/.github/workflows/install-extension.sh" Echo
-        bash "${GITHUB_WORKSPACE}/.github/workflows/install-extension.sh" Renameuser
-
-    - name: Phan
-      run: php "${HOME}/mediawiki/extensions/Sanctions/vendor/bin/phan" -d "${HOME}/mediawiki/extensions/Sanctions" -p -m checkstyle
-
-  phpunit:
     strategy:
       matrix:
-        mediawiki-version: [REL1_35]
-
-    env:
-      MEDIAWIKI_VERSION: ${{ matrix.mediawiki-version }}
+        stage:
+          # - phpunit-unit
+          - phpunit
+          # - phpunit-standalone
+          - npm-test
+          - composer-test
+          # - qunit
+          # - selenium
+          # - api-testing
 
     runs-on: ubuntu-latest
 
-    services:
-      mysql:
-        image: mysql:8
-        env:
-          MYSQL_USER: root
-          MYSQL_PASSWORD: root
-          MYSQL_DATABASE: testwiki
-          MYSQL_ROOT_PASSWORD: root
-        ports:
-          - 3306/tcp
-
     steps:
-    - uses: actions/checkout@v1
 
-    - name: Setup PHP Action
-      uses: shivammathur/setup-php@v2
+    - uses: actions/checkout@v2
+
+    - name: Prepare actions
+      run: |
+        # Ref: https://github.com/thcipriani/dockerregistry
+        echo "DOCKER_LATEST_TAG=$(curl -sL "https://${DOCKER_REGISTRY}/v2/${DOCKER_IMAGE}/tags/list" |
+          python3 -c 'import json;print("\n".join(json.loads(input())["tags"]))' |
+          grep -v latest | sort -Vr | head -1)" >> $GITHUB_ENV
+
+        # Used by actions/cache
+        echo $DEPENDENCIES > .dependencies
+
+        # Make directories
+        mkdir -p /home/runner/quibble
+        cd /home/runner/quibble
+        mkdir -p cache log
+        chmod 777 cache log
+
+    - name: Get Quibble cache
+      uses: actions/cache@v2
+      id: docker-image
       with:
-        php-version: '7.3'
-        tools: composer:v1
-    - name: Downgrade composer to v1
-      run: sudo composer self-update --stable
+        path: /home/runner/quibble/docker-image
+        key: "${{ env.DOCKER_REGISTRY }}-${{ env.DOCKER_IMAGE }}-${{ env.DOCKER_LATEST_TAG }}"
+    - run: docker pull "${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${DOCKER_LATEST_TAG}"
+      if: steps.docker-image.outputs.cache-hit != 'true'
+    - run: docker load -i /home/runner/quibble/docker-image
+      if: steps.docker-image.outputs.cache-hit == 'true'
 
-    - name: Start the MySQL service
-      # See https://github.blog/changelog/2020-02-21-github-actions-breaking-change-ubuntu-virtual-environments-will-no-longer-start-the-mysql-service-automatically/
-      run: sudo /etc/init.d/mysql start
+    - name: Get MediaWiki installation cache
+      uses: actions/cache@v2
+      id: cache
+      with:
+        path: /home/runner/quibble/src
+        key: "${{ runner.os }}-${{ env.MEDIAWIKI_VERSION }}-${{ hashFiles('.dependencies') }}"
 
-    - name: Install MediaWiki
-      run: bash "${GITHUB_WORKSPACE}/.github/workflows/install-mediawiki.sh"
-      env:
-        MYSQL_PORT: ${{ job.services.mysql.ports[3306] }}
+    - name: Download MediaWiki and extensions
+      if: steps.cache.outputs.cache-hit != 'true'
+      run: |
+        cd /home/runner/quibble
+        git clone --recurse-submodules -b "${MEDIAWIKI_VERSION}" --depth 1 https://gerrit.wikimedia.org/r/mediawiki/core src
+        git clone --recurse-submodules -b "${MEDIAWIKI_VERSION}" --depth 1 https://gerrit.wikimedia.org/r/mediawiki/skins/Vector src/skins/Vector
+        for dep in $DEPENDENCIES; do
+          git clone --recurse-submodules -b "${MEDIAWIKI_VERSION}" --depth 1 "https://gerrit.wikimedia.org/r/${dep}" src/"$(echo $dep | cut -d'/' -f2,3)"
+        done
 
-    - name: PHPUnit
-      run: php "${HOME}/mediawiki/tests/phpunit/phpunit.php"
+        # Move our extension
+        mkdir -p /home/runner/quibble/src/extensions/
+        sudo cp -r "${GITHUB_WORKSPACE}" /home/runner/quibble/src/extensions/
+
+    - name: Get dependencies cache
+      uses: actions/cache@v2
+      with:
+        path: /home/runner/quibble/cache
+        key: "${{ runner.os }}-${{ env.MEDIAWIKI_VERSION }}-${{ hashFiles('**/*.lock') }}"
+
+    - name: Run Quibble
+      run: |
+        cd /home/runner/quibble
+        chmod 777 src
+        find src cache -mindepth 1 -exec sudo chown nobody:nogroup {} \;
+        docker run \
+          -e ZUUL_PROJECT=mediawiki/extensions/"${{ github.event.repository.name }}" \
+          -v "$(pwd)"/cache:/cache \
+          -v "$(pwd)"/log:/workspace/log \
+          -v "$(pwd)"/src:/workspace/src \
+          "${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${DOCKER_LATEST_TAG}" \
+          --skip-zuul \
+          --packages-source composer \
+          --run "${{ matrix.stage }}" \
+          $DEPENDENCIES
+
+    - name: Tear down
+      run: |
+        cd /home/runner/quibble
+        # https://doc.wikimedia.org/quibble/index.html#remove-localsettings-php-between-runs
+        rm "$(pwd)"/src/LocalSettings.php
+        docker save -o "$(pwd)"/docker-image "${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${DOCKER_LATEST_TAG}"
