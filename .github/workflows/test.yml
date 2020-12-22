@@ -84,7 +84,7 @@ jobs:
       id: docker-image
       with:
         path: /home/runner/quibble/docker-image
-        key: "${{ env.DOCKER_REGISTRY }}-${{ env.DOCKER_IMAGE }}-${{ env.DOCKER_LATEST_TAG }}"
+        key: "${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_LATEST_TAG }}"
     - run: docker pull "${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${DOCKER_LATEST_TAG}"
       if: steps.docker-image.outputs.cache-hit != 'true'
     - run: docker load -i /home/runner/quibble/docker-image
