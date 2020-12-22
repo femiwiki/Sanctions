@@ -63,9 +63,9 @@ jobs:
 
     - uses: actions/checkout@v2
 
-    - name: Prepare actions
+    - name: Set up
       run: |
-        # Ref: https://github.com/thcipriani/dockerregistry
+        # Get the latest docker tag (Ref: https://github.com/thcipriani/dockerregistry)
         echo "DOCKER_LATEST_TAG=$(curl -sL "https://${DOCKER_REGISTRY}/v2/${DOCKER_IMAGE}/tags/list" |
           python3 -c 'import json;print("\n".join(json.loads(input())["tags"]))' |
           grep -v latest | sort -Vr | head -1)" >> $GITHUB_ENV
@@ -79,18 +79,17 @@ jobs:
         mkdir -p cache log
         chmod 777 cache log
 
-    - name: Get Quibble cache
+    - name: Cache Quibble
       uses: actions/cache@v2
-      id: docker-image
       with:
         path: /home/runner/quibble/docker-image
         key: "${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_LATEST_TAG }}"
-    - run: docker pull "${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${DOCKER_LATEST_TAG}"
-      if: steps.docker-image.outputs.cache-hit != 'true'
-    - run: docker load -i /home/runner/quibble/docker-image
-      if: steps.docker-image.outputs.cache-hit == 'true'
+    - name: Load or pull Quibble
+      run: |
+        docker load -i /home/runner/quibble/docker-image || \
+          docker pull "${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${DOCKER_LATEST_TAG}"
 
-    - name: Get MediaWiki installation cache
+    - name: Cache MediaWiki installation
       uses: actions/cache@v2
       id: cache
       with:
@@ -107,11 +106,7 @@ jobs:
           git clone --recurse-submodules -b "${MEDIAWIKI_VERSION}" --depth 1 "https://gerrit.wikimedia.org/r/${dep}" src/"$(echo $dep | cut -d'/' -f2,3)"
         done
 
-        # Move our extension
-        mkdir -p /home/runner/quibble/src/extensions/
-        sudo cp -r "${GITHUB_WORKSPACE}" /home/runner/quibble/src/extensions/
-
-    - name: Get dependencies cache
+    - name: Cache dependencies
       uses: actions/cache@v2
       with:
         path: /home/runner/quibble/cache
@@ -120,6 +115,8 @@ jobs:
     - name: Run Quibble
       run: |
         cd /home/runner/quibble
+        # Move our extension
+        sudo cp -r "${GITHUB_WORKSPACE}" src/extensions/
         chmod 777 src
         find src cache -mindepth 1 -exec sudo chown nobody:nogroup {} \;
         docker run \
@@ -136,6 +133,6 @@ jobs:
     - name: Tear down
       run: |
         cd /home/runner/quibble
-        # https://doc.wikimedia.org/quibble/index.html#remove-localsettings-php-between-runs
+        # See https://doc.wikimedia.org/quibble/index.html#remove-localsettings-php-between-runs
         rm "$(pwd)"/src/LocalSettings.php
         docker save -o "$(pwd)"/docker-image "${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${DOCKER_LATEST_TAG}"
