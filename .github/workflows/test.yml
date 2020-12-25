@@ -1,53 +1,52 @@
-name: Quibble
+name: Quibble and Phan
 
 on:
-  - push
-  - pull_request
+  push:
+  pull_request:
+
+env:
+  DOCKER_REGISTRY: docker-registry.wikimedia.org
+  DOCKER_ORG: releng
+  QUIBBLE_DOCKER_IMAGE: quibble-stretch-php73
+  PHAN_DOCKER_IMAGE: mediawiki-phan-php73
+  # includes deps of deps
+  # @todo auto generate below by inspecting https://raw.githubusercontent.com/wikimedia/integration-config/master/zuul/parameter_functions.py
+  DEPENDENCIES: >-
+    mediawiki/extensions/Echo
+    mediawiki/extensions/Flow
+    mediawiki/extensions/Renameuser
+    mediawiki/extensions/AbuseFilter
+    mediawiki/extensions/AntiSpoof
+    mediawiki/extensions/CentralAuth
+    mediawiki/extensions/CheckUser
+    mediawiki/extensions/Cite
+    mediawiki/extensions/CodeEditor
+    mediawiki/extensions/ConfirmEdit
+    mediawiki/extensions/EventLogging
+    mediawiki/extensions/EventStreamConfig
+    mediawiki/extensions/FlaggedRevs
+    mediawiki/extensions/GuidedTour
+    mediawiki/extensions/LiquidThreads
+    mediawiki/extensions/MassMessage
+    mediawiki/extensions/MobileApp
+    mediawiki/extensions/MobileFrontend
+    mediawiki/extensions/ParserFunctions
+    mediawiki/extensions/Scribunto
+    mediawiki/extensions/SyntaxHighlight_GeSHi
+    mediawiki/extensions/TemplateData
+    mediawiki/extensions/TitleBlacklist
+    mediawiki/extensions/UserMerge
+    mediawiki/extensions/VisualEditor
+    mediawiki/extensions/WikiEditor
+    mediawiki/extensions/WikimediaEvents
+    mediawiki/skins/MinervaNeue
 
 jobs:
-
-  quibble:
-
-    env:
-      MEDIAWIKI_VERSION: REL1_35
-      DOCKER_REGISTRY: docker-registry.wikimedia.org
-      DOCKER_IMAGE: releng/quibble-stretch-php73
-
-      # includes deps of deps
-      # @todo auto generate below by inspecting https://raw.githubusercontent.com/wikimedia/integration-config/master/zuul/parameter_functions.py
-      DEPENDENCIES: >-
-        mediawiki/extensions/Echo
-        mediawiki/extensions/Flow
-        mediawiki/extensions/Renameuser
-        mediawiki/extensions/AbuseFilter
-        mediawiki/extensions/AntiSpoof
-        mediawiki/extensions/CentralAuth
-        mediawiki/extensions/CheckUser
-        mediawiki/extensions/Cite
-        mediawiki/extensions/CodeEditor
-        mediawiki/extensions/ConfirmEdit
-        mediawiki/extensions/EventLogging
-        mediawiki/extensions/EventStreamConfig
-        mediawiki/extensions/FlaggedRevs
-        mediawiki/extensions/GuidedTour
-        mediawiki/extensions/LiquidThreads
-        mediawiki/extensions/MassMessage
-        mediawiki/extensions/MobileApp
-        mediawiki/extensions/MobileFrontend
-        mediawiki/extensions/ParserFunctions
-        mediawiki/extensions/Scribunto
-        mediawiki/extensions/SyntaxHighlight_GeSHi
-        mediawiki/extensions/TemplateData
-        mediawiki/extensions/TitleBlacklist
-        mediawiki/extensions/UserMerge
-        mediawiki/extensions/VisualEditor
-        mediawiki/extensions/WikiEditor
-        mediawiki/extensions/WikimediaEvents
-        mediawiki/skins/MinervaNeue
-
+  test:
     strategy:
       matrix:
         stage:
+          - phan
           - phpunit-unit
           - phpunit
           - phpunit-standalone
@@ -60,79 +59,119 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v2
 
-    - uses: actions/checkout@v2
+      # /home/runner/cache/                           Cache
+      # /home/runner/src/                             Mediawiki installation
+      # /home/runner/src/extensions/EXTENSION_NAME/   Clone of this repository
+      # /home/runner/docker-images/                   Docker images which exported with docker-save command
+      # $GITHUB_WORKSPACE/.dependencies               Used by actions/cache
+      #
+      # Below step should be tagged and reused using YAML node properties, but
+      # anchors are not currently supported by Github Actions
+      # https://github.community/t/support-for-yaml-anchors/16128
+      - name: Set up
+        run: |
+          if [ "${GITHUB_EVENT_NAME}" == 'push' ]; then
+            echo "MEDIAWIKI_VERSION=$(echo $GITHUB_REF | cut -d'/' -f3 | cut -d'-' -f1)" >> $GITHUB_ENV
+          else
+            echo MEDIAWIKI_VERSION=master >> $GITHUB_ENV
+          fi
 
-    - name: Set up
-      run: |
-        # Get the latest docker tag (Ref: https://github.com/thcipriani/dockerregistry)
-        echo "DOCKER_LATEST_TAG=$(curl -sL "https://${DOCKER_REGISTRY}/v2/${DOCKER_IMAGE}/tags/list" |
-          python3 -c 'import json;print("\n".join(json.loads(input())["tags"]))' |
-          grep -v latest | sort -Vr | head -1)" >> $GITHUB_ENV
+          if [ "${{ matrix.stage }}" == phan ]; then
+            export DOCKER_IMAGE="${PHAN_DOCKER_IMAGE}"
+          else
+            export DOCKER_IMAGE="${QUIBBLE_DOCKER_IMAGE}"
+          fi
+          echo "DOCKER_IMAGE=${DOCKER_IMAGE}" >> $GITHUB_ENV
 
-        # Used by actions/cache
-        echo $DEPENDENCIES > .dependencies
+          # Get the latest docker tag (Ref: https://github.com/thcipriani/dockerregistry)
+          echo "DOCKER_LATEST_TAG=$(curl -sL "https://${DOCKER_REGISTRY}/v2/${DOCKER_ORG}/${DOCKER_IMAGE}/tags/list" |
+            python3 -c 'import json;print("\n".join(json.loads(input())["tags"]))' |
+            grep -v latest | sort -Vr | head -1)" >> $GITHUB_ENV
 
-        # Make directories
-        mkdir -p /home/runner/quibble
-        cd /home/runner/quibble
-        mkdir -p cache log
-        chmod 777 cache log
+          # Used by actions/cache
+          echo $DEPENDENCIES > .dependencies
 
-    - name: Cache Quibble
-      uses: actions/cache@v2
-      with:
-        path: /home/runner/quibble/docker-image
-        key: "${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_LATEST_TAG }}"
-    - name: Load or pull Quibble
-      run: |
-        docker load -i /home/runner/quibble/docker-image || \
-          docker pull "${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${DOCKER_LATEST_TAG}"
+          # Make directories
+          cd /home/runner
+          mkdir -p cache
+          chmod 777 cache
 
-    - name: Cache MediaWiki installation
-      uses: actions/cache@v2
-      id: cache
-      with:
-        path: /home/runner/quibble/src
-        key: "${{ runner.os }}-${{ env.MEDIAWIKI_VERSION }}-${{ hashFiles('.dependencies') }}"
+      - name: Cache docker image
+        uses: actions/cache@v2
+        with:
+          path: /home/runner/docker-images/${{ env.DOCKER_IMAGE }}
+          key: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_LATEST_TAG }}
+      - name: Load or pull docker image
+        run: |
+          docker load -i /home/runner/docker-image/"${DOCKER_IMAGE}" || \
+            docker pull "${DOCKER_REGISTRY}/${DOCKER_ORG}/${DOCKER_IMAGE}:${DOCKER_LATEST_TAG}"
 
-    - name: Download MediaWiki and extensions
-      if: steps.cache.outputs.cache-hit != 'true'
-      run: |
-        cd /home/runner/quibble
-        git clone -b "${MEDIAWIKI_VERSION}" --depth 1 https://gerrit.wikimedia.org/r/mediawiki/core src
-        git clone --recurse-submodules -b "${MEDIAWIKI_VERSION}" --depth 1 https://gerrit.wikimedia.org/r/mediawiki/skins/Vector src/skins/Vector
-        for dep in $DEPENDENCIES; do
-          git clone --recurse-submodules -b "${MEDIAWIKI_VERSION}" --depth 1 "https://gerrit.wikimedia.org/r/${dep}" src/"$(echo $dep | cut -d'/' -f2,3)"
-        done
+      - name: Cache MediaWiki installation
+        uses: actions/cache@v2
+        with:
+          path: /home/runner/src
+          key: ${{ env.MEDIAWIKI_VERSION }}-${{ hashFiles('.dependencies') }}
+      - name: Download MediaWiki and extensions
+        run: |
+          cd /home/runner
+          if [ ! -d src ]; then
+            git clone -b "${MEDIAWIKI_VERSION}" --depth 1 https://gerrit.wikimedia.org/r/mediawiki/core src
+            git clone --recurse-submodules -b "${MEDIAWIKI_VERSION}" --depth 1 https://gerrit.wikimedia.org/r/mediawiki/skins/Vector src/skins/Vector
+            for dep in $DEPENDENCIES; do
+              git clone --recurse-submodules -b "${MEDIAWIKI_VERSION}" --depth 1 "https://gerrit.wikimedia.org/r/${dep}" src/"$(echo $dep | cut -d'/' -f2,3)"
+            done
+          fi
 
-    - name: Cache dependencies
-      uses: actions/cache@v2
-      with:
-        path: /home/runner/quibble/cache
-        key: "${{ runner.os }}-${{ env.MEDIAWIKI_VERSION }}-${{ hashFiles('**/*.lock') }}"
+      - name: Cache dependencies (composer and npm)
+        uses: actions/cache@v2
+        with:
+          path: /home/runner/cache
+          key: "${{ runner.os }}-${{ env.MEDIAWIKI_VERSION }}-${{ hashFiles('**/*.lock') }}"
+      - name: Setup PHP Action
+        if: ${{ matrix.stage == 'phan' }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.3'
+          tools: composer:v1
+      - name: Composer install
+        if: ${{ matrix.stage == 'phan' }}
+        run: |
+          # @todo Use composer-merge-plugin
+          composer install --prefer-dist --no-progress --no-interaction # $GITHUB_WORKSPACE
+          composer install --prefer-dist --no-progress --no-interaction --working-dir /home/runner/src
+      - name: Main Test
+        run: |
+          cd /home/runner
+          # Move our extension
+          sudo cp -r "${GITHUB_WORKSPACE}" src/extensions/
+          chmod 777 src
+          sudo chown -R nobody:nogroup src cache
+          sudo chown $(id -u):$(id -g) src cache
+          if [ "${{ matrix.stage }}" == phan ]; then
+            docker run \
+              -e THING_SUBNAME=extensions/"${{ github.event.repository.name }}" \
+              -v "$(pwd)"/src:/mediawiki \
+              "${DOCKER_REGISTRY}/${DOCKER_ORG}/${DOCKER_IMAGE}:${DOCKER_LATEST_TAG}" \
+              --color
+          else
+            docker run \
+              -e ZUUL_PROJECT=mediawiki/extensions/"${{ github.event.repository.name }}" \
+              -v "$(pwd)"/cache:/cache \
+              -v "$(pwd)"/src:/workspace/src \
+              "${DOCKER_REGISTRY}/${DOCKER_ORG}/${DOCKER_IMAGE}:${DOCKER_LATEST_TAG}" \
+              --skip-zuul \
+              --packages-source composer \
+              --run "${{ matrix.stage }}" \
+              $DEPENDENCIES
+            fi
 
-    - name: Run Quibble
-      run: |
-        cd /home/runner/quibble
-        # Move our extension
-        sudo cp -r "${GITHUB_WORKSPACE}" src/extensions/
-        chmod 777 src
-        find src cache -mindepth 1 -exec sudo chown nobody:nogroup {} \;
-        docker run \
-          -e ZUUL_PROJECT=mediawiki/extensions/"${{ github.event.repository.name }}" \
-          -v "$(pwd)"/cache:/cache \
-          -v "$(pwd)"/log:/workspace/log \
-          -v "$(pwd)"/src:/workspace/src \
-          "${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${DOCKER_LATEST_TAG}" \
-          --skip-zuul \
-          --packages-source composer \
-          --run "${{ matrix.stage }}" \
-          $DEPENDENCIES
-
-    - name: Tear down
-      run: |
-        cd /home/runner/quibble
-        # See https://doc.wikimedia.org/quibble/index.html#remove-localsettings-php-between-runs
-        rm "$(pwd)"/src/LocalSettings.php
-        docker save -o "$(pwd)"/docker-image "${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${DOCKER_LATEST_TAG}"
+      - name: Tear down
+        run: |
+          cd /home/runner
+          # See https://doc.wikimedia.org/quibble/index.html#remove-localsettings-php-between-runs
+          rm "$(pwd)"/src/LocalSettings.php || true
+          mkdir -p docker-images
+          docker save -o "$(pwd)/docker-images/${DOCKER_IMAGE}" \
+            "${DOCKER_REGISTRY}/${DOCKER_ORG}/${DOCKER_IMAGE}:${DOCKER_LATEST_TAG}"
