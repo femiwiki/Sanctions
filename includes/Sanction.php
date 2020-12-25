@@ -1315,8 +1315,8 @@ class Sanction {
 		$block->setReason( $reason );
 		$block->isHardblock( true );
 		$block->isAutoblocking( boolval( wfMessage( 'sanctions-autoblock' )->text() ) );
-		$block->prevents( 'createaccount', true );
-		$block->prevents( 'editownusertalk', $preventEditOwnUserTalk );
+		$block->isCreateAccountBlocked( true );
+		$block->isUsertalkEditAllowed( $preventEditOwnUserTalk );
 		$block->setExpiry( $expiry );
 
 		$success = $block->insert();
