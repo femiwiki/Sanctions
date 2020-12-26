@@ -160,10 +160,11 @@ class SanctionsPager extends IndexPager {
 
 		$topicTitle = $sanction->getTopic();
 
+		// @todo Use better way?
 		$userLinkTitle = Title::newFromText(
 			strtok( $this->getTitle(), '/' )
 			. '/' . $target->getName()
-		); // @todo Use better way?
+		);
 
 		$rowTitle = wfMessage( 'sanctions-topic-title', [
 			Linker::link(
