@@ -449,7 +449,10 @@ class Sanction {
 		);
 	}
 
-	// @todo Return false on failure
+	/**
+	 * @todo Return false on failure
+	 * @return bool
+	 */
 	public function execute() {
 		if ( !$this->isExpired() || $this->mIsHandled ) {
 			return false;
@@ -495,7 +498,10 @@ class Sanction {
 		return true;
 	}
 
-	// @todo If topic summary is already created (because etsprev_revision is empty), it will not work.
+	/**
+	 * @todo If topic summary is already created (because etsprev_revision is empty), it will not work.
+	 * @return bool
+	 */
 	public function updateTopicSummary() {
 		$db = wfGetDB( DB_REPLICA );
 		$row = $db->selectRow(
@@ -640,7 +646,12 @@ class Sanction {
 		] );
 	}
 
-	// @todo Do not renew $value with a value of $row
+	/**
+	 * @todo Do not renew $value with a value of $row
+	 * @param string $name
+	 * @param string $value
+	 * @return bool
+	 */
 	public function loadFrom( $name, $value ) {
 		$db = wfGetDB( DB_REPLICA );
 
@@ -837,7 +848,8 @@ class Sanction {
 	public function getTopic() {
 		$UUIDText = $this->mTopic->getAlphadecimal();
 
-		return Title::newFromText( 'Topic:' . $UUIDText ); // @todo Replace with better way?
+		// @todo Replace with better way?
+		return Title::newFromText( 'Topic:' . $UUIDText );
 	}
 
 	/**
@@ -988,7 +1000,8 @@ class Sanction {
 				]
 			);
 
-			$reasons = []; // Empty if present
+			// $reasons could be an empty array when vote is accepted
+			$reasons = [];
 			if ( $this->getAuthor()->getId() == $userId && $period > 0 ) {
 				$content = wfMessage( 'sanctions-topic-auto-reply-no-count' )->inContentLanguage()->text() .
 					PHP_EOL . '* ' .

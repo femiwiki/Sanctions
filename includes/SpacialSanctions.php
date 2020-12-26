@@ -220,7 +220,8 @@ class SpacialSanctions extends SpecialPage {
 
 		$action = $request->getVal( 'sanction-action' );
 
-		$query = []; // showResult, code, errorCode, uuid, targetName
+		// showResult, code, errorCode, uuid, targetName
+		$query = [];
 		// code
 		// 0    작성 성공
 		// 1    긴급 절차 전환 성공

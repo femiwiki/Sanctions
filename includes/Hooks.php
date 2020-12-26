@@ -35,7 +35,8 @@ class Hooks {
 				[ 'addTable', 'sanctions',
 				"$dir/../sql/sanctions.tables.sql", true ]
 			);
-		} // @todo else
+		}
+		// @todo else
 
 		require_once "$dir/../maintenance/SanctionsCreateTemplates.php";
 		$updater->addPostDatabaseUpdateMaintenance( SanctionsCreateTemplates::class );
@@ -153,9 +154,11 @@ class Hooks {
 	 */
 	public static function onFlowAddModules( OutputPage $out ) {
 		$title = $out->getTitle();
-		$specialSanctionTitle = SpecialPage::getTitleFor( 'Sanctions' ); // Special:Sanctions
+		// Special:Sanctions
+		$specialSanctionTitle = SpecialPage::getTitleFor( 'Sanctions' );
+		// ProjectTalk:foobar
 		$discussionPageName = wfMessage( 'sanctions-discussion-page-name' )
-			->inContentLanguage()->text(); // ProjectTalk:foobar
+			->inContentLanguage()->text();
 
 		if ( $title == null ) {
 			return true;
@@ -223,7 +226,13 @@ class Hooks {
 		return true;
 	}
 
-	// (talk|contribs)
+	/**
+	 * (talk|contribs)
+	 * @param int $userId User ID of the current user
+	 * @param string $userText Username of the current user
+	 * @param string[] &$items Array of user tool links as HTML fragments
+	 * @return bool|void True or no return value to continue or false to abort
+	 */
 	public static function onUserToolLinksEdit( $userId, $userText, &$items ) {
 		$user = RequestContext::getMain()->getUser();
 		if ( $user == null || !Utils::hasVoteRight( $user ) ) {

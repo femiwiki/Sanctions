@@ -1,19 +1,16 @@
 {
-	"name": "sanctions",
-	"version": "0.0.0",
-	"private": true,
-	"description": "Let users handle sanctions.",
-	"scripts": {
-		"test": "grunt test"
-	},
-	"devDependencies": {
-		"eslint-config-wikimedia": "0.15.3",
-		"grunt": "1.1.0",
-		"grunt-banana-checker": "0.9.0",
-		"grunt-contrib-watch": "1.1.0",
-		"grunt-eslint": "22.0.0",
-		"grunt-stylelint": "0.15.0",
-		"grunt-tyops": "0.1.0",
-		"stylelint-config-wikimedia": "0.10.1"
-	}
+  "name": "sanctions",
+  "description": "Let users handle sanctions.",
+  "private": true,
+  "scripts": {
+    "test": "npm -s run lint",
+    "lint": "npm -s run lint:prettier && npm -s run lint:i18n",
+    "lint:prettier": "prettier '**/*.{js,json,css,less,md,yml}' --check",
+    "lint:i18n": "banana-checker --requireLowerCase=0 i18n/",
+    "fix": "prettier '**/*.{js,json,css,less,md,yml}' --write"
+  },
+  "devDependencies": {
+    "grunt-banana-checker": "0.9.0",
+    "prettier": "^2.2.1"
+  }
 }

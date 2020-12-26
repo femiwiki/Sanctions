@@ -10,7 +10,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
-- 
+-
 
 ## Previous Releases
 
