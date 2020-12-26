@@ -114,8 +114,7 @@
     "Sanctions": ["i18n"]
   },
   "ExtensionMessagesFiles": {
-    "SanctionsAlias": "Sanctions.alias.php",
-    "SanctionsMagic": "Sanctions.i18n.magic.php"
+    "SanctionsAlias": "Sanctions.alias.php"
   },
   "manifest_version": 1
 }
