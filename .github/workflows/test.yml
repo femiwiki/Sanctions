@@ -1,3 +1,9 @@
+# If you see this message on 'femiwiki/.github' repository, please keep in mind all changes of this
+# workflow file is for being copied to other repository.
+# If you see this message on any other repositories, DO NOT edit and commit that file. You should
+# edit https://github.com/femiwiki/.github/blob/master/workflows-template/extension-test.yml Instead
+# of this.
+
 name: Quibble and Phan
 
 on:
@@ -9,37 +15,6 @@ env:
   DOCKER_ORG: releng
   QUIBBLE_DOCKER_IMAGE: quibble-stretch-php73
   PHAN_DOCKER_IMAGE: mediawiki-phan-php73
-  # includes deps of deps
-  # @todo auto generate below by inspecting https://raw.githubusercontent.com/wikimedia/integration-config/master/zuul/parameter_functions.py
-  DEPENDENCIES: >-
-    mediawiki/extensions/Echo
-    mediawiki/extensions/Flow
-    mediawiki/extensions/Renameuser
-    mediawiki/extensions/AbuseFilter
-    mediawiki/extensions/AntiSpoof
-    mediawiki/extensions/CentralAuth
-    mediawiki/extensions/CheckUser
-    mediawiki/extensions/Cite
-    mediawiki/extensions/CodeEditor
-    mediawiki/extensions/ConfirmEdit
-    mediawiki/extensions/EventLogging
-    mediawiki/extensions/EventStreamConfig
-    mediawiki/extensions/FlaggedRevs
-    mediawiki/extensions/GuidedTour
-    mediawiki/extensions/LiquidThreads
-    mediawiki/extensions/MassMessage
-    mediawiki/extensions/MobileApp
-    mediawiki/extensions/MobileFrontend
-    mediawiki/extensions/ParserFunctions
-    mediawiki/extensions/Scribunto
-    mediawiki/extensions/SyntaxHighlight_GeSHi
-    mediawiki/extensions/TemplateData
-    mediawiki/extensions/TitleBlacklist
-    mediawiki/extensions/UserMerge
-    mediawiki/extensions/VisualEditor
-    mediawiki/extensions/WikiEditor
-    mediawiki/extensions/WikimediaEvents
-    mediawiki/skins/MinervaNeue
 
 jobs:
   test:
@@ -72,6 +47,9 @@ jobs:
       # https://github.community/t/support-for-yaml-anchors/16128
       - name: Set up
         run: |
+          source .github/workflows/.test-env
+          echo "DEPENDENCIES=${DEPENDENCIES}" >> $GITHUB_ENV
+
           if [ "${GITHUB_EVENT_NAME}" == 'push' ]; then
             echo "MEDIAWIKI_VERSION=$(echo $GITHUB_REF | cut -d'/' -f3 | cut -d'-' -f1)" >> $GITHUB_ENV
           else
@@ -90,14 +68,6 @@ jobs:
             python3 -c 'import json;print("\n".join(json.loads(input())["tags"]))' |
             grep -v latest | sort -Vr | head -1)" >> $GITHUB_ENV
 
-          # Used by actions/cache
-          echo $DEPENDENCIES > .dependencies
-
-          # Make directories
-          cd /home/runner
-          mkdir -p cache
-          chmod 777 cache
-
       - name: Cache docker image
         uses: actions/cache@v2
         with:
@@ -105,14 +75,14 @@ jobs:
           key: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_LATEST_TAG }}
       - name: Load or pull docker image
         run: |
-          docker load -i /home/runner/docker-image/"${DOCKER_IMAGE}" || \
+          docker load -i /home/runner/docker-images/"${DOCKER_IMAGE}" || \
             docker pull "${DOCKER_REGISTRY}/${DOCKER_ORG}/${DOCKER_IMAGE}:${DOCKER_LATEST_TAG}"
 
       - name: Cache MediaWiki installation
         uses: actions/cache@v2
         with:
           path: /home/runner/src
-          key: ${{ env.MEDIAWIKI_VERSION }}-${{ hashFiles('.dependencies') }}
+          key: ${{ env.MEDIAWIKI_VERSION }}-${{ hashFiles('.github/workflows/.test-env') }}
       - name: Download MediaWiki and extensions
         run: |
           cd /home/runner
@@ -146,7 +116,8 @@ jobs:
           cd /home/runner
           # Move our extension
           sudo cp -r "${GITHUB_WORKSPACE}" src/extensions/
-          chmod 777 src
+          mkdir -p cache
+          chmod 777 src cache
           sudo chown -R nobody:nogroup src cache
           sudo chown $(id -u):$(id -g) src cache
           if [ "${{ matrix.stage }}" == phan ]; then
