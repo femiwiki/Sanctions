@@ -104,7 +104,7 @@
 	"sanctions-ve-agree-days-inspector-remove-label": "Supprimer",
 	"sanctions-ve-agree-days-inspector-invalid-value": "« $1 » n’est pas valide.",
 	"echo-category-title-sanctions-against-me": "Sanction contre moi",
-	"sanctions-pref-tooltip-sanctions-against-me": "Me notifier lorsqu'une sanction contre moi a été proposée ou émise.",
-	"notification-header-sanctions-proposed-against-insulting-name": "Une sanction contre {{GENDER:$2|votre}} nom d'utilisateur a été proposée.",
-	"notification-header-sanctions-proposed": "Une sanction contre {{GENDER:$2|vos}} modifications futures a été proposée."
+	"sanctions-pref-tooltip-sanctions-against-me": "Me notifier lorsqu’une sanction contre moi a été proposée ou émise.",
+	"notification-header-sanctions-proposed-against-insulting-name": "Une sanction contre {{GENDER:$2|}}votre nom d’utilisateur a été proposée.",
+	"notification-header-sanctions-proposed": "Une sanction contre {{GENDER:$2|}}vos modifications futures a été proposée."
 }
