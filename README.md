@@ -1,9 +1,11 @@
-# Extension:Sanctions [![Github checks status]][github checks link] [![codecov.io status]][codecov.io link]
+# Sanctions [![Github checks status]][github checks link] [![codecov.io status]][codecov.io link]
 
-The **Sanctions** extension adds special page `Special:Sanctions` and let users
-handle sanctions. See [Extension:Sanctions] for the detailed explanation.
+Sanctions is an extension that adds special page `Special:Sanctions` and lets users handle sanctions for [MediaWiki] wikis.
+See [https://www.mediawiki.org/wiki/Extension:Sanctions](https://www.mediawiki.org/wiki/Special:MyLanguage/Extension:Sanctions) for more information.
 
-&nbsp;
+## Contributing
+
+If you are interested in contributing to the code base, please see the document [How to Contribute].
 
 ---
 
@@ -14,6 +16,7 @@ Public License v3.0] or any later version. See [COPYRIGHT] for details.
 [github checks link]: https://github.com/femiwiki/Sanctions/actions
 [codecov.io status]: https://badgen.net/codecov/c/github/femiwiki/Sanctions
 [codecov.io link]: https://codecov.io/gh/femiwiki/Sanctions
-[extension:sanctions]: https://www.mediawiki.org/wiki/Special:MyLanguage/Extension:Sanctions
+[mediawiki]: https://www.mediawiki.org/
+[how to contribute]: https://github.com/femiwiki/femiwiki/blob/main/how-to-contribute-to-extensions.md
 [gnu affero general public license v3.0]: LICENSE
 [copyright]: COPYRIGHT
