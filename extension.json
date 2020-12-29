@@ -116,5 +116,8 @@
   "ExtensionMessagesFiles": {
     "SanctionsAlias": "Sanctions.alias.php"
   },
+  "TestAutoloadNamespaces": {
+    "MediaWiki\\Extension\\Sanctions\\Tests\\Integration\\": "tests/phpunit/integration/"
+  },
   "manifest_version": 1
 }
