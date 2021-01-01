@@ -2,6 +2,10 @@
 
 Versions and bullets are arranged chronologically from latest to oldest.
 
+## 1.1.5
+
+- Fix PhanUndeclaredMethod
+
 ## 1.1.4
 
 - Improve CI build
