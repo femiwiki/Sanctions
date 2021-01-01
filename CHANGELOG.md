@@ -2,6 +2,10 @@
 
 Versions and bullets are arranged chronologically from latest to oldest.
 
+## 1.1.4
+
+- Improve CI build
+
 ## v1.1.3
 
 ENHANCEMENTS:
