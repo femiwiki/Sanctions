@@ -1,7 +1,8 @@
 {
 	"@metadata": {
 		"authors": [
-			"Piramidion"
+			"Piramidion",
+			"Renamerr"
 		]
 	},
 	"sanctions-desc": "Дає користувачам змогу працювати із санкціями",
@@ -85,8 +86,8 @@
 	"sanctions-reason-blocked": "Блокування",
 	"sanctions-reason-recently-blocked": "$2 {{PLURAL:$2|день|дні|днів}} від розблокування $1 ще не {{PLURAL:$2|минув|минули|минуло}}",
 	"sanctions-link-on-user-tool": "Санкції",
-	"sanctions-link-on-diff": "Видати нову санкцію на основі цього",
-	"sanctions-link-on-history": "Видати нову санкцію на основі цього",
+	"sanctions-link-on-diff": "Запропонувати нову санкцію на основі цього",
+	"sanctions-link-on-history": "Запропонувати нову санкцію на основі цього",
 	"sanctions-link-on-user-contributes": "Санкції",
 	"sanctions-link-on-user-page": "Санкції",
 	"sanctions-agree-template-title": "Підтримка",
