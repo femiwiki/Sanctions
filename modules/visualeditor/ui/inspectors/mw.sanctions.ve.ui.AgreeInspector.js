@@ -63,82 +63,92 @@
   /**
    * Handle changes to the input widget
    */
-  mw.sanctions.ve.ui.AgreeInspector.prototype.onExpirationInputChange = function () {
-    var templateModel, parameterModel, key, value, inspector;
+  mw.sanctions.ve.ui.AgreeInspector.prototype.onExpirationInputChange =
+    function () {
+      var templateModel, parameterModel, key, value, inspector;
 
-    key = mw.sanctions.ve.ui.AgreeInspector.static.templateParameterKey;
-    value = this.expirationInput.getValue();
-    inspector = this;
+      key = mw.sanctions.ve.ui.AgreeInspector.static.templateParameterKey;
+      value = this.expirationInput.getValue();
+      inspector = this;
 
-    if (this.expirationInput.getValue()) {
-      // After the updates are done, we'll get onTransclusionModelChange
-      templateModel = inspector.transclusionModel.getParts()[0];
-      if (templateModel.hasParameter(key)) {
-        parameterModel = templateModel.getParameter(key);
-        parameterModel.setValue(value);
+      if (this.expirationInput.getValue()) {
+        // After the updates are done, we'll get onTransclusionModelChange
+        templateModel = inspector.transclusionModel.getParts()[0];
+        if (templateModel.hasParameter(key)) {
+          parameterModel = templateModel.getParameter(key);
+          parameterModel.setValue(value);
+        } else {
+          parameterModel = new ve.dm.MWParameterModel(
+            templateModel,
+            key,
+            value
+          );
+          templateModel.addParameter(parameterModel);
+        }
       } else {
-        parameterModel = new ve.dm.MWParameterModel(templateModel, key, value);
-        templateModel.addParameter(parameterModel);
+        // Disable save button
+        inspector.setApplicableStatus();
       }
-    } else {
-      // Disable save button
-      inspector.setApplicableStatus();
-    }
-  };
+    };
 
   /**
    * Handle the transclusion becoming ready
    */
-  mw.sanctions.ve.ui.AgreeInspector.prototype.onTransclusionReady = function () {
-    var templateModel, key;
+  mw.sanctions.ve.ui.AgreeInspector.prototype.onTransclusionReady =
+    function () {
+      var templateModel, key;
 
-    key = mw.sanctions.ve.ui.AgreeInspector.static.templateParameterKey;
+      key = mw.sanctions.ve.ui.AgreeInspector.static.templateParameterKey;
 
-    this.loaded = true;
-    this.$element.addClass('sanctions-ve-ui-agreeInspector-ready');
-    this.popPending();
+      this.loaded = true;
+      this.$element.addClass('sanctions-ve-ui-agreeInspector-ready');
+      this.popPending();
 
-    templateModel = this.transclusionModel.getParts()[0];
-    if (templateModel.hasParameter(key)) {
-      this.expirationInput.setValue(templateModel.getParameter(key).getValue());
-    }
-  };
+      templateModel = this.transclusionModel.getParts()[0];
+      if (templateModel.hasParameter(key)) {
+        this.expirationInput.setValue(
+          templateModel.getParameter(key).getValue()
+        );
+      }
+    };
 
   /**
    * Handles the transclusion model changing.  This should only happen when we change
    * the parameter, then get a callback.
    */
-  mw.sanctions.ve.ui.AgreeInspector.prototype.onTransclusionModelChange = function () {
-    if (this.loaded) {
-      this.altered = true;
-      this.setApplicableStatus();
-    }
-  };
+  mw.sanctions.ve.ui.AgreeInspector.prototype.onTransclusionModelChange =
+    function () {
+      if (this.loaded) {
+        this.altered = true;
+        this.setApplicableStatus();
+      }
+    };
 
   /**
    * Sets the abilities based on the current status
    *
    * If it's empty or invalid, it can not be inserted or updated.
    */
-  mw.sanctions.ve.ui.AgreeInspector.prototype.setApplicableStatus = function () {
-    var parts = this.transclusionModel.getParts(),
-      templateModel = parts[0],
-      key = mw.sanctions.ve.ui.AgreeInspector.static.templateParameterKey,
-      inspector = this;
+  mw.sanctions.ve.ui.AgreeInspector.prototype.setApplicableStatus =
+    function () {
+      var parts = this.transclusionModel.getParts(),
+        templateModel = parts[0],
+        key = mw.sanctions.ve.ui.AgreeInspector.static.templateParameterKey,
+        inspector = this;
 
-    // The template should always be there; the question is whether the first/only
-    // positional parameter is.
-    //
-    // If they edit an existing mention, and make it invalid, they should be able
-    // to cancel, but not save.
-    if (templateModel.hasParameter(key)) {
-      inspector.actions.setAbilities({
-        done: !!this.expirationInput.getValue(),
-      });
-    } else {
-      inspector.actions.setAbilities({ done: false });
-    }
-  };
+      // The template should always be there; the question is whether the first/only
+      // positional parameter is.
+      //
+      // If they edit an existing mention, and make it invalid, they should be able
+      // to cancel, but not save.
+      if (templateModel.hasParameter(key)) {
+        inspector.actions.setAbilities({
+          done: !!this.expirationInput.getValue(),
+        });
+      } else {
+        inspector.actions.setAbilities({ done: false });
+      }
+    };
 
   /**
    * Initialize UI of inspector
@@ -345,10 +355,11 @@
    */
   mw.sanctions.ve.ui.AgreeInspector.prototype.getSelectedNode = function () {
     // Parent method
-    var node = mw.sanctions.ve.ui.AgreeInspector.super.prototype.getSelectedNode.apply(
-      this,
-      arguments
-    );
+    var node =
+      mw.sanctions.ve.ui.AgreeInspector.super.prototype.getSelectedNode.apply(
+        this,
+        arguments
+      );
     // Checks the model class
     if (
       node &&

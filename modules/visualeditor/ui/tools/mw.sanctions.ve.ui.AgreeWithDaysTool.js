@@ -12,24 +12,25 @@
    * @param {Object} [config] Configuration options
    */
 
-  mw.sanctions.ve.ui.AgreeWithDaysTool = function SanctionsVeUiAgreeWithDaysInspectorTool() {
-    var self = this;
-    $(function () {
-      var title = self.$element
-        .closest('.flow-topic')
-        .find('.flow-topic-title')
-        .text();
-      if (
-        title.match(
-          new RegExp(mw.config.get('wgSanctionsInsultingNameTopicTitle'))
-        )
-      ) {
-        self.destroy();
-      }
-    });
-    // Parent constructor
-    mw.sanctions.ve.ui.AgreeWithDaysTool.super.apply(this, arguments);
-  };
+  mw.sanctions.ve.ui.AgreeWithDaysTool =
+    function SanctionsVeUiAgreeWithDaysInspectorTool() {
+      var self = this;
+      $(function () {
+        var title = self.$element
+          .closest('.flow-topic')
+          .find('.flow-topic-title')
+          .text();
+        if (
+          title.match(
+            new RegExp(mw.config.get('wgSanctionsInsultingNameTopicTitle'))
+          )
+        ) {
+          self.destroy();
+        }
+      });
+      // Parent constructor
+      mw.sanctions.ve.ui.AgreeWithDaysTool.super.apply(this, arguments);
+    };
 
   OO.inheritClass(mw.sanctions.ve.ui.AgreeWithDaysTool, ve.ui.InspectorTool);
 
