@@ -1,13 +1,13 @@
 {
   "name": "Sanctions",
-  "version": "1.1.0",
+  "version": "1.1.6",
   "author": "[https://femiwiki.com/ Femiwiki Team]",
   "url": "https://github.com/femiwiki/sanctions",
   "descriptionmsg": "sanctions-desc",
   "license-name": "AGPL-3.0-or-later",
   "type": "specialpage",
   "requires": {
-    "MediaWiki": ">= 1.35.0",
+    "MediaWiki": ">= 1.36.0",
     "extensions": {
       "Echo": "*",
       "Flow": "*",

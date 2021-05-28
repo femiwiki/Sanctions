@@ -2,15 +2,16 @@
 
 Versions and bullets are arranged chronologically from latest to oldest.
 
-## Unreleased
+## 1.1.6
 
-ENHANCEMENTS:
+Note: this version requires MediaWiki 1.36+. Earlier versions are no longer supported.
+If you still use those versions of MediaWiki, please use REL1_35 branch instead of this release.
 
 - Localisations update.
 
-BUG FIXES:
+ENHANCEMENTS:
 
--
+- Localisation updates from https://translatewiki.net.
 
 ## Previous Releases
 
