@@ -157,7 +157,7 @@ class Sanction {
 			'st_last_update_timestamp' => $now
 		];
 
-		$db = wfGetDB( DB_MASTER );
+		$db = wfGetDB( DB_PRIMARY );
 		$db->insert( 'sanctions', $data, __METHOD__ );
 
 		$sanction = new self();
@@ -214,7 +214,7 @@ class Sanction {
 
 		// Update DB
 		$id = $this->mId;
-		$db = wfGetDB( DB_MASTER );
+		$db = wfGetDB( DB_PRIMARY );
 		$now = wfTimestamp( TS_MW );
 		$db->update(
 			'sanctions',
@@ -437,7 +437,7 @@ class Sanction {
 		}
 
 		// Write to the database that sanctions have been processed.
-		$db = wfGetDB( DB_MASTER );
+		$db = wfGetDB( DB_PRIMARY );
 		$now = wfTimestamp( TS_MW );
 		$res = $db->update(
 			'sanctions',
@@ -480,7 +480,7 @@ class Sanction {
 		$this->updateTopicSummary();
 
 		// Write to DB
-		$db = wfGetDB( DB_MASTER );
+		$db = wfGetDB( DB_PRIMARY );
 		$now = wfTimestamp( TS_MW );
 		$res = $db->update(
 			'sanctions',
@@ -866,7 +866,7 @@ class Sanction {
 	 * @return Sanction|null
 	 */
 	public static function existingSanctionForInsultingNameOf( $user ) {
-		$db = wfGetDB( DB_MASTER );
+		$db = wfGetDB( DB_PRIMARY );
 		$targetId = $user->getId();
 
 		$row = $db->selectRow(
@@ -885,7 +885,7 @@ class Sanction {
 	}
 
 	public static function checkAllSanctionNewVotes() {
-		$db = wfGetDB( DB_MASTER );
+		$db = wfGetDB( DB_PRIMARY );
 
 		$sanctions = $db->select(
 			'sanctions',
@@ -911,7 +911,7 @@ class Sanction {
 
 		$uuid = $this->getTopicUUID();
 		$db = wfGetDB( DB_REPLICA );
-		$writableDb = wfGetDB( DB_MASTER );
+		$writableDb = wfGetDB( DB_PRIMARY );
 
 		// Ignore if the topic has not changed since the last check.
 		$topicLastUpdate = $db->selectField(
@@ -1189,7 +1189,7 @@ class Sanction {
 	 * @return Sanction|bool
 	 */
 	public static function newFromVoteId( $vote ) {
-		$db = wfGetDB( DB_MASTER );
+		$db = wfGetDB( DB_PRIMARY );
 
 		$sanctionId = $db->selectField(
 			'sanctions_vote',
