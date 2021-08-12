@@ -1,6 +1,7 @@
 {
 	"@metadata": {
 		"authors": [
+			"DDPAT",
 			"Piramidion",
 			"Renamerr"
 		]
@@ -99,5 +100,9 @@
 	"sanctions-ve-vote-disagree-tool-title": "Проти",
 	"sanctions-ve-agree-days-inspector-title": "Закінчення",
 	"sanctions-ve-agree-days-inspector-remove-label": "Вилучити",
-	"sanctions-ve-agree-days-inspector-invalid-value": "Значення «$1» не є дійсним."
+	"sanctions-ve-agree-days-inspector-invalid-value": "Значення «$1» не є дійсним.",
+	"echo-category-title-sanctions-against-me": "Санкція проти мене",
+	"sanctions-pref-tooltip-sanctions-against-me": "Повідомляти мене, коли проти мене буде запропоновано чи винесено санкцію.",
+	"notification-header-sanctions-proposed-against-insulting-name": "Запропоновано санкцію проти {{GENDER:$2|вашого}} імені користувача.",
+	"notification-header-sanctions-proposed": "Запропоновано санкцію проти {{GENDER:$2|вашого}} майбутньої зміни."
 }
