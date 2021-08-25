@@ -335,7 +335,7 @@
         // Cleanup
         this.$element.removeClass('flow-ve-ui-mentionInspector-ready');
         this.transclusionModel.disconnect(this);
-        this.transclusionModel.abortRequests();
+        this.transclusionModel.abortAllApiRequests();
         this.transclusionModel = null;
 
         this.expirationInput.disconnect(this);
