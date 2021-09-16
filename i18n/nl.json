@@ -1,0 +1,39 @@
+{
+	"@metadata": {
+		"authors": [
+			"Elroy",
+			"Mainframe98",
+			"McDutchie",
+			"Romaine"
+		]
+	},
+	"sanctions-bot-name": "Straf",
+	"sanctions-form-target": "Doel:",
+	"sanctions-submit": "Verzenden",
+	"sanctions-submit-error-invaild-username": "Gebruiker $1 bestaat niet",
+	"sanctions-show-all-sanctions-link": "Alle straffen weergeven",
+	"sanctions-row-label-emergency": "Noodgeval",
+	"sanctions-row-label-normal": "Normaal",
+	"sanctions-row-label-rejected": "Afgewezen",
+	"sanctions-row-label-pending": "In behandeling",
+	"sanctions-row-button-execute": "Uitvoeren",
+	"sanctions-row-button-toggle-emergency": "Prioriteit wijzigen",
+	"sanctions-topic-summary-status-label": "Status: $1",
+	"sanctions-topic-summary-status-rejected": "Afgewezen",
+	"sanctions-topic-summary-status-immediate-rejection": "Onmiddellijk afgewezen",
+	"sanctions-topic-summary-deadline": "Einddatum: $1",
+	"sanctions-reason-not-logged-in": "Niet aangemeld.",
+	"sanctions-link-on-user-tool": "Sancties",
+	"sanctions-link-on-user-contributes": "Sancties",
+	"sanctions-link-on-user-page": "Straffen",
+	"sanctions-agree-template-title": "Steun",
+	"sanctions-disagree-template-title": "Tegen",
+	"sanctions-agree-template-body": "Steunen",
+	"sanctions-agree-with-day-template-body": "Steun voor blokkade van $1 dagen",
+	"sanctions-disagree-template-body": "Tegen",
+	"sanctions-ve-vote-agree-tool-title": "Steun",
+	"sanctions-ve-vote-disagree-tool-title": "Tegen",
+	"sanctions-ve-agree-days-inspector-title": "Vervalt",
+	"sanctions-ve-agree-days-inspector-remove-label": "Verwijderen",
+	"sanctions-ve-agree-days-inspector-invalid-value": "\"$1\" is niet geldig."
+}
