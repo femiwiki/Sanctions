@@ -106,12 +106,11 @@ class SanctionsCreateTemplates extends LoggedUpdateMaintenance {
 			return Status::newGood();
 		}
 
-		return $page->doEditContent(
+		return $page->doUserEditContent(
 			$content,
+			Sanction::getBot(),
 			'/* Automatically created by Sanctions */',
-			EDIT_FORCE_BOT | EDIT_SUPPRESS_RC,
-			false,
-			Sanction::getBot()
+			EDIT_FORCE_BOT | EDIT_SUPPRESS_RC
 		);
 	}
 }
