@@ -1,6 +1,6 @@
 'use strict';
 
-const assert = require('assert'),
+const assert = require('assert');
 const SanctionsPage = require('../pageobjects/sanctions.page');
 // const Util = require('wdio-mediawiki/Util');
 // const Api = require('wdio-mediawiki/Api');
