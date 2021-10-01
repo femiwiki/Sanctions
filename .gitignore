@@ -1,3 +1,4 @@
+tests/selenium/log
 vendor/
 node_modules/
 .eslintcache
