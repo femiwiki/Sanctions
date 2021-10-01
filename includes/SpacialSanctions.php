@@ -90,7 +90,9 @@ class SpacialSanctions extends SpecialPage {
 			}
 
 			if ( is_array( $reason ) && count( $reason ) > 0 ) {
-				$message .= PHP_EOL . '* ' . implode( PHP_EOL . '* ', $reason );
+				$message .= '<ul class="sanctions-reasons-disabled-participation">';
+				$message .= '<li>' . implode( '</li><li>', $reason ) . '</li>';
+				$message .= '</ul>';
 			}
 
 			$output->addWikiTextAsInterface( $message );
