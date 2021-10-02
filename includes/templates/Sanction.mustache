@@ -4,8 +4,8 @@
   <div class="sanction-vote-status">{{{vote-status}}}</div>
   {{#time-left}}<div class="sanction-timeLeft">{{{.}}}</div>{{/time-left}}
   {{#data-execute}}
-  <form method="post" action="{{action}}" class="sanction-exectute">
-    <input class="sanction-exectute-button mw-ui-progressive" type="submit" value="{{label}}">
+  <form method="post" action="{{action}}" class="sanction-execute">
+    <input class="sanction-execute-button mw-ui-progressive" type="submit" value="{{label}}">
     <input type="hidden" value="{{token}}" name="token">
     <input type="hidden" value="{{sanction-id}}" name="sanctionId">
     <input type="hidden" value="execute" name="sanction-action">
