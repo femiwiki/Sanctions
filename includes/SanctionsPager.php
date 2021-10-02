@@ -115,7 +115,6 @@ class SanctionsPager extends IndexPager {
 			'is-expired' => $expired,
 			'is-handled' => $handled,
 			'can-vote' => $this->getUserHasVoteRight(),
-			'title' => $rowTitle,
 		];
 		$class = [ 'sanction' ];
 
