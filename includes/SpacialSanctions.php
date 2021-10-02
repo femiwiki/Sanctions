@@ -97,8 +97,6 @@ class SpacialSanctions extends SpecialPage {
 			}
 
 			$data['data-reasons-disabled-participation'] = $reason;
-
-			$output->addWikiTextAsInterface( $message );
 		}
 
 		$output->addHTML( $this->templateParser->processTemplate( 'SpecialSanctions', $data ) );
