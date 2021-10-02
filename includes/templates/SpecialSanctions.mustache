@@ -1,0 +1,19 @@
+{{{html-body}}}
+{{#data-form}}
+{{#header}}<h2>{{.}}</h2>{{/header}}
+<form id="sanctionsForm" method="post" action={{action}}>
+  <p>
+    {{{target-label}}}<input name="target" class="mw-ui-input-inline" size="10"{{#target-name}} value="{{.}}"{{/target-name}}>
+    <input id="forInsultingName" name="forInsultingName" type="checkbox" {{#is-for-insulting-name}}value="1"{{/is-for-insulting-name}}>
+    <label for="forInsultingName">{{{label-insulting-name}}}</label>
+  </p>
+  <textarea name="content" id="content" cols="40" rows="7" placeholder="{{textarea-placeholder}}">{{{content}}}</textarea>
+  <input class="submit-button" type="submit" value="{{submit-label}}">
+  <input type="hidden" value="{{token}}" name="token">
+  <input type="hidden" value="write" name="sanction-action">
+</form>
+{{/data-form}}
+<p>{{{sanctions-unable-create-description}}}</p>
+<ul class="sanctions-reasons-disabled-participation">
+  {{#data-reasons-disabled-participation}}<li>{{.}}</li>{{/data-reasons-disabled-participation}}
+</ul>

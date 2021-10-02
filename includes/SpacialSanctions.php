@@ -9,39 +9,33 @@ use MediaWiki\MediaWikiServices;
 use MediaWiki\Revision\RevisionLookup;
 use OutputPage;
 use SpecialPage;
+use TemplateParser;
 use User;
-use Xml;
 
 class SpacialSanctions extends SpecialPage {
-	/**
-	 * @var string
-	 */
+	/** @var string */
 	protected $mTargetName;
 
-	/**
-	 * @var int
-	 */
+	/** @var int */
 	protected $mTargetId;
 
-	/**
-	 * @var int|null
-	 */
+	/** @var int|null */
 	protected $mOldRevisionId;
 
-	/**
-	 * @var int
-	 */
+	/** @var int */
 	protected $mNewRevisionId;
 
-	/**
-	 * @var RevisionLookup
-	 */
+	/** @var RevisionLookup */
 	protected $revLookup;
+
+	/** @var TemplateParser */
+	private $templateParser;
 
 	public function __construct() {
 		parent::__construct( 'Sanctions' );
 
 		$this->revLookup = MediaWikiServices::getInstance()->getRevisionLookup();
+		$this->templateParser = new TemplateParser( __DIR__ . '/templates' );
 	}
 
 	/**
@@ -74,29 +68,40 @@ class SpacialSanctions extends SpecialPage {
 			) );
 		}
 
+		$data = [];
+
 		$pager = new SanctionsPager( $this->getContext(), (string)$this->mTargetName );
 		$pager->doQuery();
-		$output->addHTML( $pager->getBody() );
+		$data['html-body'] = $pager->getBody();
 
-		$reason = [];
 		if ( Utils::hasVoteRight( $this->getUser(), $reason ) ) {
-			$output->addHTML( $this->makeForm() );
+			$data['data-form'] = [
+				'content' => $this->makeDiffLink(),
+				'header' => $this->msg( 'sanctions-sactions-form-header' )->text(),
+				'action' => $this->getPageTitle()->getFullURL(),
+				'target-label' => wfMessage( 'sanctions-form-target' )->text(),
+				'target-name' => $this->mTargetName,
+				'is-for-insulting-name' => $this->mNewRevisionId == null && $this->mTargetName != null,
+				'label-insulting-name' => wfMessage( 'sanctions-form-for-insulting-name' )->text(),
+				'textarea-placeholder' => $this->msg( 'sanctions-content-placeholder' )->text(),
+				'submit-label' => $this->msg( 'sanctions-submit' )->text(),
+				'token' => $this->getUser()->getEditToken( 'sanctions' ),
+			];
 		} else {
 			if ( $this->getUser()->isAnon() ) {
-				$message = wfMessage( 'sanctions-unable-create-new' )->text();
+				$data['sanctions-unable-create-description'] = wfMessage( 'sanctions-unable-create-new' )->parse();
 			} else {
-				$message = wfMessage( 'sanctions-unable-create-new-logged-in', $this->getUser()->getName() )
-					->text();
+				$username = $this->getUser()->getName();
+				$description = wfMessage( 'sanctions-unable-create-new-logged-in', $username )->parse();
+				$data['sanctions-unable-create-description'] = $description;
 			}
 
-			if ( is_array( $reason ) && count( $reason ) > 0 ) {
-				$message .= '<ul class="sanctions-reasons-disabled-participation">';
-				$message .= '<li>' . implode( '</li><li>', $reason ) . '</li>';
-				$message .= '</ul>';
-			}
+			$data['data-reasons-disabled-participation'] = $reason;
 
 			$output->addWikiTextAsInterface( $message );
 		}
+
+		$output->addHTML( $this->templateParser->processTemplate( 'SpecialSanctions', $data ) );
 	}
 
 	/**
@@ -410,67 +415,6 @@ class SpacialSanctions extends SpecialPage {
 		default:
 			return wfMessage( "sanctions-submit-massage-other", (string)$code )->text();
 		}
-	}
-
-	/**
-	 * @return string
-	 */
-	protected function makeForm() {
-		$content = '';
-
-		$content .= $this->makeDiffLink();
-
-		$out = '';
-		$out .= Html::rawelement(
-			'h2',
-			[],
-			$this->msg( 'sanctions-sactions-form-header' )->text()
-		);
-
-		$out .= Html::rawelement(
-			'form',
-			[
-			'method' => 'post',
-			'action' => $this->getPageTitle()->getFullURL(),
-			'id' => 'sanctionsForm'
-			],
-			Html::rawelement( 'p', [],
-				wfMessage( 'sanctions-form-target' )->text() .
-				Html::input( 'target', $this->mTargetName, 'text', [
-						'class' => 'mw-ui-input-inline',
-						'size' => 10
-				] ) .
-				' ' .
-				Xml::checkLabel(
-					wfMessage( 'sanctions-form-for-insulting-name' )->text(),
-					'forInsultingName',
-					'forInsultingName',
-					$this->mNewRevisionId == null && $this->mTargetName != null,
-					[]
-				)
-			) .
-			Xml::textarea(
-				'content',
-				$content,
-				40,
-				7,
-				[ 'placeholder' => $this->msg( 'sanctions-content-placeholder' )->text() ]
-			) .
-			Html::submitButton(
-				$this->msg( 'sanctions-submit' )->text(),
-				[ 'class' => 'submit-button' ], [ 'mw-ui-progressive' ]
-			) .
-			Html::hidden(
-				'token',
-				$this->getUser()->getEditToken( 'sanctions' )
-			) .
-			Html::hidden(
-				'sanction-action',
-				'write'
-			)
-		);
-
-		return $out;
 	}
 
 	protected function makeDiffLink() {

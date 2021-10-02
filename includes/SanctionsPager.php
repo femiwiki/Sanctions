@@ -8,20 +8,19 @@ use IndexPager;
 use Linker;
 use MWTimestamp;
 use stdClass;
+use TemplateParser;
 use Title;
 use User;
-use Xml;
 
 class SanctionsPager extends IndexPager {
-	/**
-	 * @var bool
-	 */
+	/** @var bool */
 	protected $userHasVoteRight = null;
 
-	/**
-	 * @var string
-	 */
+	/** @var string */
 	private $targetName;
+
+	/** @var TemplateParser */
+	private $templateParser;
 
 	/**
 	 * @param IContextSource $context
@@ -30,6 +29,7 @@ class SanctionsPager extends IndexPager {
 	public function __construct( IContextSource $context, ?string $targetName ) {
 		parent::__construct( $context );
 		$this->targetName = $targetName;
+		$this->templateParser = new TemplateParser( __DIR__ . '/templates' );
 	}
 
 	/**
@@ -117,9 +117,13 @@ class SanctionsPager extends IndexPager {
 		$expiry = $sanction->getExpiry();
 		$expired = $sanction->isExpired();
 
+		// sanctions-row-label-emergency
+		// sanctions-row-label-normal
 		$process = wfMessage(
 			'sanctions-row-label-' . ( $sanction->isEmergency() ? 'emergency' : 'normal' )
 		)->text();
+		// sanctions-row-label-passed
+		// sanctions-row-label-rejected
 		$passStatus = wfMessage(
 			'sanctions-row-label-' . ( $sanction->isPassed() ? 'passed' : 'rejected' )
 		)->text();
@@ -189,63 +193,48 @@ class SanctionsPager extends IndexPager {
 		if ( isset( $isVoted ) ) {
 			$class .= $isVoted ? ' voted' : ' not-voted';
 		}
+		$sanctionId = $sanction->getId();
+		$data = [
+			'class' => $class,
+			'is-expired' => $expired,
+			'is-handled' => $handled,
+			'can-vote' => $this->getUserHasVoteRight(),
+			'vote-status' => $isMySanction ?
+				wfMessage( 'sanctions-row-label-my-sanction' )->text() :
+				( $isVoted ?
+					wfMessage( 'sanctions-row-label-voted' )->text() :
+					wfMessage( 'sanctions-row-label-not-voted' )->text()
+				),
+			'time-left' => $timeLeftText,
+			'title' => $rowTitle,
+		];
 
-		$out = Html::openElement(
-			'div',
-			[ 'class' => $class ]
-		);
 		if ( $expired && !$handled ) {
-			$out .= Html::rawelement(
-				'div',
-				[ 'class' => 'sanction-expired' ],
-				wfMessage( 'sanctions-row-label-pending' )->text()
-			);
-			$out .= Html::rawelement(
-				'div',
-				[ 'class' => 'sanction-pass-status' ],
-				$passStatus
-			);
+			$data['pending'] = wfMessage( 'sanctions-row-label-pending' )->text();
+			$data['pass-status'] = $passStatus;
 		}
-		if ( isset( $isVoted ) ) {
-			$out .= Html::rawelement(
-				'div',
-				[ 'class' => 'sanction-vote-status' ],
-				$isMySanction ?
-					wfMessage( 'sanctions-row-label-my-sanction' )->text() :
-					( $isVoted ?
-						wfMessage( 'sanctions-row-label-voted' )->text() :
-						wfMessage( 'sanctions-row-label-not-voted' )->text()
-					)
-			);
-		}
-		if ( isset( $timeLeftText ) ) {
-			$out .= Html::rawelement(
-				'div',
-				[ 'class' => 'sanction-timeLeft' ],
-				$timeLeftText ?: ''
-			);
-		}
+
 		if ( $expired && $this->getUserHasVoteRight() && !$handled ) {
-			$out .= $this->executeButton( $sanction->getId() );
+			$data['data-execute'] = [
+				'action' => $this->getContext()->getTitle()->getFullURL(),
+				'label' => wfMessage( 'sanctions-row-button-execute' )->text(),
+				'token' => $this->getUser()->getEditToken( 'sanctions' ),
+				'sanction-id' => (string)$sanctionId,
+			];
 		}
 		if ( !$handled ) {
-			$out .= Html::rawelement(
-				'div',
-				[ 'class' => 'sanction-process' ],
-				$process
-			);
+			$data['process'] = $process;
 		}
 		if ( !$expired && !$handled && $this->getUser()->isAllowed( 'block' ) ) {
-			$out .= $this->processToggleButton( $sanction->getId() );
+			$data['data-toggle-process'] = [
+				'action' => $this->getContext()->getTitle()->getFullURL(),
+				'label' => wfMessage( 'sanctions-row-button-toggle-emergency' )->text(),
+				'token' => $this->getUser()->getEditToken( 'sanctions' ),
+				'sanction-id' => (string)$sanctionId,
+			];
 		}
 
-		$out .= Html::rawelement(
-			'div',
-			[ 'class' => 'sanction-title' ],
-			$rowTitle
-		);
-
-		return $out . Html::closeElement( 'div' );
+		return $this->templateParser->processTemplate( 'Sanction', $data );
 	}
 
 	/**
@@ -264,77 +253,6 @@ class SanctionsPager extends IndexPager {
 			[ 'class' => 'sanction-empty' ],
 			$text
 		);
-	}
-
-	/**
-	 * @param int $sanctionId
-	 * @return string
-	 */
-	protected function processToggleButton( $sanctionId ) {
-		$out = '';
-
-		$out .= Xml::tags(
-			'form',
-			[
-			'method' => 'post',
-			'action' => $this->getContext()->getTitle()->getFullURL(),
-			'class' => 'sanction-process-toggle'
-			],
-			Html::submitButton(
-				wfMessage( 'sanctions-row-button-toggle-emergency' )->text(),
-				[ 'class' => 'sanction-process-toggle-button' ],
-				[ 'mw-ui-progressive' ]
-			) .
-			Html::hidden(
-				'token',
-				$this->getUser()->getEditToken( 'sanctions' )
-			) .
-			Html::hidden(
-				'sanctionId',
-				(string)$sanctionId
-			) .
-			Html::hidden(
-				'sanction-action',
-				'toggle-emergency'
-			)
-		);
-
-		return $out;
-	}
-
-	/**
-	 * @param int $sanctionId
-	 * @return string
-	 */
-	protected function executeButton( $sanctionId ) {
-		$out = '';
-
-		$out .= Xml::tags(
-			'form',
-			[
-			'method' => 'post',
-			'action' => $this->getContext()->getTitle()->getFullURL()
-			],
-			Html::submitButton(
-				wfMessage( 'sanctions-row-button-execute' )->text(),
-				[ 'class' => 'sanction-exectute-button' ],
-				[ 'mw-ui-progressive' ]
-			) .
-			Html::hidden(
-				'token',
-				$this->getUser()->getEditToken( 'sanctions' )
-			) .
-			Html::hidden(
-				'sanctionId',
-				(string)$sanctionId
-			) .
-			Html::hidden(
-				'sanction-action',
-				'execute'
-			)
-		);
-
-		return $out;
 	}
 
 	/**
