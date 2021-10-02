@@ -1,0 +1,24 @@
+<div class="{{class}}">
+  {{#pending}}<div class="sanction-expired">{{{.}}}</div>{{/pending}}
+  {{#pass-status}}<div class="sanction-pass-status">{{{}}}</div>{{/pass-status}}
+  <div class="sanction-vote-status">{{{vote-status}}}</div>
+  {{#time-left}}<div class="sanction-timeLeft">{{{.}}}</div>{{/time-left}}
+  {{#data-execute}}
+  <form method="post" action="{{action}}" class="sanction-execute">
+    <input class="sanction-execute-button mw-ui-progressive" type="submit" value="{{label}}">
+    <input type="hidden" value="{{token}}" name="token">
+    <input type="hidden" value="{{sanction-id}}" name="sanctionId">
+    <input type="hidden" value="execute" name="sanction-action">
+  </form>
+  {{/data-execute}}
+  {{#process}}<div class="sanction-process">{{{.}}}</div>{{/process}}
+  {{#data-toggle-process}}
+  <form method="post" action="{{action}}" class="sanction-process-toggle">
+    <input class="sanction-process-toggle-button mw-ui-progressive" type="submit" value="{{{label}}}">
+    <input type="hidden" value="{{token}}" name="token">
+    <input type="hidden" value="{{sanction-id}}" name="sanctionId">
+    <input type="hidden" value="toggle-emergency" name="sanction-action">
+  </form>
+  {{/data-toggle-process}}
+  <div class="sanction-title">{{{title}}}</div>
+</div>
