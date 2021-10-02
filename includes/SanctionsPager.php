@@ -166,7 +166,7 @@ class SanctionsPager extends IndexPager {
 						'sanction-id' => (string)$row->st_id,
 					];
 				}
-			} else  {
+			} else {
 				$data['pending'] = wfMessage( 'sanctions-row-label-pending' )->text();
 				$data['pass-status'] = wfMessage(
 					// sanctions-row-label-passed
