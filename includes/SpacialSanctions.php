@@ -40,7 +40,6 @@ class SpacialSanctions extends SpecialPage {
 
 	/**
 	 * @param string $subpage
-	 * @suppress SecurityCheck-XSS
 	 */
 	public function execute( $subpage ) {
 		$output = $this->getOutput();
