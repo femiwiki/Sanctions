@@ -30,9 +30,10 @@ describe('Special:Sanctions', function () {
     UserLoginPage.login(browser.config.mwUser, browser.config.mwPwd);
     SanctionsPage.open();
 
-    assert.match(
-      SanctionsPage.reasonsDisabledParticipation.getText(),
-      /\(sanctions-reason-unsatisfying-verification-period: 20, .+\)/
+    assert.ok(
+      /\(sanctions-reason-unsatisfying-verification-period: 20, .+\)/.test(
+        SanctionsPage.reasonsDisabledParticipation.getText()
+      )
     );
   });
 
