@@ -2,7 +2,7 @@
 
 const assert = require('assert');
 const SanctionsPage = require('../pageobjects/sanctions.page');
-// const Util = require('wdio-mediawiki/Util');
+const UserLoginPage = require('wdio-mediawiki/LoginPage');
 const Api = require('wdio-mediawiki/Api');
 
 describe('Special:Sanctions', function () {
