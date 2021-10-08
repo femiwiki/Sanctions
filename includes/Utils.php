@@ -140,7 +140,7 @@ class Utils {
 			}
 		}
 
-		if ( $reasons !== false ) {
+		if ( is_array( $reasons ) ) {
 			return count( $reasons ) == 0;
 		}
 		return true;
