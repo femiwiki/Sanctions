@@ -2,8 +2,10 @@
 
 namespace MediaWiki\Extension\Sanctions;
 
+use MediaWiki\Logger\LoggerFactory;
 use Message;
 use MWTimestamp;
+use Psr\Log\LoggerInterface;
 use User;
 
 class Utils {
@@ -156,5 +158,16 @@ class Utils {
 			$msg = $msg->inContentLanguage();
 		}
 		$reasons[] = $msg->text();
+	}
+
+	/**
+	 * @return LoggerInterface
+	 */
+	public static function getLogger(): LoggerInterface {
+		static $logger = null;
+		if ( !self::$logger ) {
+			self::$logger = LoggerFactory::getInstance( 'DiscordRCFeed' );
+		}
+		return self::$logger;
 	}
 }

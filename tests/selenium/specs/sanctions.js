@@ -5,17 +5,13 @@ const SanctionsPage = require('../pageobjects/sanctions.page');
 const UserLoginPage = require('wdio-mediawiki/LoginPage');
 const Api = require('wdio-mediawiki/Api');
 const Util = require('wdio-mediawiki/Util');
+const Config = require('../config');
 
 describe('Special:Sanctions', function () {
   let bot;
 
   before(async () => {
     bot = await Api.bot();
-  });
-
-  afterEach(async () => {
-    bot.delete('MediaWiki:sanctions-voting-right-verification-period');
-    bot.delete('MediaWiki:sanctions-voting-right-verification-edits');
   });
 
   it('shows an anonymous user not-loggedin warning @daily', function () {
@@ -28,48 +24,37 @@ describe('Special:Sanctions', function () {
   });
 
   it('shows a newly registered user that you are too new @daily', function () {
+    Config.setVerifications(10, 0);
     UserLoginPage.login(browser.config.mwUser, browser.config.mwPwd);
     SanctionsPage.open();
 
     assert.ok(
-      /\(sanctions-reason-unsatisfying-verification-period: 20, .+\)/.test(
+      /\(sanctions-reason-unsatisfying-verification-period: 10, .+\)/.test(
         SanctionsPage.reasonsDisabledParticipation.getText()
       )
     );
   });
 
   it('shows a user does not have enough edit count the edit count @daily', function () {
-    browser.call(async () => {
-      await bot.edit(
-        'MediaWiki:sanctions-voting-right-verification-period',
-        '0'
-      );
-    });
+    Config.setVerifications(0, 10);
 
     UserLoginPage.login(browser.config.mwUser, browser.config.mwPwd);
     SanctionsPage.open();
 
     assert.strictEqual(
       SanctionsPage.reasonsDisabledParticipation.getText(),
-      '(sanctions-reason-unsatisfying-verification-edits: 0, 0, 3)'
+      '(sanctions-reason-unsatisfying-verification-edits: 0, 0, 10)'
     );
   });
 
   it('hide or show the form as the conditions change @daily', function () {
+    Config.setVerifications(5 /* seconds */ / (24 * 60 * 60), 1);
     const username = Util.getTestString('User-');
     const password = Util.getTestString();
     let creationTime;
     browser.call(async () => {
       await Api.createAccount(bot, username, password);
       creationTime = new Date().getTime();
-      await bot.edit(
-        'MediaWiki:sanctions-voting-right-verification-period',
-        '' + 5 /* seconds */ / (24 * 60 * 60)
-      );
-      await bot.edit(
-        'MediaWiki:sanctions-voting-right-verification-edits',
-        '1'
-      );
     });
 
     UserLoginPage.login(username, password);
@@ -112,20 +97,31 @@ describe('Special:Sanctions', function () {
   });
 
   it('does not show any warning to user matches all conditions @daily', function () {
-    browser.call(async () => {
-      await bot.edit(
-        'MediaWiki:sanctions-voting-right-verification-period',
-        '0'
-      );
-      await bot.edit(
-        'MediaWiki:sanctions-voting-right-verification-edits',
-        '0'
-      );
-    });
+    Config.setVerifications(0, 0);
 
     UserLoginPage.login(browser.config.mwUser, browser.config.mwPwd);
     SanctionsPage.open();
 
     assert.ok(!SanctionsPage.reasonsDisabledParticipation.getText());
+  });
+
+  it('can be used to make the first sanction @daily', function () {
+    Config.setVerifications(0, 0);
+    const discussionPage = Util.getTestString('Sanctions-discussion-');
+    Config.discussionPage = discussionPage;
+
+    const targetName = Util.getTestString('Sanction-target-');
+    browser.call(async () => {
+      await Api.createAccount(bot, targetName, Util.getTestString());
+    });
+
+    UserLoginPage.login(browser.config.mwUser, browser.config.mwPwd);
+    SanctionsPage.open();
+    SanctionsPage.submit(targetName);
+
+    assert.ok(!/An error has occurred/.test($('.mw-body-content').getText()));
+    assert.ok(
+      new RegExp(`${targetName}`).test(SanctionsPage.sanctions.getText())
+    );
   });
 });

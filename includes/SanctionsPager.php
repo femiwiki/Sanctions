@@ -99,6 +99,19 @@ class SanctionsPager extends IndexPager {
 		return $query;
 	}
 
+	/** @inheritDoc */
+	protected function getStartBody() {
+		return Html::openElement(
+			'div',
+			[ 'class' => 'sanctions' ],
+		);
+	}
+
+	/** @inheritDoc */
+	protected function getEndBody() {
+		return Html::closeElement( 'div' );
+	}
+
 	/**
 	 * @param array|stdClass $row
 	 * @return string

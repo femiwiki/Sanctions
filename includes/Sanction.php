@@ -5,6 +5,9 @@ namespace MediaWiki\Extension\Sanctions;
 use EchoEvent;
 use Flow\Container;
 use Flow\Exception\DataModelException;
+use Flow\Import\Converter;
+use Flow\Import\EnableFlow\EnableFlowWikitextConversionStrategy;
+use Flow\Import\SourceStore\NullImportSourceStore;
 use Flow\Model\UUID;
 use Hooks;
 use Html;
@@ -14,6 +17,7 @@ use MediaWiki\Block\DatabaseBlock;
 use MediaWiki\MediaWikiServices;
 use MovePage;
 use MWTimestamp;
+use Psr\Log\NullLogger;
 use RenameuserSQL;
 use RequestContext;
 use Title;
@@ -110,6 +114,11 @@ class Sanction {
 
 		$factory = Container::get( 'factory.loader.workflow' );
 		$page = Title::newFromText( $discussionPageName );
+		if ( $page->getContentModel() != CONTENT_MODEL_FLOW_BOARD ) {
+			if ( !self::convertToFlow( $page ) ) {
+				return false;
+			}
+		}
 		$loader = $factory->createWorkflowLoader( $page );
 		$blocks = $loader->getBlocks();
 		$action = 'new-topic';
@@ -181,6 +190,74 @@ class Sanction {
 		] );
 
 		return $sanction;
+	}
+
+	/**
+	 * @param Title $title
+	 * @return bool
+	 */
+	public static function convertToFlow( $title ) {
+		$logger = new NullLogger;
+		$user = self::getBot();
+		if ( $title->exists( Title::GAID_FOR_UPDATE ) ) {
+			$converter = new Converter(
+				wfGetDB( DB_PRIMARY ),
+				Container::get( 'importer' ),
+				$logger,
+				$user,
+				new EnableFlowWikitextConversionStrategy(
+					MediaWikiServices::getInstance()->getParser(),
+					new NullImportSourceStore(),
+					$logger,
+					$user
+				)
+			);
+
+			try {
+				$converter->convert( $title );
+			} catch ( \Exception $e ) {
+				return false;
+			}
+		} else {
+			$loaderFactory = Container::get( 'factory.loader.workflow' );
+			$occupationController = Container::get( 'occupation_controller' );
+
+			$creationStatus = $occupationController->safeAllowCreation( $title, $user, false );
+			if ( !$creationStatus->isGood() ) {
+				return false;
+			}
+
+			$loader = $loaderFactory->createWorkflowLoader( $title );
+			$blocks = $loader->getBlocks();
+
+			$action = 'edit-header';
+			$params = [
+				'header' => [
+					'content' => '',
+					'format' => 'wikitext',
+				],
+			];
+
+			$blocksToCommit = $loader->handleSubmit(
+				clone RequestContext::getMain(),
+				$action,
+				$params
+			);
+
+			foreach ( $blocks as $block ) {
+				if ( $block->hasErrors() ) {
+					$errors = $block->getErrors();
+
+					foreach ( $errors as $errorKey ) {
+						Utils::getLogger()->warning( $block->getErrorMessage( $errorKey ) );
+					}
+					return false;
+				}
+			}
+
+			$loader->commit( $blocksToCommit );
+		}
+		return true;
 	}
 
 	/**
@@ -1206,6 +1283,14 @@ class Sanction {
 	public static function getBot() {
 		$botName = wfMessage( 'sanctions-bot-name' )->inContentLanguage()->text();
 		$bot = User::newSystemUser( $botName, [ 'steal' => true ] );
+
+		$userGroupManager = MediaWikiServices::getInstance()->getUserGroupManager();
+		$groups = $userGroupManager->getUserGroups( $bot );
+		foreach ( [ 'bot', 'flow-bot' ] as $group ) {
+			if ( !in_array( $group, $groups ) ) {
+				$userGroupManager->addUserToGroup( $bot, $group );
+			}
+		}
 
 		return $bot;
 	}
