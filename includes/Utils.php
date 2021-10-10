@@ -165,9 +165,9 @@ class Utils {
 	 */
 	public static function getLogger(): LoggerInterface {
 		static $logger = null;
-		if ( !self::$logger ) {
-			self::$logger = LoggerFactory::getInstance( 'DiscordRCFeed' );
+		if ( !$logger ) {
+			$logger = LoggerFactory::getInstance( 'DiscordRCFeed' );
 		}
-		return self::$logger;
+		return $logger;
 	}
 }
