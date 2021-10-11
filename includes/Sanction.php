@@ -981,6 +981,7 @@ class Sanction {
 	 * @return bool
 	 */
 	public function checkNewVotes() {
+		global $wgFlowContentFormat;
 		// Do not check the closed sanction.
 		if ( $this->isExpired() ) {
 			return false;
@@ -1047,26 +1048,42 @@ class Sanction {
 
 			// Filter out posts does not includes vote. We use tags to identify a vote.
 			$period = 0;
-			$agreeRegex = '/<span class="sanction-vote-agree-period">(\d+)<\/span>/';
-			$hasPeriod = preg_match( $agreeRegex, $content, $matches );
-			if ( strpos( $content, '"sanction-vote-counted"' ) !== false ) {
+			if ( $wgFlowContentFormat === 'html' ) {
+				$agreementWithDayRegex = '/<span class="sanction-vote-agree-period">(\d+)<\/span>/';
+				$agreementRegex = '"sanction-vote-agree"';
+				$disagreementRegex = '"sanction-vote-disagree"';
+				$countedText = '"sanction-vote-counted"';
+			} else {
+				$agreementTemplateTitle = wfMessage( 'sanctions-agree-template-title' )->inContentLanguage()->text();
+				$agreementWithDayRegex = "/\{\{${agreementTemplateTitle}\|(\d+)\}\}/";
+				$agreementRegex = '{{' . $agreementTemplateTitle . '}}';
+				$disagreementRegex = wfMessage( 'sanctions-disagree-template-title' )->inContentLanguage()->text();
+				$disagreementRegex = '{{' . $disagreementRegex . '}}';
+				$countedText = '<!--sanction-vote-counted-->';
+			}
+			$hasPeriod = preg_match( $agreementWithDayRegex, $content, $matches );
+			if ( strpos( $content, $countedText ) !== false ) {
 				continue;
 			} elseif ( $hasPeriod != 0 && count( $matches ) > 0 ) {
 				$period = (int)$matches[1];
-			} elseif ( strpos( $content, '"sanction-vote-agree"' ) !== false ) {
+			} elseif ( strpos( $content, $agreementRegex ) !== false ) {
 				// If the affirmative opinion is not dated, it will be processed as a day.
 				$period = 1;
-			} elseif ( strpos( $content, '"sanction-vote-disagree"' ) !== false ) {
+			} elseif ( strpos( $content, $disagreementRegex ) !== false ) {
 				$period = 0;
 			} else {
 				continue;
 			}
 
 			// Append "is counted" mark
-			$newContent = $row->rev_content . Html::rawelement(
-				'span',
-				[ 'class' => 'sanction-vote-counted' ]
-			);
+			if ( $wgFlowContentFormat === 'html' ) {
+				$newContent = $row->rev_content . Html::rawelement(
+					'span',
+					[ 'class' => 'sanction-vote-counted' ]
+				);
+			} else {
+				$newContent = $row->rev_content . '<!--sanction-vote-counted-->';
+			}
 			$writableDb->update(
 				'flow_revision',
 				[
