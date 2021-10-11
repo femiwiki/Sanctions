@@ -1,7 +1,6 @@
 <?php
 
 use MediaWiki\Extension\Sanctions\Sanction;
-use MediaWiki\MediaWikiServices;
 
 require_once getenv( 'MW_INSTALL_PATH' ) !== false
 	? getenv( 'MW_INSTALL_PATH' ) . '/maintenance/Maintenance.php'
@@ -28,12 +27,7 @@ class SanctionsCreateTemplates extends LoggedUpdateMaintenance {
 	protected function getTemplates() {
 		return [
 			'sanctions-agree-template-title' => function ( Title $title ) {
-				// get "User:" namespace prefix in wiki language
-				$namespaces = MediaWikiServices::getInstance()->getContentLanguage()->getFormattedNamespaces();
-
-				// @codingStandardsIgnoreLine
-				return "[[" . $namespaces[NS_FILE] . ":Symbol support vote.svg|17px]]" .
-					"{{#if:{{{1|}}}|'''" .
+				return "{{#if:{{{1|}}}|'''" .
 					wfMessage(
 						'sanctions-agree-with-day-template-body',
 						"<span class=\"sanction-vote-agree-period\">{{{1|}}}</span>"
@@ -43,11 +37,7 @@ class SanctionsCreateTemplates extends LoggedUpdateMaintenance {
 					"'''}}";
 			},
 			'sanctions-disagree-template-title' => function ( Title $title ) {
-				// get "User:" namespace prefix in wiki language
-				$namespaces = MediaWikiServices::getInstance()->getContentLanguage()->getFormattedNamespaces();
-
-				return "[[" . $namespaces[NS_FILE] . ":Symbol oppose vote.svg|17px]]" .
-				"<span class=\"sanction-vote-disagree\"></span>'''" .
+				return "<span class=\"sanction-vote-disagree\"></span>'''" .
 				wfMessage( 'sanctions-disagree-template-body' )->inContentLanguage()->plain() .
 				"'''";
 			}
