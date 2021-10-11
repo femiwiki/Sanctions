@@ -15,7 +15,7 @@ describe('Special:Sanctions', () => {
       bot = await Api.bot();
     });
 
-    it('shows an anonymous user not-loggedin warning @daily', () => {
+    it('shows an anonymous user not-loggedin warning', () => {
       SanctionsPage.open();
 
       assert.strictEqual(
@@ -24,7 +24,7 @@ describe('Special:Sanctions', () => {
       );
     });
 
-    it('shows a newly registered user that you are too new @daily', () => {
+    it('shows a newly registered user that you are too new', () => {
       Config.setVerifications(10, 0);
       UserLoginPage.login(browser.config.mwUser, browser.config.mwPwd);
       SanctionsPage.open();
@@ -36,7 +36,7 @@ describe('Special:Sanctions', () => {
       );
     });
 
-    it('shows a user does not have enough edit count the edit count @daily', () => {
+    it('shows a user does not have enough edit count the edit count', () => {
       Config.setVerifications(0, 10);
 
       UserLoginPage.login(browser.config.mwUser, browser.config.mwPwd);
@@ -48,7 +48,7 @@ describe('Special:Sanctions', () => {
       );
     });
 
-    it('hide or show the form as the conditions change @daily', () => {
+    it('hide or show the form as the conditions change', () => {
       Config.setVerifications(5 /* seconds */ / (24 * 60 * 60), 1);
       const username = Util.getTestString('User-');
       const password = Util.getTestString();
@@ -97,7 +97,7 @@ describe('Special:Sanctions', () => {
       );
     });
 
-    it('does not show any warning to user matches all conditions @daily', () => {
+    it('does not show any warning to user matches all conditions', () => {
       Config.setVerifications(0, 0);
 
       UserLoginPage.login(browser.config.mwUser, browser.config.mwPwd);
@@ -107,7 +107,7 @@ describe('Special:Sanctions', () => {
     });
   });
 
-  it('can be used to make the first sanction @daily', () => {
+  it('can be used to make the first sanction', () => {
     Config.setVerifications(0, 0);
     const discussionPage = Util.getTestString('Sanctions-discussion-');
     Config.discussionPage = discussionPage;
