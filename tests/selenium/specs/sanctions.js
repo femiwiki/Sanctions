@@ -8,13 +8,13 @@ const Util = require('wdio-mediawiki/Util');
 const Config = require('../config');
 
 describe('Special:Sanctions', () => {
+  let bot;
+
+  before(async () => {
+    bot = await Api.bot();
+  });
+
   describe('Verification of participation', () => {
-    let bot;
-
-    before(async () => {
-      bot = await Api.bot();
-    });
-
     it('shows an anonymous user not-loggedin warning', () => {
       SanctionsPage.open();
 
