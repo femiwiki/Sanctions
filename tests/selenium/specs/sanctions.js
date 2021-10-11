@@ -7,105 +7,107 @@ const Api = require('wdio-mediawiki/Api');
 const Util = require('wdio-mediawiki/Util');
 const Config = require('../config');
 
-describe('Special:Sanctions', function () {
-  let bot;
+describe('Special:Sanctions', () => {
+  describe('Verification of participation', () => {
+    let bot;
 
-  before(async () => {
-    bot = await Api.bot();
-  });
-
-  it('shows an anonymous user not-loggedin warning @daily', function () {
-    SanctionsPage.open();
-
-    assert.strictEqual(
-      SanctionsPage.reasonsDisabledParticipation.getText(),
-      '(sanctions-reason-not-logged-in)'
-    );
-  });
-
-  it('shows a newly registered user that you are too new @daily', function () {
-    Config.setVerifications(10, 0);
-    UserLoginPage.login(browser.config.mwUser, browser.config.mwPwd);
-    SanctionsPage.open();
-
-    assert.ok(
-      /\(sanctions-reason-unsatisfying-verification-period: 10, .+\)/.test(
-        SanctionsPage.reasonsDisabledParticipation.getText()
-      )
-    );
-  });
-
-  it('shows a user does not have enough edit count the edit count @daily', function () {
-    Config.setVerifications(0, 10);
-
-    UserLoginPage.login(browser.config.mwUser, browser.config.mwPwd);
-    SanctionsPage.open();
-
-    assert.strictEqual(
-      SanctionsPage.reasonsDisabledParticipation.getText(),
-      '(sanctions-reason-unsatisfying-verification-edits: 0, 0, 10)'
-    );
-  });
-
-  it('hide or show the form as the conditions change @daily', function () {
-    Config.setVerifications(5 /* seconds */ / (24 * 60 * 60), 1);
-    const username = Util.getTestString('User-');
-    const password = Util.getTestString();
-    let creationTime;
-    browser.call(async () => {
-      await Api.createAccount(bot, username, password);
-      creationTime = new Date().getTime();
+    before(async () => {
+      bot = await Api.bot();
     });
 
-    UserLoginPage.login(username, password);
-    SanctionsPage.open();
-    assert.ok(
-      /\(sanctions-reason-unsatisfying-verification-edits: .+, 0, 1\)/.test(
-        SanctionsPage.reasonsDisabledParticipation.getText()
-      )
-    );
+    it('shows an anonymous user not-loggedin warning @daily', () => {
+      SanctionsPage.open();
 
-    browser.call(async () => {
-      const user = await Api.bot(username, password);
-      await user.edit(
-        Util.getTestString('Sanctions-edit-'),
-        Util.getTestString()
+      assert.strictEqual(
+        SanctionsPage.reasonsDisabledParticipation.getText(),
+        '(sanctions-reason-not-logged-in)'
       );
     });
-    const spentSeconds = new Date().getTime() - creationTime;
-    if (spentSeconds < 5000) {
+
+    it('shows a newly registered user that you are too new @daily', () => {
+      Config.setVerifications(10, 0);
+      UserLoginPage.login(browser.config.mwUser, browser.config.mwPwd);
+      SanctionsPage.open();
+
+      assert.ok(
+        /\(sanctions-reason-unsatisfying-verification-period: 10, .+\)/.test(
+          SanctionsPage.reasonsDisabledParticipation.getText()
+        )
+      );
+    });
+
+    it('shows a user does not have enough edit count the edit count @daily', () => {
+      Config.setVerifications(0, 10);
+
+      UserLoginPage.login(browser.config.mwUser, browser.config.mwPwd);
+      SanctionsPage.open();
+
+      assert.strictEqual(
+        SanctionsPage.reasonsDisabledParticipation.getText(),
+        '(sanctions-reason-unsatisfying-verification-edits: 0, 0, 10)'
+      );
+    });
+
+    it('hide or show the form as the conditions change @daily', () => {
+      Config.setVerifications(5 /* seconds */ / (24 * 60 * 60), 1);
+      const username = Util.getTestString('User-');
+      const password = Util.getTestString();
+      let creationTime;
+      browser.call(async () => {
+        await Api.createAccount(bot, username, password);
+        creationTime = new Date().getTime();
+      });
+
+      UserLoginPage.login(username, password);
+      SanctionsPage.open();
+      assert.ok(
+        /\(sanctions-reason-unsatisfying-verification-edits: .+, 0, 1\)/.test(
+          SanctionsPage.reasonsDisabledParticipation.getText()
+        )
+      );
+
+      browser.call(async () => {
+        const user = await Api.bot(username, password);
+        await user.edit(
+          Util.getTestString('Sanctions-edit-'),
+          Util.getTestString()
+        );
+      });
+      const spentSeconds = new Date().getTime() - creationTime;
+      if (spentSeconds < 5000) {
+        SanctionsPage.open();
+        const text = SanctionsPage.reasonsDisabledParticipation.getText();
+        assert.ok(
+          /sanctions-reason-unsatisfying-verification-period/.test(text),
+          'reject for creation time'
+        );
+
+        // Wait
+        browser.pause(5000 - spentSeconds);
+      }
       SanctionsPage.open();
       const text = SanctionsPage.reasonsDisabledParticipation.getText();
       assert.ok(
-        /sanctions-reason-unsatisfying-verification-period/.test(text),
-        'reject for creation time'
+        !/sanctions-reason-unsatisfying-verification-period/.test(text),
+        'does not prevent for creation time'
       );
+      assert.ok(
+        !/sanctions-reason-unsatisfying-verification-edits/.test(text),
+        'does not prevent for edit count'
+      );
+    });
 
-      // Wait
-      browser.pause(5000 - spentSeconds);
-    }
-    SanctionsPage.open();
-    const text = SanctionsPage.reasonsDisabledParticipation.getText();
-    assert.ok(
-      !/sanctions-reason-unsatisfying-verification-period/.test(text),
-      'does not prevent for creation time'
-    );
-    assert.ok(
-      !/sanctions-reason-unsatisfying-verification-edits/.test(text),
-      'does not prevent for edit count'
-    );
+    it('does not show any warning to user matches all conditions @daily', () => {
+      Config.setVerifications(0, 0);
+
+      UserLoginPage.login(browser.config.mwUser, browser.config.mwPwd);
+      SanctionsPage.open();
+
+      assert.ok(!SanctionsPage.reasonsDisabledParticipation.getText());
+    });
   });
 
-  it('does not show any warning to user matches all conditions @daily', function () {
-    Config.setVerifications(0, 0);
-
-    UserLoginPage.login(browser.config.mwUser, browser.config.mwPwd);
-    SanctionsPage.open();
-
-    assert.ok(!SanctionsPage.reasonsDisabledParticipation.getText());
-  });
-
-  it('can be used to make the first sanction @daily', function () {
+  it('can be used to make the first sanction @daily', () => {
     Config.setVerifications(0, 0);
     const discussionPage = Util.getTestString('Sanctions-discussion-');
     Config.discussionPage = discussionPage;
