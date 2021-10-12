@@ -6,12 +6,10 @@ class FlowTopic extends Page {
     return $('.flow-ui-replyWidget .oo-ui-inputWidget-input');
   }
   get replyEditor() {
-    return $(
-      '.flow-ui-replyWidget-editor .oo-ui-inputWidget-input:not(.oo-ui-element-hidden)'
-    );
+    return $('.flow-ui-replyWidget [role="textbox"]');
   }
   get replySaveButton() {
-    return $('.flow-ui-replyWidget .flow-ui-editorControlsWidget-saveButton');
+    return $('.flow-ui-editorControlsWidget-saveButton a');
   }
   get topicSummary() {
     return $('.flow-topic-summary-content');
