@@ -15,12 +15,14 @@ describe('Special:Sanctions', () => {
   });
 
   describe('Verification of participation', () => {
-    it('shows an anonymous user not-loggedin warning', () => {
+    it('should show an anonymous user not-logged-in warning', () => {
+      // logout
+      browser.deleteCookies();
       SanctionsPage.open();
 
       assert.strictEqual(
-        SanctionsPage.reasonsDisabledParticipation.getText(),
-        '(sanctions-reason-not-logged-in)'
+        '(sanctions-reason-not-logged-in)',
+        SanctionsPage.reasonsDisabledParticipation.getText()
       );
     });
 
