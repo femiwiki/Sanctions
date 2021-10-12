@@ -21,6 +21,11 @@ describe('Sanction', () => {
     UserLoginPage.login(browser.config.mwUser, browser.config.mwPwd);
     SanctionsPage.open();
     SanctionsPage.submit(target);
+
+	// For some reason, clicking without refreshing fails.
+	// TODO Investment the cause.
+    browser.refresh();
+
     SanctionsPage.getSanctionLink(null, true).click();
 
     FlowTopic.reply('{{Oppose}}');
