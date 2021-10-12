@@ -22,8 +22,8 @@ describe('Sanction', () => {
     SanctionsPage.open();
     SanctionsPage.submit(target);
 
-	// For some reason, clicking without refreshing fails.
-	// TODO Investment the cause.
+    // For some reason, clicking without refreshing fails.
+    // TODO Investment the cause.
     browser.refresh();
 
     SanctionsPage.getSanctionLink(null, true).click();
