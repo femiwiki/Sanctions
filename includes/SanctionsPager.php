@@ -131,7 +131,7 @@ class SanctionsPager extends IndexPager {
 		];
 		$class = [ 'sanction' ];
 
-		$isVoted = $row->voted_from != null;
+		$isVoted = isset( $row->voted_from );
 		if ( $isMySanction ) {
 			$class[] = 'my-sanction';
 			$data['vote-status'] = wfMessage( 'sanctions-row-label-my-sanction' )->text();
