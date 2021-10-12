@@ -52,7 +52,7 @@ describe('Special:Sanctions', () => {
     });
   });
 
-  it('should hide or the form as the conditions change', () => {
+  it('should hide and show the form as the conditions change', () => {
     Config.setVerifications(5 /* seconds */ / (24 * 60 * 60), 1);
     const username = Util.getTestString('User-');
     const password = Util.getTestString();
@@ -101,7 +101,7 @@ describe('Special:Sanctions', () => {
     );
   });
 
-  it('should not show any warning to user matches all conditions', () => {
+  it('should not show any warning user matches all conditions', () => {
     Config.setVerifications(0, 0);
 
     UserLoginPage.login(browser.config.mwUser, browser.config.mwPwd);
