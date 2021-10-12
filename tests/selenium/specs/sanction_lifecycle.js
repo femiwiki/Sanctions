@@ -2,7 +2,7 @@
 
 const assert = require('assert');
 const SanctionsPage = require('../pageobjects/sanctions.page');
-const FlowTopic = require('../pageobjects/flow-topic.page');
+const FlowTopic = require('../pageobjects/flow_topic.page');
 const UserLoginPage = require('wdio-mediawiki/LoginPage');
 const Api = require('wdio-mediawiki/Api');
 const Util = require('wdio-mediawiki/Util');
@@ -21,7 +21,7 @@ describe('Sanction', () => {
     UserLoginPage.login(browser.config.mwUser, browser.config.mwPwd);
     SanctionsPage.open();
     SanctionsPage.submit(target);
-    SanctionsPage.getSanctionLink(false, true).click();
+    SanctionsPage.getSanctionLink(null, true).click();
 
     FlowTopic.reply('{{Oppose}}');
 
