@@ -17,6 +17,35 @@ class SanctionsPage extends Page {
   get sanctions() {
     return $('.sanctions');
   }
+  get executeButton() {
+    return $('.sanction-execute-button');
+  }
+  getSanctionSelector(voted = null, mySanction = null) {
+    let classSelector = '.sanction';
+    let notClassSelector = '';
+
+    if (mySanction === true) {
+      classSelector += '.my-sanction';
+    }
+
+    if (voted === null) {
+      // nothing to do
+    } else if (voted) {
+      classSelector += '.voted';
+    } else {
+      notClassSelector += '.voted';
+    }
+
+    let selector = classSelector;
+    if (notClassSelector) {
+      selector += `:not(${notClassSelector})`;
+    }
+    return selector;
+  }
+  getSanctionLink(voted = null, mySanction = null) {
+    const selector = this.getSanctionSelector(voted, mySanction);
+    return $(`${selector} a.sanction-type`);
+  }
 
   open(subpage) {
     super.openTitle('Special:Sanctions/' + subpage, { uselang: 'qqx' });
