@@ -8,7 +8,7 @@ const Api = require('wdio-mediawiki/Api');
 const Util = require('wdio-mediawiki/Util');
 const Config = require('../config');
 
-describe('Lifecycle of sanctions', () => {
+describe('Sanction', () => {
   let target;
   before(async () => {
     Config.setVerifications(0, 0);
@@ -17,11 +17,11 @@ describe('Lifecycle of sanctions', () => {
     await Api.createAccount(bot, target, Util.getTestString());
   });
 
-  it('should be possible to self-reject', () => {
+  it('should be canceled by the author', () => {
     UserLoginPage.login(browser.config.mwUser, browser.config.mwPwd);
     SanctionsPage.open();
     SanctionsPage.submit(target);
-    SanctionsPage.getSanctionLink({ mySanction: true }).click();
+    SanctionsPage.getSanctionLink(false, true).click();
 
     FlowTopic.reply('{{Oppose}}');
 
