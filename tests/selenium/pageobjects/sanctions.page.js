@@ -50,6 +50,18 @@ class SanctionsPage extends Page {
   open(subpage) {
     super.openTitle('Special:Sanctions/' + subpage, { uselang: 'qqx' });
   }
+
+  waitUntilUserIsNotNew() {
+    let text;
+    do {
+      text = this.reasonsDisabledParticipation.getText();
+
+      // Wait
+      browser.pause(1000);
+      browser.refresh();
+    } while (/sanctions-reason-unsatisfying-verification-period/.test(text));
+  }
+
   submit(target, isForInsultingName = false) {
     this.target.setValue(target);
     if (isForInsultingName) {

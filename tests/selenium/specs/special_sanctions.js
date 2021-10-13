@@ -54,12 +54,11 @@ describe('Special:Sanctions', () => {
 
   it('should hide and show the form as the conditions change', () => {
     Config.setVerifications(5 /* seconds */ / (24 * 60 * 60), 1);
-    const username = Util.getTestString('User-');
+    const username = Util.getTestString('Sanction-user-');
     const password = Util.getTestString();
     let creationTime;
     browser.call(async () => {
       await Api.createAccount(bot, username, password);
-      creationTime = new Date().getTime();
     });
 
     UserLoginPage.login(username, password);
@@ -69,35 +68,24 @@ describe('Special:Sanctions', () => {
         SanctionsPage.reasonsDisabledParticipation.getText()
       )
     );
+    SanctionsPage.open();
+    SanctionsPage.waitUntilUserIsNotNew();
 
+    // Do edit
     browser.call(async () => {
       const user = await Api.bot(username, password);
-      await user.edit(
-        Util.getTestString('Sanctions-edit-'),
-        Util.getTestString()
-      );
+      await user.edit('Sanctions-dummy-edit', Util.getTestString());
     });
-    const spentSeconds = new Date().getTime() - creationTime;
-    if (spentSeconds < 5000) {
-      SanctionsPage.open();
-      const text = SanctionsPage.reasonsDisabledParticipation.getText();
-      assert.ok(
-        /sanctions-reason-unsatisfying-verification-period/.test(text),
-        'reject for creation time'
-      );
 
-      // Wait
-      browser.pause(5000 - spentSeconds);
-    }
     SanctionsPage.open();
     const text = SanctionsPage.reasonsDisabledParticipation.getText();
     assert.ok(
       !/sanctions-reason-unsatisfying-verification-period/.test(text),
-      'does not prevent for creation time'
+      'There should be no warnings about the creation time'
     );
     assert.ok(
       !/sanctions-reason-unsatisfying-verification-edits/.test(text),
-      'does not prevent for edit count'
+      'There should be no warnings about the edit count'
     );
   });
 
