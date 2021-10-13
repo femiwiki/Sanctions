@@ -53,20 +53,23 @@ describe('Special:Sanctions', () => {
   });
 
   it('should hide and show the form as the conditions change', () => {
-    Config.setVerifications(5 /* seconds */ / (24 * 60 * 60), 1);
+    Config.setVerifications(10 /* seconds */ / (24 * 60 * 60), 1);
     const username = Util.getTestString('Sanction-user-');
     const password = Util.getTestString();
-    let creationTime;
     browser.call(async () => {
       await Api.createAccount(bot, username, password);
     });
 
     UserLoginPage.login(username, password);
     SanctionsPage.open();
+    let warnings = SanctionsPage.reasonsDisabledParticipation.getText();
     assert.ok(
-      /\(sanctions-reason-unsatisfying-verification-edits: .+, 0, 1\)/.test(
-        SanctionsPage.reasonsDisabledParticipation.getText()
-      )
+      /sanctions-reason-unsatisfying-verification-period/.test(warnings),
+      'There should be a warning about the creation time. ' + warnings
+    );
+    assert.ok(
+      /sanctions-reason-unsatisfying-verification-edits/.test(warnings),
+      'There should be a warning about the edit count. ' + warnings
     );
     SanctionsPage.open();
     SanctionsPage.waitUntilUserIsNotNew();
@@ -78,14 +81,10 @@ describe('Special:Sanctions', () => {
     });
 
     SanctionsPage.open();
-    const text = SanctionsPage.reasonsDisabledParticipation.getText();
-    assert.ok(
-      !/sanctions-reason-unsatisfying-verification-period/.test(text),
-      'There should be no warnings about the creation time'
-    );
-    assert.ok(
-      !/sanctions-reason-unsatisfying-verification-edits/.test(text),
-      'There should be no warnings about the edit count'
+    assert.strictEqual(
+      '',
+      SanctionsPage.reasonsDisabledParticipation.getText(),
+      'There should be no warnings'
     );
   });
 
