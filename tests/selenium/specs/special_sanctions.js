@@ -14,7 +14,7 @@ describe('Special:Sanctions', () => {
     bot = await Api.bot();
   });
 
-  after(() => {
+  afterEach(() => {
     SanctionsPage.open();
     assert.strictEqual(
       '(sanctions-empty-now)',
