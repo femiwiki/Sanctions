@@ -16,7 +16,10 @@ describe('Special:Sanctions', () => {
 
   after(async () => {
     await SanctionsPage.open();
-    assert.strictEqual('(sanctions-empty-now)', SanctionsPage.sanctions.getText());
+    assert.strictEqual(
+      '(sanctions-empty-now)',
+      SanctionsPage.sanctions.getText()
+    );
   });
 
   describe('should show', () => {

@@ -22,7 +22,10 @@ describe('Sanction', () => {
 
   after(async () => {
     await SanctionsPage.open();
-    assert.strictEqual('(sanctions-empty-now)', SanctionsPage.sanctions.getText());
+    assert.strictEqual(
+      '(sanctions-empty-now)',
+      SanctionsPage.sanctions.getText()
+    );
   });
 
   it('should be canceled by the author', () => {
