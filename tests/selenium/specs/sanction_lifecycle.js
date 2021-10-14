@@ -44,7 +44,7 @@ describe('Sanction', () => {
   it('should be canceled by the author', () => {
     UserLoginPage.login(browser.config.mwUser, browser.config.mwPwd);
     SanctionsPage.open();
-    SanctionsPage.submit(target);
+    SanctionsPage.submit(targetName);
 
     // For some reason, clicking without refreshing fails.
     // TODO Investment the cause.
