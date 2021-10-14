@@ -14,6 +14,11 @@ describe('Special:Sanctions', () => {
     bot = await Api.bot();
   });
 
+  after(async () => {
+    await SanctionsPage.open();
+    assert.strictEqual('(sanctions-empty-now)', SanctionsPage.sanctions.getText());
+  });
+
   describe('should show', () => {
     it('an anonymous user not-logged-in warning', () => {
       // logout
