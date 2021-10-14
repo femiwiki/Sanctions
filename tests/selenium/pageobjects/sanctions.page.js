@@ -63,7 +63,7 @@ class SanctionsPage extends Page {
   }
 
   submit(target, isForInsultingName = false) {
-	this.target.waitForDisplayed();
+    this.target.waitForDisplayed();
     this.target.setValue(target);
     if (isForInsultingName) {
       this.forInsultingName.click();
