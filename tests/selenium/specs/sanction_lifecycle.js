@@ -20,8 +20,8 @@ describe('Sanction', () => {
     await Api.createAccount(bot, target, Util.getTestString());
   });
 
-  after(async () => {
-    await SanctionsPage.open();
+  after(() => {
+    SanctionsPage.open();
     assert.strictEqual(
       '(sanctions-empty-now)',
       SanctionsPage.sanctions.getText()
