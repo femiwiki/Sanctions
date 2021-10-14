@@ -17,6 +17,13 @@ class Config {
     });
   }
 
+  set votingPeriod(period) {
+    browser.call(async () => {
+      const bot = await Api.bot();
+      await bot.edit('MediaWiki:sanctions-voting-period', period);
+    });
+  }
+
   set discussionPage(name) {
     browser.call(async () => {
       const bot = await Api.bot();

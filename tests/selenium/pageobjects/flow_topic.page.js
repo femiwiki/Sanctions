@@ -1,5 +1,6 @@
 'use strict';
 const Page = require('wdio-mediawiki/Page');
+const Api = require('wdio-mediawiki/Api');
 
 class FlowTopic extends Page {
   get replyButton() {

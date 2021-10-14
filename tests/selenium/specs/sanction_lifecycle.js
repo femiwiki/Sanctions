@@ -1,37 +1,50 @@
 'use strict';
 
 const assert = require('assert');
-const SanctionsPage = require('../pageobjects/sanctions.page');
-const Sanction = require('../sanction');
-const FlowTopic = require('../pageobjects/flow_topic.page');
+const Page = require('wdio-mediawiki/Page');
 const UserLoginPage = require('wdio-mediawiki/LoginPage');
 const Api = require('wdio-mediawiki/Api');
 const Util = require('wdio-mediawiki/Util');
+const SanctionsPage = require('../pageobjects/sanctions.page');
+const Sanction = require('../sanction');
+const FlowTopic = require('../pageobjects/flow_topic.page');
+const FlowApi = require('../flow_api');
 const Config = require('../config');
 
 describe('Sanction', () => {
-  let target;
+  let targetName;
+  const voters = [];
   let bot;
 
   before(async () => {
-    Config.setVerifications(0, 0);
     bot = await Api.bot();
-    target = Util.getTestString('Sanction-target-');
-    await Api.createAccount(bot, target, Util.getTestString());
+    Config.setVerifications(0, 0);
+    Config.votingPeriod = 10 /* seconds */ / (24 * 60 * 60);
+    targetName = Util.getTestString('Sanction-target-');
+    await Api.createAccount(bot, targetName, Util.getTestString());
+
+    // Create voter accounts
+    for (let count = 0; count < 3; count++) {
+      const username = Util.getTestString(`Sanction-voter-${count}-`);
+      const password = Util.getTestString();
+      Api.createAccount(bot, username, password);
+      voters.push(await Api.bot(username, password));
+    }
   });
 
-  after(() => {
+  afterEach(() => {
     SanctionsPage.open();
     assert.strictEqual(
       '(sanctions-empty-now)',
       SanctionsPage.sanctions.getText()
     );
+    Api.unblockUser(bot, targetName);
   });
 
   it('should be canceled by the author', () => {
     UserLoginPage.login(browser.config.mwUser, browser.config.mwPwd);
     SanctionsPage.open();
-    SanctionsPage.submit(target);
+    SanctionsPage.submit(targetName);
 
     // For some reason, clicking without refreshing fails.
     // TODO Investment the cause.
@@ -56,25 +69,10 @@ describe('Sanction', () => {
   });
 
   it('should be rejected if three users object', () => {
-    const uuid = Sanction.createRandom(target);
+    const uuid = Sanction.createRandom(targetName);
 
     for (let count = 0; count < 3; count++) {
-      const username = Util.getTestString('Sanction-voter-');
-      const password = Util.getTestString();
-
-      browser.call(async () => {
-        await Api.createAccount(bot, username, password);
-        const voter = await Api.bot(username, password);
-        await voter.request({
-          action: 'flow',
-          submodule: 'reply',
-          page: `Topic:${uuid}`,
-          repreplyTo: uuid,
-          repcontent: '{{Oppose}}',
-          repformat: 'wikitext',
-          token: voter.editToken,
-        });
-      });
+      FlowApi.reply('{{Oppose}}', uuid, voters[count]);
     }
 
     browser.refresh();
@@ -87,7 +85,39 @@ describe('Sanction', () => {
       FlowTopic.topicSummary.getText()
     );
     SanctionsPage.open();
-    SanctionsPage.executeButton.waitForDisplayed();
+    assert.ok(SanctionsPage.executeButton.isExisting());
     SanctionsPage.executeButton.click();
+  });
+
+  it('should be passed if three users support before expired', () => {
+    // Create a sanction
+    const uuid = Sanction.createRandom(targetName);
+    const created = new Date().getTime();
+
+    for (let count = 0; count < 3; count++) {
+      FlowApi.reply('{{Support}}', uuid, voters[count]);
+    }
+
+    browser.refresh();
+    // Wait for topic summary is updated by the bot.
+    browser.pause(1000);
+
+    SanctionsPage.open();
+    SanctionsPage.getSanctionLink(null, true).click();
+    assert.ok(
+      FlowTopic.topicSummary
+        .getText()
+        .includes('Status: Passed to block 1 day(s) (prediction)')
+    );
+
+    const spentTime = new Date().getTime() - created;
+    browser.pause(10000 - spentTime);
+
+    SanctionsPage.open();
+    assert.ok(SanctionsPage.executeButton.isExisting());
+    SanctionsPage.executeButton.click();
+
+    new Page().openTitle(`User:${targetName}`);
+    assert.ok($('.warningbox').getText().includes('Sanction passed.'));
   });
 });
