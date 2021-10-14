@@ -20,6 +20,14 @@ describe('Sanction', () => {
     await Api.createAccount(bot, target, Util.getTestString());
   });
 
+  after(() => {
+    SanctionsPage.open();
+    assert.strictEqual(
+      '(sanctions-empty-now)',
+      SanctionsPage.sanctions.getText()
+    );
+  });
+
   it('should be canceled by the author', () => {
     UserLoginPage.login(browser.config.mwUser, browser.config.mwPwd);
     SanctionsPage.open();
@@ -72,12 +80,12 @@ describe('Sanction', () => {
     browser.refresh();
     // Wait for topic summary is updated by the bot.
     browser.pause(1000);
-    browser.refresh();
-    // TODO enable this assertion. There is a bug on topic summary.
-    // assert.strictEqual(
-    //   'Status: Immediately rejected (Rejected by first three participants.)',
-    //   FlowTopic.topicSummary.getText()
-    // );
+
+    SanctionsPage.getSanctionLink(null, true).click();
+    assert.strictEqual(
+      'Status: Immediately rejected (Rejected by first three participants.)',
+      FlowTopic.topicSummary.getText()
+    );
     SanctionsPage.open();
     SanctionsPage.executeButton.waitForDisplayed();
     SanctionsPage.executeButton.click();
