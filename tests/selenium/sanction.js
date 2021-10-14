@@ -10,6 +10,12 @@ class Sanction {
     UserLoginPage.login(browser.config.mwUser, browser.config.mwPwd);
     SanctionsPage.open();
     SanctionsPage.submit(target);
+
+    let uuid = $('.sanction-execute-result a').getText();
+    if (uuid.includes(':')) {
+      uuid = uuid.split(':')[1];
+    }
+    return uuid.toLowerCase();
   }
 }
 

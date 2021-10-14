@@ -48,18 +48,25 @@ describe('Sanction', () => {
   });
 
   it('should be rejected if three users object', () => {
-    Sanction.createRandom(target);
+    const uuid = Sanction.createRandom(target);
+
     for (let count = 0; count < 3; count++) {
       const username = Util.getTestString('Sanction-voter-');
       const password = Util.getTestString();
 
       browser.call(async () => {
         await Api.createAccount(bot, username, password);
+        const voter = await Api.bot(username, password);
+        await voter.request({
+          action: 'flow',
+          submodule: 'reply',
+          page: `Topic:${uuid}`,
+          repreplyTo: uuid,
+          repcontent: '{{Oppose}}',
+          repformat: 'wikitext',
+          token: voter.editToken,
+        });
       });
-      UserLoginPage.login(username, password);
-      SanctionsPage.open();
-      SanctionsPage.getSanctionLink(false).click();
-      FlowTopic.reply('{{Oppose}}');
     }
 
     browser.refresh();
