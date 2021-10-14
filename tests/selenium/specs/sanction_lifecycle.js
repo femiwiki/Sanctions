@@ -2,6 +2,7 @@
 
 const assert = require('assert');
 const Page = require('wdio-mediawiki/Page');
+const UserLoginPage = require('wdio-mediawiki/LoginPage');
 const Api = require('wdio-mediawiki/Api');
 const Util = require('wdio-mediawiki/Util');
 const SanctionsPage = require('../pageobjects/sanctions.page');
