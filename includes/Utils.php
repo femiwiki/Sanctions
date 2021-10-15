@@ -65,7 +65,7 @@ class Utils {
 			}
 		}
 
-		$db = wfGetDB( DB_PRIMARY );
+		$db = wfGetDB( DB_REPLICA );
 
 		// There have been more than three contribution histories within the last 20 days (currently
 		// active)
