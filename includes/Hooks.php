@@ -154,17 +154,15 @@ class Hooks {
 	 */
 	public static function onFlowAddModules( OutputPage $out ) {
 		$title = $out->getTitle();
-		// Special:Sanctions
-		$specialSanctionTitle = SpecialPage::getTitleFor( 'Sanctions' );
-		// ProjectTalk:foobar
-		$discussionPageName = wfMessage( 'sanctions-discussion-page-name' )
-			->inContentLanguage()->text();
-
 		if ( $title == null ) {
 			return true;
 		}
 
-		// The Flow board for sanctions
+		$specialSanctionTitle = SpecialPage::getTitleFor( 'Sanctions' );
+		$discussionPageName = wfMessage( 'sanctions-discussion-page-name' )
+			->inContentLanguage()->text();
+
+		// The Flow board for sanctions.
 		if ( $title->equals( Title::newFromText( $discussionPageName ) ) ) {
 			// Flow does not support redirection, so implement it.
 			// See https://phabricator.wikimedia.org/T102300
@@ -179,7 +177,7 @@ class Hooks {
 			return true;
 		}
 
-		// Each Flow topic
+		// Each Flow topic.
 		$uuid = null;
 		try {
 			$uuid = UUID::create( strtolower( $title->getText() ) );
@@ -187,12 +185,12 @@ class Hooks {
 			return true;
 		}
 
-		// Do nothing when UUID is invalid
+		// Do nothing if the UUID is invalid.
 		if ( !$uuid ) {
 			return true;
 		}
 
-		// Do nothing when the topic is not about sanction
+		// Do nothing if the topic is not about sanction.
 		$sanction = Sanction::newFromUUID( $uuid );
 		if ( $sanction === false ) {
 			return true;
@@ -200,7 +198,7 @@ class Hooks {
 
 		$out->addModules( 'ext.sanctions.flow-topic' );
 
-		if ( !$sanction->isExpired() ) {
+		if ( !$sanction->isHandled() ) {
 			$sanction->checkNewVotes();
 		}
 		// else @todo mark as expired
