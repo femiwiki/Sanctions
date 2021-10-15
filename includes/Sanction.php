@@ -943,7 +943,7 @@ class Sanction {
 	 * @return Sanction|null
 	 */
 	public static function existingSanctionForInsultingNameOf( $user ) {
-		$db = wfGetDB( DB_PRIMARY );
+		$db = wfGetDB( DB_REPLICA );
 		$targetId = $user->getId();
 
 		$row = $db->selectRow(
@@ -962,7 +962,7 @@ class Sanction {
 	}
 
 	public static function checkAllSanctionNewVotes() {
-		$db = wfGetDB( DB_PRIMARY );
+		$db = wfGetDB( DB_REPLICA );
 
 		$sanctions = $db->select(
 			'sanctions',
@@ -1283,7 +1283,7 @@ class Sanction {
 	 * @return Sanction|bool
 	 */
 	public static function newFromVoteId( $vote ) {
-		$db = wfGetDB( DB_PRIMARY );
+		$db = wfGetDB( DB_REPLICA );
 
 		$sanctionId = $db->selectField(
 			'sanctions_vote',
