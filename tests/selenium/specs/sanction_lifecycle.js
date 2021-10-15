@@ -42,25 +42,21 @@ describe('Sanction', () => {
   });
 
   it('should be canceled by the author', () => {
-    UserLoginPage.login(browser.config.mwUser, browser.config.mwPwd);
-    SanctionsPage.open();
-    SanctionsPage.submit(targetName);
-
-    // For some reason, clicking without refreshing fails.
-    // TODO Investment the cause.
-    browser.refresh();
-
-    SanctionsPage.getSanctionLink(null, true).click();
+    const uuid = Sanction.create(targetName);
+    Sanction.open(uuid);
 
     FlowTopic.reply('{{Oppose}}');
 
+    browser.pause(1000);
+    browser.refresh();
+    // Wait for topic summary is updated by the bot.
+    browser.pause(1000);
     browser.refresh();
 
-    // TODO enable this assertion. There is a bug on topic summary.
-    // assert.strictEqual(
-    //   "Status: Rejected (Canceled by the sanction's author.)",
-    //   FlowTopic.topicSummary.getText()
-    // );
+    assert.strictEqual(
+      "Status: Rejected (Canceled by the sanction's author.)",
+      FlowTopic.topicSummary.getText()
+    );
 
     SanctionsPage.open();
     SanctionsPage.executeButton.waitForDisplayed();
@@ -68,56 +64,56 @@ describe('Sanction', () => {
     assert.ok(!SanctionsPage.executeButton.isExisting());
   });
 
-  it('should be rejected if three users object', () => {
-    const uuid = Sanction.createRandom(targetName);
+  //   it('should be rejected if three users object', () => {
+  //     const uuid = Sanction.create(targetName);
 
-    for (let count = 0; count < 3; count++) {
-      FlowApi.reply('{{Oppose}}', uuid, voters[count]);
-    }
+  //     for (let count = 0; count < 3; count++) {
+  //       FlowApi.reply('{{Oppose}}', uuid, voters[count]);
+  //     }
 
-    browser.refresh();
-    // Wait for topic summary is updated by the bot.
-    browser.pause(1000);
+  //     browser.refresh();
+  //     // Wait for topic summary is updated by the bot.
+  //     browser.pause(1000);
 
-    SanctionsPage.getSanctionLink(null, true).click();
-    assert.strictEqual(
-      'Status: Immediately rejected (Rejected by first three participants.)',
-      FlowTopic.topicSummary.getText()
-    );
-    SanctionsPage.open();
-    assert.ok(SanctionsPage.executeButton.isExisting());
-    SanctionsPage.executeButton.click();
-  });
+  //     SanctionsPage.sanctionLink.click();
+  //     assert.strictEqual(
+  //       'Status: Immediately rejected (Rejected by first three participants.)',
+  //       FlowTopic.topicSummary.getText()
+  //     );
+  //     SanctionsPage.open();
+  //     assert.ok(SanctionsPage.executeButton.isExisting());
+  //     SanctionsPage.executeButton.click();
+  //   });
 
-  it('should be passed if three users support before expired', () => {
-    // Create a sanction
-    const uuid = Sanction.createRandom(targetName);
-    const created = new Date().getTime();
+  //   it('should be passed if three users support before expired', () => {
+  //     // Create a sanction
+  //     const uuid = Sanction.create(targetName);
+  //     const created = new Date().getTime();
 
-    for (let count = 0; count < 3; count++) {
-      FlowApi.reply('{{Support}}', uuid, voters[count]);
-    }
+  //     for (let count = 0; count < 3; count++) {
+  //       FlowApi.reply('{{Support}}', uuid, voters[count]);
+  //     }
 
-    browser.refresh();
-    // Wait for topic summary is updated by the bot.
-    browser.pause(1000);
+  //     browser.refresh();
+  //     // Wait for topic summary is updated by the bot.
+  //     browser.pause(1000);
 
-    SanctionsPage.open();
-    SanctionsPage.getSanctionLink(null, true).click();
-    assert.ok(
-      FlowTopic.topicSummary
-        .getText()
-        .includes('Status: Passed to block 1 day(s) (prediction)')
-    );
+  //     SanctionsPage.open();
+  //     SanctionsPage.sanctionLink.click();
+  //     assert.ok(
+  //       FlowTopic.topicSummary
+  //         .getText()
+  //         .includes('Status: Passed to block 1 day(s) (prediction)')
+  //     );
 
-    const spentTime = new Date().getTime() - created;
-    browser.pause(10000 - spentTime);
+  //     const spentTime = new Date().getTime() - created;
+  //     browser.pause(10000 - spentTime);
 
-    SanctionsPage.open();
-    assert.ok(SanctionsPage.executeButton.isExisting());
-    SanctionsPage.executeButton.click();
+  //     SanctionsPage.open();
+  //     assert.ok(SanctionsPage.executeButton.isExisting());
+  //     SanctionsPage.executeButton.click();
 
-    new Page().openTitle(`User:${targetName}`);
-    assert.ok($('.warningbox').getText().includes('Sanction passed.'));
-  });
+  //     new Page().openTitle(`User:${targetName}`);
+  //     assert.ok($('.warningbox').getText().includes('Sanction passed.'));
+  //   });
 });

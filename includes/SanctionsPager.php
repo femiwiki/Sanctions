@@ -60,7 +60,6 @@ class SanctionsPager extends IndexPager {
 	 * @return array
 	 */
 	public function getQueryInfo() {
-		Sanction::checkAllSanctionNewVotes();
 		$subquery = $this->mDb->buildSelectSubquery(
 			'sanctions_vote',
 			[ 'stv_id', 'stv_topic' ],

@@ -69,6 +69,7 @@ class SpacialSanctions extends SpecialPage {
 
 		$data = [];
 
+		Sanction::checkAllSanctionNewVotes();
 		$pager = new SanctionsPager( $this->getContext(), (string)$this->mTargetName );
 		$pager->doQuery();
 		$data['html-body'] = $pager->getBody();

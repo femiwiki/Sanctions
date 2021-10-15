@@ -20,31 +20,8 @@ class SanctionsPage extends Page {
   get executeButton() {
     return $('.sanction-execute-button');
   }
-  getSanctionSelector(voted = null, mySanction = null) {
-    let classSelector = '.sanction';
-    let notClassSelector = '';
-
-    if (mySanction === true) {
-      classSelector += '.my-sanction';
-    }
-
-    if (voted === null) {
-      // nothing to do
-    } else if (voted) {
-      classSelector += '.voted';
-    } else {
-      notClassSelector += '.voted';
-    }
-
-    let selector = classSelector;
-    if (notClassSelector) {
-      selector += `:not(${notClassSelector})`;
-    }
-    return selector;
-  }
-  getSanctionLink(voted = null, mySanction = null) {
-    const selector = this.getSanctionSelector(voted, mySanction);
-    return $(`${selector} a.sanction-type`);
+  get sanctionLink() {
+    return $('.sanction a.sanction-type');
   }
 
   open(subpage) {

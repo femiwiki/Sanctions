@@ -18,6 +18,7 @@ class FlowTopic extends Page {
 
   reply(msg) {
     this.replyButton.waitForDisplayed();
+    this.replyButton.waitForClickable();
     this.replyButton.click();
     this.replyEditor.waitForDisplayed();
     this.replyEditor.setValue(msg);

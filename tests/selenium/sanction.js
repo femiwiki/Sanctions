@@ -1,11 +1,12 @@
 'use strict';
 
+const Page = require('wdio-mediawiki/Page');
+const UserLoginPage = require('wdio-mediawiki/LoginPage');
 const SanctionsPage = require('./pageobjects/sanctions.page');
 const Config = require('./config');
-const UserLoginPage = require('wdio-mediawiki/LoginPage');
 
 class Sanction {
-  createRandom(target) {
+  create(target) {
     Config.setVerifications(0, 0);
     UserLoginPage.loginAdmin();
     SanctionsPage.open();
@@ -18,6 +19,10 @@ class Sanction {
       uuid = uuid.split(':')[1];
     }
     return uuid.toLowerCase();
+  }
+
+  open(uuid) {
+    new Page().openTitle('Topic:' + uuid);
   }
 }
 
