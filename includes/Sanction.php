@@ -725,7 +725,7 @@ class Sanction {
 			return false;
 		}
 
-		$this->loadFromRow( $row );
+		return $this->loadFromRow( $row );
 	}
 
 	/**
@@ -740,28 +740,40 @@ class Sanction {
 
 	/**
 	 * @param stdClass $row
+	 * @return bool
 	 */
 	protected function loadFromRow( $row ) {
 		if ( !is_object( $row ) ) {
 			throw new \InvalidArgumentException( '$row must be an object' );
 		}
 
-		try {
+		if ( isset( $row->st_id ) ) {
 			$this->mId = $row->st_id;
+		}
+		if ( isset( $row->st_author ) ) {
 			$this->mAuthor = User::newFromId( $row->st_author );
+		}
+		if ( isset( $row->st_topic ) ) {
 			$topicUUIDBinary = $row->st_topic;
 			$this->mTopic = UUID::create( $topicUUIDBinary );
-			$this->mTarget = User::newFromId( $row->st_target );
-			$this->mTargetOriginalName = $row->st_original_name;
-			$this->mExpiry = $row->st_expiry;
-			$this->mIsHandled = $row->st_handled;
-			$this->mIsEmergency = $row->st_emergency;
-		} catch ( \MWException $e ) {
-			if ( defined( 'MW_PHPUNIT_TEST' ) ) {
-				throw( $e );
-			}
-			// TODO
 		}
+		if ( isset( $row->st_target ) ) {
+			$this->mTarget = User::newFromId( $row->st_target );
+		}
+		if ( isset( $row->st_original_name ) ) {
+			$this->mTargetOriginalName = $row->st_original_name;
+		}
+		if ( isset( $row->st_expiry ) ) {
+			$this->mExpiry = $row->st_expiry;
+		}
+		if ( isset( $row->st_handled ) ) {
+			$this->mIsHandled = $row->st_handled;
+		}
+		if ( isset( $row->st_emergency ) ) {
+			$this->mIsEmergency = $row->st_emergency;
+		}
+
+		return true;
 	}
 
 	/**

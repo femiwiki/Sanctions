@@ -71,6 +71,7 @@ class SanctionsPager extends IndexPager {
 			],
 			'fields' => [
 				'st_id',
+				'st_author',
 				'my_sanction' => 'st_author = ' . $this->getUser()->getId(),
 				'st_expiry',
 				'not_expired' => 'st_expiry > ' . wfTimestamp( TS_MW ),
@@ -124,7 +125,7 @@ class SanctionsPager extends IndexPager {
 		$isForInsultingName = $sanction->isForInsultingName();
 
 		$data = [
-			'class' => implode( '.', $this->getClasses( $row, $this->getUser() ) ),
+			'class' => implode( ' ', $this->getClasses( $row, $this->getUser() ) ),
 			'is-expired' => $expired,
 			'is-handled' => $handled,
 			'can-vote' => $this->getUserHasVoteRight(),
@@ -218,7 +219,7 @@ class SanctionsPager extends IndexPager {
 	}
 
 	/**
-	 * @param stdClass $row
+	 * @param array|stdClass $row
 	 * @param User $visitor
 	 * @return array
 	 */
