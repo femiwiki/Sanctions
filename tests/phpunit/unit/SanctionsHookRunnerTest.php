@@ -2,15 +2,15 @@
 
 namespace Flow\Tests;
 
-use MediaWiki\Extension\Sanctions\Hooks\Sanctions;
+use MediaWiki\Extension\Sanctions\Hooks\SanctionsHookRunner;
 use MediaWiki\Tests\HookContainer\HookRunnerTestBase;
 
 /**
- * @covers \MediaWiki\Extension\Sanctions\Hooks\Sanctions
+ * @covers \MediaWiki\Extension\Sanctions\Hooks\SanctionsHookRunner
  */
 class SanctionsHookRunnerTest extends HookRunnerTestBase {
 
 	public function provideHookRunners() {
-		yield Sanctions::class => [ Sanctions::class ];
+		yield SanctionsHookRunner::class => [ SanctionsHookRunner::class ];
 	}
 }
