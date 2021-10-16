@@ -13,12 +13,12 @@ class ReplyUtilsTest extends MediaWikiIntegrationTestCase {
 			'Agreement with days should be caught' => [
 				10,
 				'<span class="sanction-vote-agree-period">10</span>',
-				'html,'
+				'html',
 			],
 			'Agreement with days in wikitext should be caught' => [
 				10,
 				'{{Support|10}}',
-				'wikitext,'
+				'wikitext',
 			],
 		];
 	}

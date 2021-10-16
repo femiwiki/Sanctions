@@ -19,11 +19,11 @@ class ReplyUtils {
 		$countedText = $wgFlowContentFormat == 'html'
 			? '"sanction-vote-counted"'
 			: '<!--sanction-vote-counted-->';
-		if ( strpos( $content, $countedText ) ) {
+		if ( strpos( $content, $countedText ) !== false ) {
 			return null;
 		}
 
-		if ( $wgFlowContentFormat === 'html' ) {
+		if ( $wgFlowContentFormat == 'html' ) {
 			$agreementWithDayRegex = '/<span class="sanction-vote-agree-period">(\d+)<\/span>/';
 			$agreementRegex = '"sanction-vote-agree"';
 			$disagreementRegex = '"sanction-vote-disagree"';
@@ -36,14 +36,14 @@ class ReplyUtils {
 			$disagreementRegex = '{{' . $disagreementRegex . '}}';
 		}
 
-		if ( strpos( $content, $disagreementRegex ) ) {
+		if ( strpos( $content, $disagreementRegex ) !== false ) {
 			return 0;
 		}
-		if ( preg_match( $agreementWithDayRegex, $content, $matches ) != 0 && count( $matches ) > 0 ) {
+		if ( preg_match( $agreementWithDayRegex, $content, $matches ) == 1 ) {
 			return (int)$matches[1];
 		}
 		// If the affirmative opinion is without explicit length, it would be considered as a day.
-		if ( strpos( $content, $agreementRegex ) ) {
+		if ( strpos( $content, $agreementRegex ) !== false ) {
 			return 1;
 		}
 		return null;
