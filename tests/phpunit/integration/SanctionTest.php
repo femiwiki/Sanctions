@@ -6,9 +6,12 @@ use MediaWiki\Extension\Sanctions\Sanction;
 use MediaWikiIntegrationTestCase;
 
 /**
- * @covers \MediaWiki\Extension\Sanctions\Sanction::getBot
+ * @covers \MediaWiki\Extension\Sanctions\Sanction
  */
 class SanctionTest extends MediaWikiIntegrationTestCase {
+	/**
+	 * @covers \MediaWiki\Extension\Sanctions\Sanction::getBot
+	 */
 	public function testGetBot() {
 		$bot = Sanction::getBot();
 		$this->assertTrue( $bot->isSystemUser() );

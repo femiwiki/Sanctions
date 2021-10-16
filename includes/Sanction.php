@@ -10,7 +10,6 @@ use Flow\Import\EnableFlow\EnableFlowWikitextConversionStrategy;
 use Flow\Import\SourceStore\NullImportSourceStore;
 use Flow\Model\UUID;
 use Hooks;
-use Html;
 use ManualLogEntry;
 use MediaWiki\Block\CompositeBlock;
 use MediaWiki\Block\DatabaseBlock;
@@ -981,7 +980,6 @@ class Sanction {
 	 * @return bool
 	 */
 	public function checkNewVotes() {
-		global $wgFlowContentFormat;
 		// Do not check the closed sanction.
 		if ( $this->isExpired() ) {
 			return false;
@@ -1046,53 +1044,12 @@ class Sanction {
 			$userId = $row->rev_user_id;
 			$content = $row->rev_content;
 
-			// Filter out posts does not includes vote. We use tags to identify a vote.
-			$period = 0;
-			if ( $wgFlowContentFormat === 'html' ) {
-				$agreementWithDayRegex = '/<span class="sanction-vote-agree-period">(\d+)<\/span>/';
-				$agreementRegex = '"sanction-vote-agree"';
-				$disagreementRegex = '"sanction-vote-disagree"';
-				$countedText = '"sanction-vote-counted"';
-			} else {
-				$agreementTemplateTitle = wfMessage( 'sanctions-agree-template-title' )->inContentLanguage()->text();
-				$agreementWithDayRegex = "/\{\{${agreementTemplateTitle}\|(\d+)\}\}/";
-				$agreementRegex = '{{' . $agreementTemplateTitle . '}}';
-				$disagreementRegex = wfMessage( 'sanctions-disagree-template-title' )->inContentLanguage()->text();
-				$disagreementRegex = '{{' . $disagreementRegex . '}}';
-				$countedText = '<!--sanction-vote-counted-->';
-			}
-			$hasPeriod = preg_match( $agreementWithDayRegex, $content, $matches );
-			if ( strpos( $content, $countedText ) !== false ) {
-				continue;
-			} elseif ( $hasPeriod != 0 && count( $matches ) > 0 ) {
-				$period = (int)$matches[1];
-			} elseif ( strpos( $content, $agreementRegex ) !== false ) {
-				// If the affirmative opinion is not dated, it will be processed as a day.
-				$period = 1;
-			} elseif ( strpos( $content, $disagreementRegex ) !== false ) {
-				$period = 0;
-			} else {
+			$period = ReplyUtils::checkNewVote( $content, $newContent );
+			if ( $period === null ) {
 				continue;
 			}
 
-			// Append "is counted" mark
-			if ( $wgFlowContentFormat === 'html' ) {
-				$newContent = $row->rev_content . Html::rawelement(
-					'span',
-					[ 'class' => 'sanction-vote-counted' ]
-				);
-			} else {
-				$newContent = $row->rev_content . '<!--sanction-vote-counted-->';
-			}
-			$writableDb->update(
-				'flow_revision',
-				[
-					'rev_content' => $newContent
-				],
-				[
-					'rev_id' => $row->rev_id
-				]
-			);
+			ReplyUtils::appendCheckedMark( $writableDb, $content, $row->rev_id );
 
 			// $reasons could be an empty array when vote is accepted
 			$reasons = [];
