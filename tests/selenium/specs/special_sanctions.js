@@ -1,17 +1,28 @@
 'use strict';
 
+const Api = require('wdio-mediawiki/Api');
 const assert = require('assert');
+const Config = require('../config');
+const FlowApi = require('../flow_api');
+const Sanction = require('../sanction');
 const SanctionsPage = require('../pageobjects/sanctions.page');
 const UserLoginPage = require('wdio-mediawiki/LoginPage');
-const Api = require('wdio-mediawiki/Api');
 const Util = require('wdio-mediawiki/Util');
-const Config = require('../config');
 
 describe('Special:Sanctions', () => {
+  const voters = [];
   let bot;
 
   before(async () => {
     bot = await Api.bot();
+
+    // Create voter accounts
+    for (let count = 0; count < 2; count++) {
+      const username = Util.getTestString(`Sanction-voter${count}-`);
+      const password = Util.getTestString();
+      await Api.createAccount(bot, username, password);
+      voters.push(await Api.bot(username, password));
+    }
   });
 
   afterEach(() => {
@@ -37,7 +48,7 @@ describe('Special:Sanctions', () => {
 
     it('a newly registered user that you are too new', () => {
       Config.setVerifications(10, 0);
-      UserLoginPage.login(browser.config.mwUser, browser.config.mwPwd);
+      UserLoginPage.loginAdmin();
       SanctionsPage.open();
 
       assert.ok(
@@ -50,7 +61,7 @@ describe('Special:Sanctions', () => {
     it('a user does not have enough edit count the edit count', () => {
       Config.setVerifications(0, 10);
 
-      UserLoginPage.login(browser.config.mwUser, browser.config.mwPwd);
+      UserLoginPage.loginAdmin();
       SanctionsPage.open();
 
       assert.strictEqual(
@@ -99,9 +110,44 @@ describe('Special:Sanctions', () => {
   it('should not show any warning user matches all conditions', () => {
     Config.setVerifications(0, 0);
 
-    UserLoginPage.login(browser.config.mwUser, browser.config.mwPwd);
+    UserLoginPage.loginAdmin();
     SanctionsPage.open();
 
     assert.ok(!SanctionsPage.reasonsDisabledParticipation.getText());
+  });
+
+  it('should remove voted tag on a sanction', () => {
+    Config.setVerifications(0, 0);
+    Config.votingPeriod = 1;
+
+    const username = Util.getTestString('Sanction-other-');
+    const password = Util.getTestString();
+    Api.createAccount(bot, username, password);
+    const uuid = Sanction.create(null, username, password);
+
+    UserLoginPage.loginAdmin();
+    SanctionsPage.open();
+
+    const voted = SanctionsPage.votedSanctions.length;
+
+    FlowApi.reply('{{Oppose}}', uuid, bot);
+
+    SanctionsPage.open();
+    browser.refresh();
+
+    const newVoted = SanctionsPage.votedSanctions.length;
+
+    assert.equal(1, newVoted - voted);
+
+    browser.call(async () => {
+      for (let count = 0; count < 2; count++) {
+        FlowApi.reply('{{Oppose}}', uuid, voters[count]);
+      }
+    });
+
+    SanctionsPage.open();
+    browser.refresh();
+    SanctionsPage.executeButton.waitForDisplayed();
+    SanctionsPage.executeButton.click();
   });
 });

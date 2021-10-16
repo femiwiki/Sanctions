@@ -228,9 +228,8 @@ class SanctionsPager extends IndexPager {
 		$class = [ 'sanction' ];
 		if ( $sanction->getAuthor()->equals( $visitor ) ) {
 			$class[] = 'my-sanction';
-			if ( Utils::hasVoteRight( $visitor ) && isset( $row->voted_from ) ) {
-				$class[] = 'voted';
-			}
+		} elseif ( Utils::hasVoteRight( $visitor ) ) {
+			$class[] = isset( $row->voted_from ) ? 'voted' : 'not-voted';
 		}
 
 		if ( $sanction->isExpired() ) {
