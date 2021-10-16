@@ -4,11 +4,17 @@ const Page = require('wdio-mediawiki/Page');
 const UserLoginPage = require('wdio-mediawiki/LoginPage');
 const SanctionsPage = require('./pageobjects/sanctions.page');
 const Config = require('./config');
+const Api = require('wdio-mediawiki/Api');
 
 class Sanction {
-  create(target) {
+  create(target = null, username = null, password = null) {
+    target = target ? target : browser.config.mwUser;
     Config.setVerifications(0, 0);
-    UserLoginPage.loginAdmin();
+    if (username && password) {
+      UserLoginPage.login(username, password);
+    } else {
+      UserLoginPage.loginAdmin();
+    }
     SanctionsPage.open();
     SanctionsPage.submit(target);
 

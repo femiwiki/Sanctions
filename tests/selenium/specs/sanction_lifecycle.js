@@ -1,15 +1,14 @@
 'use strict';
 
-const assert = require('assert');
-const Page = require('wdio-mediawiki/Page');
-const UserLoginPage = require('wdio-mediawiki/LoginPage');
 const Api = require('wdio-mediawiki/Api');
-const Util = require('wdio-mediawiki/Util');
-const SanctionsPage = require('../pageobjects/sanctions.page');
-const Sanction = require('../sanction');
-const FlowTopic = require('../pageobjects/flow_topic.page');
-const FlowApi = require('../flow_api');
+const assert = require('assert');
 const Config = require('../config');
+const FlowApi = require('../flow_api');
+const FlowTopic = require('../pageobjects/flow_topic.page');
+const Page = require('wdio-mediawiki/Page');
+const Sanction = require('../sanction');
+const SanctionsPage = require('../pageobjects/sanctions.page');
+const Util = require('wdio-mediawiki/Util');
 
 describe('Sanction', () => {
   let targetName;
@@ -25,9 +24,9 @@ describe('Sanction', () => {
 
     // Create voter accounts
     for (let count = 0; count < 3; count++) {
-      const username = Util.getTestString(`Sanction-voter-${count}-`);
+      const username = Util.getTestString(`Sanction-voter${count}-`);
       const password = Util.getTestString();
-      Api.createAccount(bot, username, password);
+      await Api.createAccount(bot, username, password);
       voters.push(await Api.bot(username, password));
     }
   });
@@ -64,56 +63,57 @@ describe('Sanction', () => {
     assert.ok(!SanctionsPage.executeButton.isExisting());
   });
 
-  //   it('should be rejected if three users object', () => {
-  //     const uuid = Sanction.create(targetName);
+  it('should be rejected if three users object', () => {
+    const uuid = Sanction.create(targetName);
 
-  //     for (let count = 0; count < 3; count++) {
-  //       FlowApi.reply('{{Oppose}}', uuid, voters[count]);
-  //     }
+    for (let count = 0; count < 3; count++) {
+      FlowApi.reply('{{Oppose}}', uuid, voters[count]);
+    }
 
-  //     browser.refresh();
-  //     // Wait for topic summary is updated by the bot.
-  //     browser.pause(1000);
+    browser.refresh();
+    // Wait for topic summary is updated by the bot.
+    browser.pause(1000);
 
-  //     SanctionsPage.sanctionLink.click();
-  //     assert.strictEqual(
-  //       'Status: Immediately rejected (Rejected by first three participants.)',
-  //       FlowTopic.topicSummary.getText()
-  //     );
-  //     SanctionsPage.open();
-  //     assert.ok(SanctionsPage.executeButton.isExisting());
-  //     SanctionsPage.executeButton.click();
-  //   });
+    SanctionsPage.sanctionLink.click();
+    assert.strictEqual(
+      'Status: Immediately rejected (Rejected by first three participants.)',
+      FlowTopic.topicSummary.getText()
+    );
+    SanctionsPage.open();
+    assert.ok(SanctionsPage.executeButton.isExisting());
+    SanctionsPage.executeButton.click();
+  });
 
-  //   it('should be passed if three users support before expired', () => {
-  //     // Create a sanction
-  //     const uuid = Sanction.create(targetName);
-  //     const created = new Date().getTime();
+  it('should be passed if three users support before expired', () => {
+    // Create a sanction
+    const uuid = Sanction.create(targetName);
+    const created = new Date().getTime();
 
-  //     for (let count = 0; count < 3; count++) {
-  //       FlowApi.reply('{{Support}}', uuid, voters[count]);
-  //     }
+    for (let count = 0; count < 3; count++) {
+      FlowApi.reply('{{Support}}', uuid, voters[count]);
+    }
 
-  //     browser.refresh();
-  //     // Wait for topic summary is updated by the bot.
-  //     browser.pause(1000);
+    browser.refresh();
+    // Wait for topic summary is updated by the bot.
+    browser.pause(1000);
 
-  //     SanctionsPage.open();
-  //     SanctionsPage.sanctionLink.click();
-  //     assert.ok(
-  //       FlowTopic.topicSummary
-  //         .getText()
-  //         .includes('Status: Passed to block 1 day(s) (prediction)')
-  //     );
+    SanctionsPage.open();
+    SanctionsPage.sanctionLink.click();
+    assert.ok(
+      FlowTopic.topicSummary
+        .getText()
+        .includes('Status: Passed to block 1 day(s) (prediction)'),
+      FlowTopic.topicSummary.getText()
+    );
 
-  //     const spentTime = new Date().getTime() - created;
-  //     browser.pause(10000 - spentTime);
+    const spentTime = new Date().getTime() - created;
+    browser.pause(10000 - spentTime);
 
-  //     SanctionsPage.open();
-  //     assert.ok(SanctionsPage.executeButton.isExisting());
-  //     SanctionsPage.executeButton.click();
+    SanctionsPage.open();
+    assert.ok(SanctionsPage.executeButton.isExisting());
+    SanctionsPage.executeButton.click();
 
-  //     new Page().openTitle(`User:${targetName}`);
-  //     assert.ok($('.warningbox').getText().includes('Sanction passed.'));
-  //   });
+    new Page().openTitle(`User:${targetName}`);
+    assert.ok($('.warningbox').getText().includes('Sanction passed.'));
+  });
 });
