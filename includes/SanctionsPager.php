@@ -103,7 +103,7 @@ class SanctionsPager extends IndexPager {
 	protected function getStartBody() {
 		return Html::openElement(
 			'div',
-			[ 'class' => 'sanctions' ],
+			[ 'class' => 'sanctions' ]
 		);
 	}
 
