@@ -1273,11 +1273,11 @@ class Sanction {
 	 * Rename the given User.
 	 * This funcion includes some code that originally are in SpecialRenameuser.php
 	 *
-	 * @param String $oldName
-	 * @param String $newName
+	 * @param string $oldName
+	 * @param string $newName
 	 * @param User $target
 	 * @param User $renamer
-	 * @param String $reason
+	 * @param string $reason
 	 * @return bool
 	 */
 	protected static function doRename( $oldName, $newName, $target, $renamer, $reason ) {

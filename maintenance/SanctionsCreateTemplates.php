@@ -26,7 +26,7 @@ class SanctionsCreateTemplates extends LoggedUpdateMaintenance {
 	 */
 	protected function getTemplates() {
 		return [
-			'sanctions-agree-template-title' => function ( Title $title ) {
+			'sanctions-agree-template-title' => static function ( Title $title ) {
 				return "{{#if:{{{1|}}}|'''" .
 					wfMessage(
 						'sanctions-agree-with-day-template-body',
@@ -36,7 +36,7 @@ class SanctionsCreateTemplates extends LoggedUpdateMaintenance {
 					wfMessage( 'sanctions-agree-template-body' )->inContentLanguage()->plain() .
 					"'''}}";
 			},
-			'sanctions-disagree-template-title' => function ( Title $title ) {
+			'sanctions-disagree-template-title' => static function ( Title $title ) {
 				return "<span class=\"sanction-vote-disagree\"></span>'''" .
 				wfMessage( 'sanctions-disagree-template-body' )->inContentLanguage()->plain() .
 				"'''";
