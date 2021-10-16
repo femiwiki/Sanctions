@@ -102,7 +102,8 @@ describe('Sanction', () => {
     assert.ok(
       FlowTopic.topicSummary
         .getText()
-        .includes('Status: Passed to block 1 day(s) (prediction)')
+        .includes('Status: Passed to block 1 day(s) (prediction)'),
+      FlowTopic.topicSummary.getText()
     );
 
     const spentTime = new Date().getTime() - created;
