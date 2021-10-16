@@ -41,7 +41,7 @@ class Main implements
 		if ( $updater->getDB()->getType() == 'mysql' ) {
 			$updater->addExtensionUpdate(
 				[ 'addTable', 'sanctions',
-				"$dir/../sql/sanctions.tables.sql", true ]
+				"$dir/../../sql/sanctions.tables.sql", true ]
 			);
 		}
 		// @todo else
