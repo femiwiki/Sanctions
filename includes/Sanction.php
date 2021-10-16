@@ -9,10 +9,10 @@ use Flow\Import\Converter;
 use Flow\Import\EnableFlow\EnableFlowWikitextConversionStrategy;
 use Flow\Import\SourceStore\NullImportSourceStore;
 use Flow\Model\UUID;
-use Hooks;
 use ManualLogEntry;
 use MediaWiki\Block\CompositeBlock;
 use MediaWiki\Block\DatabaseBlock;
+use MediaWiki\Extension\Sanctions\Hooks\SanctionsHookRunner;
 use MediaWiki\MediaWikiServices;
 use MovePage;
 use MWTimestamp;
@@ -1312,11 +1312,10 @@ class Sanction {
 		}
 
 		// Give other affected extensions a chance to validate or abort
-		if ( !Hooks::run(
-			'RenameUserAbort',
-			[ $targetId, $oldName, $newName ]
-		)
-		) {
+		$hookRunner = new SanctionsHookRunner(
+			MediaWikiServices::getInstance()->getHookContainer()
+		);
+		if ( $hookRunner->onRenameUserAbort( $targetId, $oldName, $newName ) ) {
 			return false;
 		}
 

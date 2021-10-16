@@ -90,18 +90,23 @@
     "remoteExtPath": "Sanctions/modules"
   },
   "Hooks": {
-    "LoadExtensionSchemaUpdates": "MediaWiki\\Extension\\Sanctions\\Hooks::onLoadExtensionSchemaUpdates",
-    "AbortEmailNotification": "MediaWiki\\Extension\\Sanctions\\Hooks::onAbortEmailNotification",
-    "BeforeEchoEventInsert": "MediaWiki\\Extension\\Sanctions\\Hooks::onBeforeEchoEventInsert",
-    "BeforeCreateEchoEvent": "MediaWiki\\Extension\\Sanctions\\Hooks::onBeforeCreateEchoEvent",
-    "EmailConfirmed": "MediaWiki\\Extension\\Sanctions\\Hooks::onEmailConfirmed",
-    "ResourceLoaderGetConfigVars": "MediaWiki\\Extension\\Sanctions\\Hooks::onResourceLoaderGetConfigVars",
-    "UserToolLinksEdit": "MediaWiki\\Extension\\Sanctions\\Hooks::onUserToolLinksEdit",
-    "DiffTools": "MediaWiki\\Extension\\Sanctions\\Hooks::onDiffTools",
-    "HistoryTools": "MediaWiki\\Extension\\Sanctions\\Hooks::onHistoryTools",
-    "SidebarBeforeOutput": "MediaWiki\\Extension\\Sanctions\\Hooks::onSidebarBeforeOutput",
-    "ContributionsToolLinks": "MediaWiki\\Extension\\Sanctions\\Hooks::onContributionsToolLinks",
-    "FlowAddModules": "MediaWiki\\Extension\\Sanctions\\Hooks::onFlowAddModules"
+    "LoadExtensionSchemaUpdates": "main",
+    "AbortEmailNotification": "main",
+    "BeforeEchoEventInsert": "MediaWiki\\Extension\\Sanctions\\Hooks\\Main::onBeforeEchoEventInsert",
+    "BeforeCreateEchoEvent": "MediaWiki\\Extension\\Sanctions\\Hooks\\Main::onBeforeCreateEchoEvent",
+    "EmailConfirmed": "main",
+    "ResourceLoaderGetConfigVars": "main",
+    "UserToolLinksEdit": "main",
+    "DiffTools": "main",
+    "HistoryTools": "main",
+    "SidebarBeforeOutput": "main",
+    "ContributionsToolLinks": "main",
+    "FlowAddModules": "main"
+  },
+  "HookHandlers": {
+    "main": {
+      "class": "MediaWiki\\Extension\\Sanctions\\Hooks\\Main"
+    }
   },
   "SpecialPages": {
     "Sanctions": "MediaWiki\\Extension\\Sanctions\\SpacialSanctions"
@@ -117,7 +122,8 @@
     "SanctionsAlias": "Sanctions.alias.php"
   },
   "TestAutoloadNamespaces": {
-    "MediaWiki\\Extension\\Sanctions\\Tests\\Integration\\": "tests/phpunit/integration/"
+    "MediaWiki\\Extension\\Sanctions\\Tests\\Integration\\": "tests/phpunit/integration/",
+    "MediaWiki\\Extension\\Sanctions\\Tests\\Unit\\": "tests/phpunit/unit/"
   },
   "manifest_version": 1
 }

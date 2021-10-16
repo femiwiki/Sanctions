@@ -1,44 +1,52 @@
 <?php
 
-namespace MediaWiki\Extension\Sanctions;
+namespace MediaWiki\Extension\Sanctions\Hooks;
 
-use DatabaseUpdater;
+use Config;
 use EchoEvent;
 use Flow\Exception\InvalidInputException;
 use Flow\Model\UUID;
 use Linker;
+use MediaWiki\Extension\Sanctions\Sanction;
+use MediaWiki\Extension\Sanctions\Utils;
 use MediaWiki\MediaWikiServices;
 use MediaWiki\Revision\RevisionRecord;
 use MediaWiki\User\UserIdentity;
-use MWException;
 use OutputPage;
 use RequestContext;
 use SanctionsCreateTemplates;
-use Skin;
 use SpecialPage;
 use Title;
 use User;
 
-class Hooks {
+class Main implements
+	\MediaWiki\Diff\Hook\DiffToolsHook,
+	\MediaWiki\Hook\AbortEmailNotificationHook,
+	\MediaWiki\Hook\ContributionsToolLinksHook,
+	\MediaWiki\Hook\HistoryToolsHook,
+	\MediaWiki\Hook\SidebarBeforeOutputHook,
+	\MediaWiki\Hook\UserToolLinksEditHook,
+	\MediaWiki\Installer\Hook\LoadExtensionSchemaUpdatesHook,
+	\MediaWiki\ResourceLoader\Hook\ResourceLoaderGetConfigVarsHook,
+	\MediaWiki\User\Hook\EmailConfirmedHook
+	{
 	/**
 	 * Create tables in the database
 	 *
-	 * @param DatabaseUpdater|null $updater
-	 * @throws MWException
-	 * @return bool
+	 * @inheritDoc
 	 */
-	public static function onLoadExtensionSchemaUpdates( DatabaseUpdater $updater = null ) {
+	public function onLoadExtensionSchemaUpdates( $updater ) {
 		$dir = __DIR__;
 
 		if ( $updater->getDB()->getType() == 'mysql' ) {
 			$updater->addExtensionUpdate(
 				[ 'addTable', 'sanctions',
-				"$dir/../sql/sanctions.tables.sql", true ]
+				"$dir/../../sql/sanctions.tables.sql", true ]
 			);
 		}
 		// @todo else
 
-		require_once "$dir/../maintenance/SanctionsCreateTemplates.php";
+		require_once "$dir/../../maintenance/SanctionsCreateTemplates.php";
 		$updater->addPostDatabaseUpdateMaintenance( SanctionsCreateTemplates::class );
 
 		return true;
@@ -53,11 +61,9 @@ class Hooks {
 	 * Copied from
 	 * https://github.com/wikimedia/mediawiki-extensions-Flow/blob/de0b9ad/Hooks.php#L963-L996
 	 *
-	 * @param User $editor
-	 * @param Title $title
-	 * @return bool false to abort email notification
+	 * @inheritDoc
 	 */
-	public static function onAbortEmailNotification( User $editor, Title $title ) {
+	public function onAbortEmailNotification( $editor, $title, $rc ) {
 		if ( $title->getContentModel() === CONTENT_MODEL_FLOW_BOARD ) {
 			// Since we are aborting the notification we need to manually update the watchlist
 			$config = RequestContext::getMain()->getConfig();
@@ -85,7 +91,7 @@ class Hooks {
 	 * @param bool &$confirmed Whether or not the email address is confirmed
 	 * @return bool|void True or no return value to continue or false to abort
 	 */
-	public static function onEmailConfirmed( User $user, bool &$confirmed ) {
+	public function onEmailConfirmed( $user, &$confirmed ) {
 		if ( !self::isSanctionBot( $user ) ) {
 			return true;
 		}
@@ -208,10 +214,9 @@ class Hooks {
 
 	/**
 	 * export static key and id to JavaScript
-	 * @param array &$vars Array of variables to be added into the output of the startup module.
-	 * @return true
+	 * @inheritDoc
 	 */
-	public static function onResourceLoaderGetConfigVars( &$vars ) {
+	public function onResourceLoaderGetConfigVars( array &$vars, $skin, Config $config ): void {
 		$vars['wgSanctionsAgreeTemplate'] = wfMessage( 'sanctions-agree-template-title' )
 			->inContentLanguage()->text();
 		$vars['wgSanctionsDisagreeTemplate'] = wfMessage( 'sanctions-disagree-template-title' )
@@ -220,8 +225,6 @@ class Hooks {
 			->inContentLanguage()->text();
 		$vars['wgSanctionsMaxBlockPeriod'] = (int)wfMessage( 'sanctions-max-block-period' )
 			->inContentLanguage()->text();
-
-		return true;
 	}
 
 	/**
@@ -231,7 +234,7 @@ class Hooks {
 	 * @param string[] &$items Array of user tool links as HTML fragments
 	 * @return bool|void True or no return value to continue or false to abort
 	 */
-	public static function onUserToolLinksEdit( $userId, $userText, &$items ) {
+	public function onUserToolLinksEdit( $userId, $userText, &$items ) {
 		$user = RequestContext::getMain()->getUser();
 		if ( $user == null || !Utils::hasVoteRight( $user ) ) {
 			return true;
@@ -251,8 +254,7 @@ class Hooks {
 	 * @param UserIdentity $userIdentity Current user
 	 * @return bool|void True or no return value to continue or false to abort
 	 */
-	public static function onDiffTools( RevisionRecord $newRevRecord, array &$links, ?RevisionRecord $oldRevRecord,
-			UserIdentity $userIdentity ) {
+	public function onDiffTools( $newRevRecord, &$links, $oldRevRecord, $userIdentity ) {
 		if ( !Utils::hasVoteRight( User::newFromIdentity( $userIdentity ) ) ) {
 			return true;
 		}
@@ -273,14 +275,9 @@ class Hooks {
 	}
 
 	/**
-	 * @param RevisionRecord $revRecord
-	 * @param string[] &$links Array of HTML links
-	 * @param RevisionRecord|null $prevRevRecord RevisionRecord object, next in line
-	 *   in page history, or null
-	 * @param UserIdentity $userIdentity Current user
-	 * @return bool|void True or no return value to continue or false to abort
+	 * @inheritDoc
 	 */
-	public static function onHistoryTools( $revRecord, &$links, $prevRevRecord, $userIdentity ) {
+	public function onHistoryTools( $revRecord, &$links, $prevRevRecord, $userIdentity ) {
 		if ( !Utils::hasVoteRight( User::newFromIdentity( $userIdentity ) ) ) {
 			return true;
 		}
@@ -295,10 +292,9 @@ class Hooks {
 	}
 
 	/**
-	 * @param Skin $skin Skin object
-	 * @param array[] &$sidebar An array of arrays of sidebar items.
+	 * @inheritDoc
 	 */
-	public static function onSidebarBeforeOutput( Skin $skin, array &$sidebar ) {
+	public function onSidebarBeforeOutput( $skin, &$sidebar ): void {
 		$user = $skin->getRelevantUser();
 
 		if ( !$user ) {
@@ -329,13 +325,10 @@ class Hooks {
 	}
 
 	/**
-	 * @param int $id - User identifier
-	 * @param Title $title - User page title
-	 * @param array &$tools - Array of tool links
-	 * @param SpecialPage $sp - The SpecialPage object
+	 * @inheritDoc
 	 */
-	public static function onContributionsToolLinks( $id, $title, &$tools, $sp ) {
-		$tools['sanctions'] = $sp->getLinkRenderer()->makeKnownLink(
+	public function onContributionsToolLinks( $id, Title $title, array &$tools, SpecialPage $specialPage ) {
+		$tools['sanctions'] = $specialPage->getLinkRenderer()->makeKnownLink(
 				SpecialPage::getTitleFor( 'Sanctions', User::newFromId( $id ) ),
 				wfMessage( 'sanctions-link-on-user-contributes' )->text()
 			);
