@@ -26,9 +26,6 @@ class SanctionsPage extends Page {
   get votedSanctions() {
     return $$('.sanction.voted');
   }
-  get numberOfVoted() {
-    return this.votedSanctions.length;
-  }
 
   open(subpage) {
     super.openTitle('Special:Sanctions/' + subpage, { uselang: 'qqx' });
