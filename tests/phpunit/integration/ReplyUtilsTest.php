@@ -8,7 +8,7 @@ use MediaWikiIntegrationTestCase;
 /** @covers \MediaWiki\Extension\Sanctions\ReplyUtils */
 class ReplyUtilsTest extends MediaWikiIntegrationTestCase {
 
-	protected static function provideReplies() {
+	public static function provideReplies() {
 		return [
 			'Agreement with days should be caught' => [
 				10,
