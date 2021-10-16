@@ -46,7 +46,7 @@ class Main implements
 		}
 		// @todo else
 
-		require_once "$dir/../maintenance/SanctionsCreateTemplates.php";
+		require_once "$dir/../../maintenance/SanctionsCreateTemplates.php";
 		$updater->addPostDatabaseUpdateMaintenance( SanctionsCreateTemplates::class );
 
 		return true;
