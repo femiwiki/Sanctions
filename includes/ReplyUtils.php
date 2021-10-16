@@ -2,6 +2,7 @@
 
 namespace MediaWiki\Extension\Sanctions;
 
+use Html;
 use Wikimedia\Rdbms\DBConnRef;
 
 class ReplyUtils {

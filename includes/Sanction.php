@@ -1044,7 +1044,7 @@ class Sanction {
 			$userId = $row->rev_user_id;
 			$content = $row->rev_content;
 
-			$period = ReplyUtils::checkNewVotes( $content, $newContent );
+			$period = ReplyUtils::checkNewVote( $content, $newContent );
 			if ( $period === null ) {
 				continue;
 			}
