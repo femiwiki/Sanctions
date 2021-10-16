@@ -63,7 +63,7 @@ class SpacialSanctions extends SpecialPage {
 			$output->setPageTitle( $this->msg( 'sanctions-title-with-target', $this->mTargetName ) );
 			$output->setSubTitle( '< ' . Linker::link(
 				$this->getPageTitle(),
-				wfMessage( 'sanctions-show-all-sanctions-link' )->text()
+				$this->msg( 'sanctions-show-all-sanctions-link' )->text()
 			) );
 		}
 
@@ -79,20 +79,20 @@ class SpacialSanctions extends SpecialPage {
 				'content' => $this->makeDiffLink(),
 				'header' => $this->msg( 'sanctions-sactions-form-header' )->text(),
 				'action' => $this->getPageTitle()->getFullURL(),
-				'target-label' => wfMessage( 'sanctions-form-target' )->text(),
+				'target-label' => $this->msg( 'sanctions-form-target' )->text(),
 				'target-name' => $this->mTargetName,
 				'is-for-insulting-name' => $this->mNewRevisionId == null && $this->mTargetName != null,
-				'label-insulting-name' => wfMessage( 'sanctions-form-for-insulting-name' )->text(),
+				'label-insulting-name' => $this->msg( 'sanctions-form-for-insulting-name' )->text(),
 				'textarea-placeholder' => $this->msg( 'sanctions-content-placeholder' )->text(),
 				'submit-label' => $this->msg( 'sanctions-submit' )->text(),
 				'token' => $this->getUser()->getEditToken( 'sanctions' ),
 			];
 		} else {
 			if ( $this->getUser()->isAnon() ) {
-				$data['sanctions-unable-create-description'] = wfMessage( 'sanctions-unable-create-new' )->parse();
+				$data['sanctions-unable-create-description'] = $this->msg( 'sanctions-unable-create-new' )->parse();
 			} else {
 				$username = $this->getUser()->getName();
-				$description = wfMessage( 'sanctions-unable-create-new-logged-in', $username )->parse();
+				$description = $this->msg( 'sanctions-unable-create-new-logged-in', $username )->parse();
 				$data['sanctions-unable-create-description'] = $description;
 			}
 
@@ -196,7 +196,7 @@ class SpacialSanctions extends SpecialPage {
 					Html::rawelement(
 						'div',
 						[ 'class' => 'sanction-execute-result' ],
-						self::makeErrorMessage(
+						$this->makeErrorMessage(
 							(int)$request->getVal( 'errorCode' ),
 							$request->getVal( 'uuid' ),
 							$request->getVal( 'targetName' )
@@ -208,7 +208,7 @@ class SpacialSanctions extends SpecialPage {
 					Html::rawelement(
 						'div',
 						[ 'class' => 'sanction-execute-result' ],
-						self::makeMessage(
+						$this->makeMessage(
 							(int)$request->getVal( 'code' ),
 							$request->getVal( 'uuid' ),
 							$request->getVal( 'targetName' )
@@ -252,7 +252,7 @@ class SpacialSanctions extends SpecialPage {
 				$targetName = $request->getVal( 'target' );
 				$forInsultingName = $request->getBool( 'forInsultingName' );
 				$content = $request->getVal( 'content' ) ?:
-					wfMessage( 'sanctions-topic-no-description' )->text();
+					$this->msg( 'sanctions-topic-no-description' )->text();
 
 				if ( !$targetName ) {
 					list( $query['showResult'], $query['errorCode'] ) = [ true, 100 ];
@@ -367,29 +367,29 @@ class SpacialSanctions extends SpecialPage {
 	 * @param string $targetName
 	 * @return string Error Message
 	 */
-	protected static function makeErrorMessage( $errorCode, $uuid, $targetName ) {
+	protected function makeErrorMessage( $errorCode, $uuid, $targetName ) {
 		$link = $uuid ? Linker::link( Sanction::newFromUUID( $uuid )->getTopic() ) : '';
 		switch ( $errorCode ) {
 		case 0:
-			return wfMessage( "sanctions-submit-error-invalid-token" )->text();
+			return $this->msg( "sanctions-submit-error-invalid-token" )->text();
 		case 1:
-			return wfMessage( "sanctions-submit-error-no-permission" )->text();
+			return $this->msg( "sanctions-submit-error-no-permission" )->text();
 		case 2:
-			return wfMessage( "sanctions-submit-error-failed-to-add-topic" )->text();
+			return $this->msg( "sanctions-submit-error-failed-to-add-topic" )->text();
 		case 3:
-			return wfMessage( "sanctions-submit-error-failed-to-toggle-process" )->text();
+			return $this->msg( "sanctions-submit-error-failed-to-toggle-process" )->text();
 		case 4:
-			return wfMessage( "sanctions-submit-error-failed-to-execute" )->text();
+			return $this->msg( "sanctions-submit-error-failed-to-execute" )->text();
 		case 100:
-			return wfMessage( "sanctions-submit-error-no-username" )->text();
+			return $this->msg( "sanctions-submit-error-no-username" )->text();
 		case 101:
-			return wfMessage( "sanctions-submit-error-invaild-username", $targetName )->text();
+			return $this->msg( "sanctions-submit-error-invaild-username", $targetName )->text();
 		case 102:
-			return wfMessage(
+			return $this->msg(
 					"sanctions-submit-error-insulting-report-already-exist", [ $targetName, $link ]
 				)->text();
 		default:
-			return wfMessage( "sanctions-submit-error-other", (string)$errorCode )->text();
+			return $this->msg( "sanctions-submit-error-other", (string)$errorCode )->text();
 		}
 	}
 
@@ -399,19 +399,19 @@ class SpacialSanctions extends SpecialPage {
 	 * @param string $targetName
 	 * @return string Message
 	 */
-	protected static function makeMessage( $code, $uuid, $targetName ) {
+	protected function makeMessage( $code, $uuid, $targetName ) {
 		$link = $uuid ? Linker::link( Sanction::newFromUUID( $uuid )->getTopic() ) : '';
 		switch ( $code ) {
 		case 0:
-			return wfMessage( "sanctions-submit-massage-added-topic", $link )->text();
+			return $this->msg( "sanctions-submit-massage-added-topic", $link )->text();
 		case 1:
-			return wfMessage( "sanctions-submit-massage-switched-emergency", $link )->text();
+			return $this->msg( "sanctions-submit-massage-switched-emergency", $link )->text();
 		case 2:
-			return wfMessage( "sanctions-submit-massage-switched-normal", $link )->text();
+			return $this->msg( "sanctions-submit-massage-switched-normal", $link )->text();
 		case 3:
-			return wfMessage( "sanctions-submit-massage-executed-sanction", $link )->text();
+			return $this->msg( "sanctions-submit-massage-executed-sanction", $link )->text();
 		default:
-			return wfMessage( "sanctions-submit-massage-other", (string)$code )->text();
+			return $this->msg( "sanctions-submit-massage-other", (string)$code )->text();
 		}
 	}
 
@@ -427,13 +427,13 @@ class SpacialSanctions extends SpecialPage {
 
 		$rt = '';
 		if ( $oldRevisionId != null ) {
-			$rt = wfMessage( 'sanctions-topic-diff', [
+			$rt = $this->msg( 'sanctions-topic-diff', [
 				(string)$oldRevisionId,
 				(string)$newRevisionId,
 				(string)$newRevision->getPageAsLinkTarget()
 			] )->inContentLanguage()->text();
 		} else {
-			$rt = wfMessage( 'sanctions-topic-revision', [
+			$rt = $this->msg( 'sanctions-topic-revision', [
 				(string)$newRevisionId,
 				(string)$newRevision->getPageAsLinkTarget()
 			] )->inContentLanguage()->text();
