@@ -26,7 +26,7 @@ class SanctionsPager extends IndexPager {
 	 * @param IContextSource $context
 	 * @param string|null $targetName
 	 */
-	public function __construct( IContextSource $context, ?string $targetName ) {
+	public function __construct( IContextSource $context, string $targetName = null ) {
 		parent::__construct( $context );
 		$this->targetName = $targetName;
 		$this->templateParser = new TemplateParser( __DIR__ . '/templates' );
@@ -124,32 +124,22 @@ class SanctionsPager extends IndexPager {
 		$isForInsultingName = $sanction->isForInsultingName();
 
 		$data = [
+			'class' => implode( '.', $this->getClasses( $row, $this->getUser() ) ),
 			'is-expired' => $expired,
 			'is-handled' => $handled,
 			'can-vote' => $this->getUserHasVoteRight(),
 		];
-		$class = [ 'sanction' ];
 
 		$isVoted = isset( $row->voted_from );
 		if ( $isMySanction ) {
-			$class[] = 'my-sanction';
 			$data['vote-status'] = $this->msg( 'sanctions-row-label-my-sanction' )->text();
-			if ( $this->getUserHasVoteRight() && $isVoted ) {
-				$class[] = 'voted';
-			}
 		} else {
 			$data['vote-status'] = $isVoted ?
 				$this->msg( 'sanctions-row-label-voted' )->text() :
 				$this->msg( 'sanctions-row-label-not-voted' )->text();
 		}
 
-		if ( $expired ) {
-			$class[] = 'expired';
-		}
-
-		if ( $handled ) {
-			$class[] = 'handled';
-		} else {
+		if ( !$handled ) {
 			$data['process'] = $this->msg(
 				// sanctions-row-label-emergency
 				// sanctions-row-label-normal
@@ -196,17 +186,11 @@ class SanctionsPager extends IndexPager {
 			}
 		}
 
-		if ( $sanction->isEmergency() ) {
-			$class[] = 'emergency';
-		}
-
 		if ( $isForInsultingName ) {
 			$originalName = $sanction->getTargetOriginalName();
 			$targetNameForDisplay = self::maskStringPartially( $originalName );
-			$class[] = 'insulting-name';
 		} else {
 			$targetNameForDisplay = $targetName;
-			$class[] = 'block';
 
 		}
 
@@ -230,9 +214,38 @@ class SanctionsPager extends IndexPager {
 			)
 		] )->text();
 
-		$data['class'] = implode( ' ', $class );
-
 		return $this->templateParser->processTemplate( 'Sanction', $data );
+	}
+
+	/**
+	 * @param stdClass $row
+	 * @param User $visitor
+	 * @return array
+	 */
+	public static function getClasses( $row, User $visitor ) {
+		$sanction = Sanction::newFromRow( $row );
+		$class = [ 'sanction' ];
+		if ( $sanction->getAuthor()->equals( $visitor ) ) {
+			$class[] = 'my-sanction';
+			if ( Utils::hasVoteRight( $visitor ) && isset( $row->voted_from ) ) {
+				$class[] = 'voted';
+			}
+		}
+
+		if ( $sanction->isExpired() ) {
+			$class[] = 'expired';
+		}
+		if ( $sanction->isHandled() ) {
+			$class[] = 'handled';
+		}
+		if ( $sanction->isEmergency() ) {
+			$class[] = 'emergency';
+		}
+		$class[] = $sanction->isForInsultingName()
+			? 'insulting-name'
+			: 'block';
+
+		return $class;
 	}
 
 	/**

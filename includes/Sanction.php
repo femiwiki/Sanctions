@@ -19,6 +19,7 @@ use MWTimestamp;
 use Psr\Log\NullLogger;
 use RenameuserSQL;
 use RequestContext;
+use stdClass;
 use Title;
 use User;
 use Wikimedia\IPUtils;
@@ -708,6 +709,8 @@ class Sanction {
 	 * @param string $name
 	 * @param string $value
 	 * @return bool
+	 *
+	 * @deprecated Use self::loadFromRow() instead
 	 */
 	public function loadFrom( $name, $value ) {
 		$db = wfGetDB( DB_REPLICA );
@@ -722,6 +725,27 @@ class Sanction {
 			return false;
 		}
 
+		$this->loadFromRow( $row );
+	}
+
+	/**
+	 * @param stdClass $row
+	 * @return Sanction
+	 */
+	public static function newFromRow( $row ) {
+		$sanction = new Sanction();
+		$sanction->loadFromRow( $row );
+		return $sanction;
+	}
+
+	/**
+	 * @param stdClass $row
+	 */
+	protected function loadFromRow( $row ) {
+		if ( !is_object( $row ) ) {
+			throw new \InvalidArgumentException( '$row must be an object' );
+		}
+
 		try {
 			$this->mId = $row->st_id;
 			$this->mAuthor = User::newFromId( $row->st_author );
@@ -732,10 +756,11 @@ class Sanction {
 			$this->mExpiry = $row->st_expiry;
 			$this->mIsHandled = $row->st_handled;
 			$this->mIsEmergency = $row->st_emergency;
-
-			return true;
 		} catch ( \MWException $e ) {
-			return false;
+			if ( defined( 'MW_PHPUNIT_TEST' ) ) {
+				throw( $e );
+			}
+			// TODO
 		}
 	}
 
@@ -825,6 +850,7 @@ class Sanction {
 	}
 
 	public function isExpired() {
+		// return false;
 		return $this->mExpiry <= wfTimestamp( TS_MW );
 	}
 
