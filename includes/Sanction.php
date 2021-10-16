@@ -1036,6 +1036,7 @@ class Sanction {
 				$countedText = '"sanction-vote-counted"';
 			} else {
 				$agreementTemplateTitle = wfMessage( 'sanctions-agree-template-title' )->inContentLanguage()->text();
+				$agreementTemplateTitle = preg_quote( $agreementTemplateTitle );
 				$agreementWithDayRegex = "/\{\{${agreementTemplateTitle}\|(\d+)\}\}/";
 				$agreementRegex = '{{' . $agreementTemplateTitle . '}}';
 				$disagreementRegex = wfMessage( 'sanctions-disagree-template-title' )->inContentLanguage()->text();
