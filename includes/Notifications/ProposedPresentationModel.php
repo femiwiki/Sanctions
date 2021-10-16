@@ -29,7 +29,7 @@ class ProposedPresentationModel extends EchoEventPresentationModel {
 	/**
 	 * @return Message
 	 */
-	public function getHeaderMessage() : Message {
+	public function getHeaderMessage(): Message {
 		$event = $this->event;
 		if ( $event->getExtraParam( 'is-for-insulting-name' ) ) {
 			$msg = $this->getMessageWithAgent( 'notification-header-sanctions-proposed-against-insulting-name' );

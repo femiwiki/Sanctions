@@ -19,67 +19,49 @@ use MWTimestamp;
 use Psr\Log\NullLogger;
 use RenameuserSQL;
 use RequestContext;
+use stdClass;
 use Title;
 use User;
 use Wikimedia\IPUtils;
 
 class Sanction {
-	/**
-	 * @var int
-	 */
+	/** @var int */
 	protected $mId;
-	/**
-	 * @var User
-	 */
+
+	/** @var User */
 	protected $mAuthor;
-	/**
-	 * @var UUID
-	 */
+
+	/** @var UUID */
 	protected $mTopic;
 
-	/**
-	 * @var User
-	 */
+	/** @var User */
 	protected $mTarget;
 
-	/**
-	 * @var string
-	 */
-
+	/** @var string */
 	protected $mTargetOriginalName;
 
-	/**
-	 * @var string
-	 */
+	/** @var string */
 	protected $mExpiry;
 
-	/**
-	 * @var bool
-	 */
+	/** @var bool */
 	protected $mIsHandled;
 
-	/**
-	 * @var bool
-	 */
+	/** @var bool */
 	protected $mIsEmergency;
 
-	/**
-	 * @var array
-	 */
+	/** @var array */
 	protected $mVotes = null;
 
-	/**
-	 * @var bool $mIsPassed, $mVoteNumber and $mAgreeVote are valid when $mCounted is true.
-	 */
+	/** @var bool $mIsPassed, $mVoteNumber and $mAgreeVote are valid when $mCounted is true. */
 	protected $mCounted = false;
 
-	/**
-	 * @var bool
-	 */
+	/** @var bool */
 	protected $mIsPassed;
 
+	/** @var int */
 	protected $mVoteNumber;
 
+	/** @var int */
 	protected $mAgreeVote;
 
 	/**
@@ -727,6 +709,8 @@ class Sanction {
 	 * @param string $name
 	 * @param string $value
 	 * @return bool
+	 *
+	 * @deprecated Use self::loadFromRow() instead
 	 */
 	public function loadFrom( $name, $value ) {
 		$db = wfGetDB( DB_REPLICA );
@@ -741,21 +725,55 @@ class Sanction {
 			return false;
 		}
 
-		try {
+		return $this->loadFromRow( $row );
+	}
+
+	/**
+	 * @param stdClass $row
+	 * @return Sanction
+	 */
+	public static function newFromRow( $row ) {
+		$sanction = new Sanction();
+		$sanction->loadFromRow( $row );
+		return $sanction;
+	}
+
+	/**
+	 * @param stdClass $row
+	 * @return bool
+	 */
+	protected function loadFromRow( $row ) {
+		if ( !is_object( $row ) ) {
+			throw new \InvalidArgumentException( '$row must be an object' );
+		}
+
+		if ( isset( $row->st_id ) ) {
 			$this->mId = $row->st_id;
+		}
+		if ( isset( $row->st_author ) ) {
 			$this->mAuthor = User::newFromId( $row->st_author );
+		}
+		if ( isset( $row->st_topic ) ) {
 			$topicUUIDBinary = $row->st_topic;
 			$this->mTopic = UUID::create( $topicUUIDBinary );
-			$this->mTarget = User::newFromId( $row->st_target );
-			$this->mTargetOriginalName = $row->st_original_name;
-			$this->mExpiry = $row->st_expiry;
-			$this->mIsHandled = $row->st_handled;
-			$this->mIsEmergency = $row->st_emergency;
-
-			return true;
-		} catch ( \MWException $e ) {
-			return false;
 		}
+		if ( isset( $row->st_target ) ) {
+			$this->mTarget = User::newFromId( $row->st_target );
+		}
+		if ( isset( $row->st_original_name ) ) {
+			$this->mTargetOriginalName = $row->st_original_name;
+		}
+		if ( isset( $row->st_expiry ) ) {
+			$this->mExpiry = $row->st_expiry;
+		}
+		if ( isset( $row->st_handled ) ) {
+			$this->mIsHandled = $row->st_handled;
+		}
+		if ( isset( $row->st_emergency ) ) {
+			$this->mIsEmergency = $row->st_emergency;
+		}
+
+		return true;
 	}
 
 	/**
@@ -844,6 +862,7 @@ class Sanction {
 	}
 
 	public function isExpired() {
+		// return false;
 		return $this->mExpiry <= wfTimestamp( TS_MW );
 	}
 
@@ -1273,11 +1292,11 @@ class Sanction {
 	 * Rename the given User.
 	 * This funcion includes some code that originally are in SpecialRenameuser.php
 	 *
-	 * @param String $oldName
-	 * @param String $newName
+	 * @param string $oldName
+	 * @param string $newName
 	 * @param User $target
 	 * @param User $renamer
-	 * @param String $reason
+	 * @param string $reason
 	 * @return bool
 	 */
 	protected static function doRename( $oldName, $newName, $target, $renamer, $reason ) {

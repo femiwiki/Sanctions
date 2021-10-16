@@ -26,7 +26,7 @@ class SanctionsPager extends IndexPager {
 	 * @param IContextSource $context
 	 * @param string|null $targetName
 	 */
-	public function __construct( IContextSource $context, ?string $targetName ) {
+	public function __construct( IContextSource $context, string $targetName = null ) {
 		parent::__construct( $context );
 		$this->targetName = $targetName;
 		$this->templateParser = new TemplateParser( __DIR__ . '/templates' );
@@ -71,6 +71,7 @@ class SanctionsPager extends IndexPager {
 			],
 			'fields' => [
 				'st_id',
+				'st_author',
 				'my_sanction' => 'st_author = ' . $this->getUser()->getId(),
 				'st_expiry',
 				'not_expired' => 'st_expiry > ' . wfTimestamp( TS_MW ),
@@ -102,7 +103,7 @@ class SanctionsPager extends IndexPager {
 	protected function getStartBody() {
 		return Html::openElement(
 			'div',
-			[ 'class' => 'sanctions' ],
+			[ 'class' => 'sanctions' ]
 		);
 	}
 
@@ -124,33 +125,23 @@ class SanctionsPager extends IndexPager {
 		$isForInsultingName = $sanction->isForInsultingName();
 
 		$data = [
+			'class' => implode( ' ', $this->getClasses( $row, $this->getUser() ) ),
 			'is-expired' => $expired,
 			'is-handled' => $handled,
 			'can-vote' => $this->getUserHasVoteRight(),
 		];
-		$class = [ 'sanction' ];
 
 		$isVoted = isset( $row->voted_from );
 		if ( $isMySanction ) {
-			$class[] = 'my-sanction';
-			$data['vote-status'] = wfMessage( 'sanctions-row-label-my-sanction' )->text();
-			if ( $this->getUserHasVoteRight() && $isVoted ) {
-				$class[] = 'voted';
-			}
+			$data['vote-status'] = $this->msg( 'sanctions-row-label-my-sanction' )->text();
 		} else {
 			$data['vote-status'] = $isVoted ?
-				wfMessage( 'sanctions-row-label-voted' )->text() :
-				wfMessage( 'sanctions-row-label-not-voted' )->text();
+				$this->msg( 'sanctions-row-label-voted' )->text() :
+				$this->msg( 'sanctions-row-label-not-voted' )->text();
 		}
 
-		if ( $expired ) {
-			$class[] = 'expired';
-		}
-
-		if ( $handled ) {
-			$class[] = 'handled';
-		} else {
-			$data['process'] = wfMessage(
+		if ( !$handled ) {
+			$data['process'] = $this->msg(
 				// sanctions-row-label-emergency
 				// sanctions-row-label-normal
 				'sanctions-row-label-' . ( $sanction->isEmergency() ? 'emergency' : 'normal' )
@@ -166,20 +157,20 @@ class SanctionsPager extends IndexPager {
 					]
 				);
 
-				$timeLeftText = wfMessage( 'sanctions-row-label-expiry', $timeLeftText )->text();
+				$timeLeftText = $this->msg( 'sanctions-row-label-expiry', $timeLeftText )->text();
 				$data['time-left'] = $timeLeftText;
 
 				if ( $this->getUser()->isAllowed( 'block' ) ) {
 					$data['data-toggle-process'] = [
 						'action' => $this->getContext()->getTitle()->getFullURL(),
-						'label' => wfMessage( 'sanctions-row-button-toggle-emergency' )->text(),
+						'label' => $this->msg( 'sanctions-row-button-toggle-emergency' )->text(),
 						'token' => $this->getUser()->getEditToken( 'sanctions' ),
 						'sanction-id' => (string)$row->st_id,
 					];
 				}
 			} else {
-				$data['pending'] = wfMessage( 'sanctions-row-label-pending' )->text();
-				$data['pass-status'] = wfMessage(
+				$data['pending'] = $this->msg( 'sanctions-row-label-pending' )->text();
+				$data['pass-status'] = $this->msg(
 					// sanctions-row-label-passed
 					// sanctions-row-label-rejected
 					'sanctions-row-label-' . ( $sanction->isPassed() ? 'passed' : 'rejected' )
@@ -188,7 +179,7 @@ class SanctionsPager extends IndexPager {
 				if ( $this->getUserHasVoteRight() ) {
 					$data['data-execute'] = [
 						'action' => $this->getContext()->getTitle()->getFullURL(),
-						'label' => wfMessage( 'sanctions-row-button-execute' )->text(),
+						'label' => $this->msg( 'sanctions-row-button-execute' )->text(),
 						'token' => $this->getUser()->getEditToken( 'sanctions' ),
 						'sanction-id' => (string)$row->st_id,
 					];
@@ -196,17 +187,11 @@ class SanctionsPager extends IndexPager {
 			}
 		}
 
-		if ( $sanction->isEmergency() ) {
-			$class[] = 'emergency';
-		}
-
 		if ( $isForInsultingName ) {
 			$originalName = $sanction->getTargetOriginalName();
 			$targetNameForDisplay = self::maskStringPartially( $originalName );
-			$class[] = 'insulting-name';
 		} else {
 			$targetNameForDisplay = $targetName;
-			$class[] = 'block';
 
 		}
 
@@ -216,7 +201,7 @@ class SanctionsPager extends IndexPager {
 			. '/' . $targetName
 		);
 
-		$data['title'] = wfMessage( 'sanctions-topic-title', [
+		$data['title'] = $this->msg( 'sanctions-topic-title', [
 			Linker::link(
 				$userLinkTitle,
 				$targetNameForDisplay,
@@ -224,15 +209,44 @@ class SanctionsPager extends IndexPager {
 			),
 			Linker::link(
 				$sanction->getTopic(),
-				wfMessage( 'sanctions-type-' . ( $isForInsultingName ? 'insulting-name' : 'block' ) )
+				$this->msg( 'sanctions-type-' . ( $isForInsultingName ? 'insulting-name' : 'block' ) )
 					->text(),
 				[ 'class' => 'sanction-type' ]
 			)
 		] )->text();
 
-		$data['class'] = implode( ' ', $class );
-
 		return $this->templateParser->processTemplate( 'Sanction', $data );
+	}
+
+	/**
+	 * @param array|stdClass $row
+	 * @param User $visitor
+	 * @return array
+	 */
+	public static function getClasses( $row, User $visitor ) {
+		$sanction = Sanction::newFromRow( $row );
+		$class = [ 'sanction' ];
+		if ( $sanction->getAuthor()->equals( $visitor ) ) {
+			$class[] = 'my-sanction';
+			if ( Utils::hasVoteRight( $visitor ) && isset( $row->voted_from ) ) {
+				$class[] = 'voted';
+			}
+		}
+
+		if ( $sanction->isExpired() ) {
+			$class[] = 'expired';
+		}
+		if ( $sanction->isHandled() ) {
+			$class[] = 'handled';
+		}
+		if ( $sanction->isEmergency() ) {
+			$class[] = 'emergency';
+		}
+		$class[] = $sanction->isForInsultingName()
+			? 'insulting-name'
+			: 'block';
+
+		return $class;
 	}
 
 	/**
@@ -253,12 +267,12 @@ class SanctionsPager extends IndexPager {
 	 * @return string
 	 */
 	public function getEmptyBody() {
-		$text = wfMessage( 'sanctions-empty' )->text();
+		$text = $this->msg( 'sanctions-empty' )->text();
 
 		if ( $this->targetName == null ) {
-			$text = wfMessage( 'sanctions-empty-now' )->text();
+			$text = $this->msg( 'sanctions-empty-now' )->text();
 		} else {
-			$text = wfMessage( 'sanctions-empty-about-now', $this->targetName )->text();
+			$text = $this->msg( 'sanctions-empty-about-now', $this->targetName )->text();
 		}
 		return Html::rawelement(
 			'div',
