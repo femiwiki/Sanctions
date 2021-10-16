@@ -25,62 +25,43 @@ use User;
 use Wikimedia\IPUtils;
 
 class Sanction {
-	/**
-	 * @var int
-	 */
+	/** @var int */
 	protected $mId;
-	/**
-	 * @var User
-	 */
+
+	/** @var User */
 	protected $mAuthor;
-	/**
-	 * @var UUID
-	 */
+
+	/** @var UUID */
 	protected $mTopic;
 
-	/**
-	 * @var User
-	 */
+	/** @var User */
 	protected $mTarget;
 
-	/**
-	 * @var string
-	 */
-
+	/** @var string */
 	protected $mTargetOriginalName;
 
-	/**
-	 * @var string
-	 */
+	/** @var string */
 	protected $mExpiry;
 
-	/**
-	 * @var bool
-	 */
+	/** @var bool */
 	protected $mIsHandled;
 
-	/**
-	 * @var bool
-	 */
+	/** @var bool */
 	protected $mIsEmergency;
 
-	/**
-	 * @var array
-	 */
+	/** @var array */
 	protected $mVotes = null;
 
-	/**
-	 * @var bool $mIsPassed, $mVoteNumber and $mAgreeVote are valid when $mCounted is true.
-	 */
+	/** @var bool $mIsPassed, $mVoteNumber and $mAgreeVote are valid when $mCounted is true. */
 	protected $mCounted = false;
 
-	/**
-	 * @var bool
-	 */
+	/** @var bool */
 	protected $mIsPassed;
 
+	/** @var int */
 	protected $mVoteNumber;
 
+	/** @var int */
 	protected $mAgreeVote;
 
 	/**
