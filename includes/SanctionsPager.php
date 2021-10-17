@@ -71,7 +71,6 @@ class SanctionsPager extends IndexPager {
 				'st_handled',
 				'my_sanction' => 'st_author = ' . $this->getUser()->getId(),
 				'not_expired' => 'st_expiry > ' . wfTimestamp( TS_MW ),
-				'voted_from' => 'stv_id',
 			]
 		];
 
@@ -83,6 +82,7 @@ class SanctionsPager extends IndexPager {
 
 		if ( $this->getUserHasVoteRight() ) {
 			$query['tables'][] = 'sanctions_vote';
+			$query['fields']['voted_from'] = 'stv_id';
 			$query['join_conds']['sanctions_vote'] = [
 				'LEFT JOIN',
 				[
