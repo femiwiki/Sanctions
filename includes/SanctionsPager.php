@@ -60,11 +60,6 @@ class SanctionsPager extends IndexPager {
 	 * @return array
 	 */
 	public function getQueryInfo() {
-		$subquery = $this->mDb->buildSelectSubquery(
-			'sanctions_vote',
-			[ 'stv_id', 'stv_topic' ],
-			[ 'stv_user' => $this->getUser()->getId() ]
-		);
 		$query = [
 			'tables' => [
 				'sanctions'
@@ -72,10 +67,11 @@ class SanctionsPager extends IndexPager {
 			'fields' => [
 				'st_id',
 				'st_author',
-				'my_sanction' => 'st_author = ' . $this->getUser()->getId(),
 				'st_expiry',
+				'st_handled',
+				'my_sanction' => 'st_author = ' . $this->getUser()->getId(),
 				'not_expired' => 'st_expiry > ' . wfTimestamp( TS_MW ),
-				'st_handled'
+				'voted_from' => 'stv_id',
 			]
 		];
 
@@ -86,10 +82,14 @@ class SanctionsPager extends IndexPager {
 		}
 
 		if ( $this->getUserHasVoteRight() ) {
-			// If 'AS' is not written explicitly, it will not work as expected.
-			$query['tables']['sub'] = $subquery . ' AS';
-			$query['fields']['voted_from'] = 'stv_id';
-			$query['join_conds'] = [ 'sub' => [ 'LEFT JOIN', 'st_topic = sub.stv_topic' ] ];
+			$query['tables'][] = 'sanctions_vote';
+			$query['join_conds']['sanctions_vote'] = [
+				'LEFT JOIN',
+				[
+					'stv_topic = st_topic',
+					'stv_user' => $this->getUser()->getId(),
+				]
+			];
 		} else {
 			// If the user does not have permission to participate in the sanctions procedure, they will
 			// not see expired sanctions.
