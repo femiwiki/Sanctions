@@ -5,12 +5,55 @@ namespace MediaWiki\Extension\Sanctions\Tests\Integration;
 use Flow\Model\UUID;
 use MediaWiki\Extension\Sanctions\SanctionsPager;
 use MediaWikiIntegrationTestCase;
+use MessageCache;
+use RequestContext;
 use User;
+use Wikimedia\TestingAccessWrapper;
 
 /**
  * @covers \MediaWiki\Extension\Sanctions\SanctionsPager
  */
 class SanctionsPagerTest extends MediaWikiIntegrationTestCase {
+
+	private function getSanctionsPager( User $viewer = null, string $targetName = null ) {
+		$request = new RequestContext();
+		if ( $viewer ) {
+			$request->setUser( $viewer );
+		}
+		return new SanctionsPager( $request, $targetName );
+	}
+
+	/**
+	 * TODO Mock edit counts without touching system message.
+	 * @return User
+	 */
+	private function getVotableUser() {
+		// Make MessageCache to return sanctions-voting-right-verification-edits as 0
+		$mock = $this->createMock( MessageCache::class );
+		$mock->method( 'get' )
+			->will( $this->returnValue( '0' ) );
+		$mock->method( 'transform' )
+			->will( $this->returnArgument( 0 ) );
+		$this->setService( 'MessageCache', $mock );
+
+		$user = $this->createMock( User::class );
+
+		$user->expects( $this->any() )
+			->method( 'isAnon' )
+			->will( $this->returnValue( false ) );
+		$user->expects( $this->any() )
+			->method( 'getRegistration' )
+			->will( $this->returnValue( wfTimestamp( TS_MW, 1 ) ) );
+		$user->expects( $this->any() )
+			->method( 'isAllowed' )
+			->will( $this->returnValue( true ) );
+		$user->expects( $this->any() )
+			->method( 'isBlocked' )
+			->will( $this->returnValue( false ) );
+
+		return $user;
+	}
+
 	public static function provideRow() {
 		$future = wfTimestamp( TS_MW, time() + 60 );
 		$past = wfTimestamp( TS_MW, time() - 60 );
@@ -62,5 +105,42 @@ class SanctionsPagerTest extends MediaWikiIntegrationTestCase {
 		sort( $expected );
 		sort( $actual );
 		$this->assertEquals( $expected, $actual );
+	}
+
+	/**
+	 * @covers \MediaWiki\Extension\Sanctions\SanctionsPager::getExtraSortFields
+	 * @covers \MediaWiki\Extension\Sanctions\SanctionsPager::getIndexField
+	 * @covers \MediaWiki\Extension\Sanctions\SanctionsPager::getQueryInfo
+	 */
+	public function testSortOrderNotLoggedIn() {
+		$pager = $this->getSanctionsPager( new User() );
+
+		'@phan-var SanctionsPager $pager';
+		$pager = TestingAccessWrapper::newFromObject( $pager );
+		$queryInfo = $pager->buildQueryInfo( '', 1, \IndexPager::QUERY_DESCENDING );
+
+		$this->assertSame( [ 'st_handled DESC', 'st_expiry DESC' ], $queryInfo[4]['ORDER BY'] );
+	}
+
+	/**
+	 * @covers \MediaWiki\Extension\Sanctions\SanctionsPager::getExtraSortFields
+	 * @covers \MediaWiki\Extension\Sanctions\SanctionsPager::getIndexField
+	 * @covers \MediaWiki\Extension\Sanctions\SanctionsPager::getQueryInfo
+	 */
+	public function testSortOrderRegistered() {
+		$pager = $this->getSanctionsPager( $this->getVotableUser() );
+
+		/** @var SanctionsPager $pager */
+		$pager = TestingAccessWrapper::newFromObject( $pager );
+		$queryInfo = $pager->buildQueryInfo( '', 1, \IndexPager::QUERY_DESCENDING );
+
+		$expected = [
+			'st_handled DESC',
+			'not_expired DESC',
+			'my_sanction DESC',
+			'voted_from DESC',
+			'st_expiry DESC',
+		];
+		$this->assertSame( $expected, $queryInfo[4]['ORDER BY'] );
 	}
 }
