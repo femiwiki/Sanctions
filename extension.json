@@ -99,7 +99,7 @@
     "UserToolLinksEdit": "ToolLinks",
     "DiffTools": "ToolLinks",
     "HistoryTools": "ToolLinks",
-    "SidebarBeforeOutput": "main",
+    "SidebarBeforeOutput": "ToolLinks",
     "ContributionsToolLinks": "ToolLinks",
     "FlowAddModules": "main"
   },
