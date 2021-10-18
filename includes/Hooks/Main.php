@@ -157,7 +157,6 @@ class Main implements
 			);
 			return;
 		}
-		\MediaWiki\Logger\LoggerFactory::getInstance( 'femiwiki-log' )->warning( 'not author' );
 		if ( !Utils::hasVoteRight( $user, $reasons, true ) ) {
 			$content = wfMessage( 'sanctions-topic-auto-reply-no-count' )->inContentLanguage()->text() .
 				PHP_EOL . '* ' . implode( PHP_EOL . '* ', $reasons ?? [] );
@@ -169,9 +168,7 @@ class Main implements
 			return;
 		}
 
-		\MediaWiki\Logger\LoggerFactory::getInstance( 'femiwiki-log' )->warning( 'has right' );
 		$lastVote = $this->voteStore->getVoteBySanction( $sanction, $user );
-		\MediaWiki\Logger\LoggerFactory::getInstance( 'femiwiki-log' )->warning( print_r( $lastVote, true ) );
 		$timestamp = $post->getPostId()->getTimestamp();
 		if ( $lastVote ) {
 			$lastVote->updateByPostRevision( $post, $timestamp );
