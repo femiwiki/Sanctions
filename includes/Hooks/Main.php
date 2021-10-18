@@ -134,7 +134,7 @@ class Main implements
 	 */
 	public function handleReply( array $change, User $user ) {
 		$sanction = Sanction::newFromUUID( $change['workflow'] );
-		if ( $sanction->isHandled() ) {
+		if ( !$sanction || $sanction->isHandled() ) {
 			return;
 		}
 

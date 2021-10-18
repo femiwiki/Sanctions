@@ -1026,32 +1026,32 @@ class Sanction {
 
 	/**
 	 * @param string $id
-	 * @return Sanction|bool
+	 * @return Sanction|null
 	 */
 	public static function newFromId( $id ) {
 		$rt = new self();
 		if ( $rt->loadFrom( 'st_id', $id ) ) {
 			return $rt;
 		}
-		return false;
+		return null;
 	}
 
 	/**
-	 * @param UUID|string $UUID
-	 * @return Sanction|bool
+	 * @param UUID|string $uuid
+	 * @return Sanction|null
 	 */
-	public static function newFromUUID( $UUID ) {
-		if ( $UUID instanceof UUID ) {
-			$UUID = $UUID->getBinary();
-		} elseif ( is_string( $UUID ) ) {
-			$UUID = UUID::create( strtolower( $UUID ) )->getBinary();
+	public static function newFromUUID( $uuid ) {
+		if ( $uuid instanceof UUID ) {
+			$uuid = $uuid->getBinary();
+		} elseif ( is_string( $uuid ) ) {
+			$uuid = UUID::create( strtolower( $uuid ) )->getBinary();
 		}
 
 		$rt = new self();
-		if ( $rt->loadFrom( 'st_topic', $UUID ) ) {
+		if ( $rt->loadFrom( 'st_topic', $uuid ) ) {
 			return $rt;
 		}
-		return false;
+		return null;
 	}
 
 	/**
