@@ -8,6 +8,19 @@ use MediaWikiIntegrationTestCase;
 /** @covers \MediaWiki\Extension\Sanctions\Vote */
 class VoteTest extends MediaWikiIntegrationTestCase {
 
+	/**
+	 * @covers \MediaWiki\Extension\Sanctions\Vote::newFromRow
+	 * @covers \MediaWiki\Extension\Sanctions\Vote::loadFromRow
+	 */
+	public function testNewFromRow() {
+		$actual = Vote::newFromRow( (object)[
+			'stv_user' => 0,
+			'stv_topic' => false,
+			'stv_period' => 1,
+		] );
+		$this->assertInstanceOf( Vote::class, $actual );
+	}
+
 	public static function provideReplies() {
 		return [
 			'Agreement with days should be caught' => [
