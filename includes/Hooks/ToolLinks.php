@@ -1,0 +1,128 @@
+<?php
+
+namespace MediaWiki\Extension\Sanctions\Hooks;
+
+use Linker;
+use MediaWiki\Extension\Sanctions\Utils;
+use MediaWiki\Revision\RevisionRecord;
+use MediaWiki\User\UserIdentity;
+use RequestContext;
+use SpecialPage;
+use Title;
+use User;
+
+class ToolLinks implements
+	\MediaWiki\Diff\Hook\DiffToolsHook,
+	\MediaWiki\Hook\ContributionsToolLinksHook,
+	\MediaWiki\Hook\HistoryToolsHook,
+	\MediaWiki\Hook\SidebarBeforeOutputHook,
+	\MediaWiki\Hook\UserToolLinksEditHook
+	{
+
+	/**
+	 * (talk|contribs)
+	 * @param int $userId User ID of the current user
+	 * @param string $userText Username of the current user
+	 * @param string[] &$items Array of user tool links as HTML fragments
+	 * @return bool|void True or no return value to continue or false to abort
+	 */
+	public function onUserToolLinksEdit( $userId, $userText, &$items ) {
+		$user = RequestContext::getMain()->getUser();
+		if ( $user == null || !Utils::hasVoteRight( $user ) ) {
+			return true;
+		}
+
+		$items[] = Linker::link(
+			SpecialPage::getTitleFor( 'Sanctions', $userText ),
+			wfMessage( 'sanctions-link-on-user-tool' )->text()
+		);
+		return true;
+	}
+
+	/**
+	 * @param RevisionRecord $newRevRecord New revision
+	 * @param string[] &$links Array of HTML links
+	 * @param RevisionRecord|null $oldRevRecord Old revision (may be null)
+	 * @param UserIdentity $userIdentity Current user
+	 * @return bool|void True or no return value to continue or false to abort
+	 */
+	public function onDiffTools( $newRevRecord, &$links, $oldRevRecord, $userIdentity ) {
+		if ( !Utils::hasVoteRight( User::newFromIdentity( $userIdentity ) ) ) {
+			return true;
+		}
+
+		$ids = '';
+		if ( $oldRevRecord != null ) {
+			$ids .= $oldRevRecord->getId() . '/';
+		}
+		$ids .= $newRevRecord->getId();
+
+		$titleText = $newRevRecord->getUser()->getName() . '/' . $ids;
+		$links[] = Linker::link(
+			SpecialPage::getTitleFor( 'Sanctions', $titleText ),
+			wfMessage( 'sanctions-link-on-diff' )->text()
+		);
+
+		return true;
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public function onHistoryTools( $revRecord, &$links, $prevRevRecord, $userIdentity ) {
+		if ( !Utils::hasVoteRight( User::newFromIdentity( $userIdentity ) ) ) {
+			return true;
+		}
+
+		$titleText = $revRecord->getUser()->getName() . '/' . $revRecord->getId();
+		$links[] = Linker::link(
+			SpecialPage::getTitleFor( 'Sanctions', $titleText ),
+			wfMessage( 'sanctions-link-on-history' )->text()
+		);
+
+		return true;
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public function onSidebarBeforeOutput( $skin, &$sidebar ): void {
+		$user = $skin->getRelevantUser();
+
+		if ( !$user ) {
+			return;
+		}
+
+		$rootUser = $user->getName();
+
+		$sanctionsLink = [
+			'sanctions' => [
+				'text' => $skin->msg( 'sanctions-link-on-user-page' )->text(),
+				'href' => $skin::makeSpecialUrlSubpage( 'Sanctions', $rootUser ),
+				'id' => 't-sanctions'
+			]
+		];
+
+		if ( !isset( $sidebar['TOOLBOX'] ) || !$sidebar['TOOLBOX'] ) {
+			$sidebar['TOOLBOX'] = $sanctionsLink;
+		} else {
+			$toolbox = $sidebar['TOOLBOX'];
+
+			$sidebar['TOOLBOX'] = wfArrayInsertAfter(
+				$toolbox,
+				$sanctionsLink,
+				isset( $toolbox['blockip'] ) ? 'blockip' : 'log'
+			);
+		}
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public function onContributionsToolLinks( $id, Title $title, array &$tools, SpecialPage $specialPage ) {
+		$tools['sanctions'] = $specialPage->getLinkRenderer()->makeKnownLink(
+				SpecialPage::getTitleFor( 'Sanctions', User::newFromId( $id ) ),
+				wfMessage( 'sanctions-link-on-user-contributes' )->text()
+			);
+	}
+}

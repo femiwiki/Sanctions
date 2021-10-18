@@ -91,21 +91,27 @@
   },
   "Hooks": {
     "LoadExtensionSchemaUpdates": "main",
-    "AbortEmailNotification": "main",
-    "BeforeEchoEventInsert": "MediaWiki\\Extension\\Sanctions\\Hooks\\Main::onBeforeEchoEventInsert",
-    "BeforeCreateEchoEvent": "MediaWiki\\Extension\\Sanctions\\Hooks\\Main::onBeforeCreateEchoEvent",
-    "EmailConfirmed": "main",
+    "AbortEmailNotification": "Notification",
+    "BeforeEchoEventInsert": "MediaWiki\\Extension\\Sanctions\\Hooks\\Notification::onBeforeEchoEventInsert",
+    "BeforeCreateEchoEvent": "MediaWiki\\Extension\\Sanctions\\Hooks\\Notification::onBeforeCreateEchoEvent",
+    "EmailConfirmed": "Notification",
     "ResourceLoaderGetConfigVars": "main",
-    "UserToolLinksEdit": "main",
-    "DiffTools": "main",
-    "HistoryTools": "main",
-    "SidebarBeforeOutput": "main",
-    "ContributionsToolLinks": "main",
+    "UserToolLinksEdit": "ToolLinks",
+    "DiffTools": "ToolLinks",
+    "HistoryTools": "ToolLinks",
+    "SidebarBeforeOutput": "ToolLinks",
+    "ContributionsToolLinks": "ToolLinks",
     "FlowAddModules": "main"
   },
   "HookHandlers": {
     "main": {
       "class": "MediaWiki\\Extension\\Sanctions\\Hooks\\Main"
+    },
+    "Notification": {
+      "class": "MediaWiki\\Extension\\Sanctions\\Hooks\\Notification"
+    },
+    "ToolLinks": {
+      "class": "MediaWiki\\Extension\\Sanctions\\Hooks\\ToolLinks"
     }
   },
   "SpecialPages": {
