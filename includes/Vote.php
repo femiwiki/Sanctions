@@ -46,7 +46,7 @@ class Vote {
 			$userFactory = MediaWikiServices::getInstance()->getUserFactory();
 			$this->user = $userFactory->newFromId( (int)$row->stv_user );
 		}
-		if ( isset( $row->stv_topic,  ) ) {
+		if ( isset( $row->stv_topic ) ) {
 			$uuid = UUID::create( $row->stv_topic );
 			$this->sanction = Sanction::newFromUUID( $uuid );
 		}
