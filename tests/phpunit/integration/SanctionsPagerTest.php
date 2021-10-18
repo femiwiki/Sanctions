@@ -130,7 +130,7 @@ class SanctionsPagerTest extends MediaWikiIntegrationTestCase {
 	public function testSortOrderRegistered() {
 		$pager = $this->getSanctionsPager( $this->getVotableUser() );
 
-		'@phan-var SanctionsPager $pager';
+		/** @var SanctionsPager $pager */
 		$pager = TestingAccessWrapper::newFromObject( $pager );
 		$queryInfo = $pager->buildQueryInfo( '', 1, \IndexPager::QUERY_DESCENDING );
 

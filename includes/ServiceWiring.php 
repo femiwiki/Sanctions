@@ -1,0 +1,7 @@
+<?php
+
+return [
+	'SanctionsHookRunner' => static function ( MediaWikiServices $services ): SanctionsHookRunner {
+		return new SanctionsHookRunner( $services->getHookContainer() );
+	},
+];

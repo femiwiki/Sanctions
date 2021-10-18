@@ -4,6 +4,7 @@ namespace MediaWiki\Extension\Sanctions;
 
 use EchoEvent;
 use Flow\Container;
+use Flow\Exception\DataModelException;
 use Flow\Import\Converter;
 use Flow\Import\EnableFlow\EnableFlowWikitextConversionStrategy;
 use Flow\Import\SourceStore\NullImportSourceStore;
@@ -249,6 +250,8 @@ class Sanction {
 		if ( $this->isExpired() ) {
 			return false;
 		}
+
+		$this->checkNewVotes();
 
 		$emergency = $this->mIsEmergency;
 		$toEmergency = !$emergency;
@@ -976,20 +979,217 @@ class Sanction {
 		return null;
 	}
 
+	public static function checkAllSanctionNewVotes() {
+		$db = wfGetDB( DB_REPLICA );
+
+		$sanctions = $db->select(
+			'sanctions',
+			'st_id',
+			[
+				'st_handled' => 0,
+			]
+		);
+
+		foreach ( $sanctions as $sanction ) {
+			self::newFromId( $sanction->st_id )->checkNewVotes();
+		}
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function checkNewVotes() {
+		// Do not check the closed sanction.
+		if ( $this->isExpired() ) {
+			return false;
+		}
+
+		$uuid = $this->getTopicUUID();
+		$db = wfGetDB( DB_REPLICA );
+		$writableDb = wfGetDB( DB_PRIMARY );
+
+		// Ignore if the topic has not changed since the last check.
+		$topicLastUpdate = $db->selectField(
+			'flow_workflow',
+			'workflow_last_update_timestamp',
+			[
+				'workflow_id' => $uuid->getBinary(),
+				'workflow_type' => 'topic'
+			]
+		);
+		$id = $this->mId;
+		$sanctionLastUpdate = $db->selectField(
+			'sanctions',
+			'st_last_update_timestamp',
+			[
+				'st_id' => $id
+			]
+		);
+		if ( $topicLastUpdate <= $sanctionLastUpdate ) {
+			return false;
+		}
+
+		// Get all revisions for all comments created on this sanctions topic.
+		// @todo All revisions is not required
+		$res = $db->select(
+			[
+				'flow_workflow',
+				'flow_tree_node',
+				'flow_tree_revision',
+				'flow_revision'
+			],
+			[
+				'rev_id',
+				'rev_user_id',
+				'rev_content'
+			],
+			[
+				'workflow_id' => $uuid->getBinary()
+			],
+			__METHOD__,
+			[ 'DISTINCT' ],
+			[
+				'flow_tree_node' => [ 'INNER JOIN', 'workflow_id = tree_ancestor_id' ],
+				'flow_tree_revision' => [ 'INNER JOIN', 'tree_descendant_id = tree_rev_descendant_id' ],
+				'flow_revision' => [ 'INNER JOIN', 'tree_rev_id = rev_id' ],
+			]
+		);
+
+		$votes = [];
+
+		// Count valid/invalid votes first.
+		foreach ( $res as $row ) {
+			$timestamp = UUID::create( $row->rev_id )->getTimestamp();
+			$userId = $row->rev_user_id;
+			$content = $row->rev_content;
+
+			$period = ReplyUtils::checkNewVote( $content, $newContent );
+			if ( $period === null ) {
+				continue;
+			}
+
+			ReplyUtils::appendCheckedMark( $writableDb, $content, $row->rev_id );
+
+			// $reasons could be an empty array when vote is accepted
+			$reasons = [];
+			if ( $this->getAuthor()->getId() == $userId && $period > 0 ) {
+				$content = wfMessage( 'sanctions-topic-auto-reply-no-count' )->inContentLanguage()->text() .
+					PHP_EOL . '* ' .
+					wfMessage( 'sanctions-topic-auto-reply-unable-self-agree' )->inContentLanguage()->text();
+				try {
+					$this->replyTo( $row->rev_id, $content );
+				} catch ( DataModelException $e ) {
+					// @todo
+					// If someone modifies comments with no suggestions and adds suggestions, an error occurs
+					// because the bot cannot attach a ripple directly below them.
+				}
+				unset( $votes[$userId] );
+				continue;
+			} elseif ( !Utils::hasVoteRight( User::newFromId( $userId ), $reasons, true ) ) {
+				$content = wfMessage( 'sanctions-topic-auto-reply-no-count' )->inContentLanguage()->text() .
+					PHP_EOL . '* ' . implode( PHP_EOL . '* ', $reasons ?? [] );
+				try {
+					$this->replyTo( $row->rev_id, $content );
+				} catch ( DataModelException $e ) {
+					// @todo
+					// If someone modifies comments with no suggestions and adds suggestions, an error occurs
+					// because the bot cannot attach a ripple directly below them.
+				}
+				unset( $votes[$userId] );
+				continue;
+			}
+
+			// If this is not the last comment left by the user, ignore it.
+			if (
+				isset( $votes[$userId] ) &&
+				$votes[$userId]['stv_last_update_timestamp'] > $timestamp
+			) {
+				continue;
+			}
+
+			// save to the array
+			$votes[$userId] = [
+				'stv_period' => $period,
+				'stv_last_update_timestamp' => $timestamp
+			];
+		}
+
+		// Do nothing ff there is no valid vote.
+		if ( !count( $votes ) ) {
+			return false;
+		}
+
+		$dbIsTouched = false;
+		foreach ( $votes as $userId => $vote ) {
+			$previous = $db->selectRow(
+				'sanctions_vote',
+				[
+					'stv_period',
+					'stv_last_update_timestamp'
+				],
+				[
+					'stv_topic' => $uuid->getBinary(),
+					'stv_user' => $userId
+				]
+			);
+			if ( $previous == false ) {
+				$writableDb->insert(
+					'sanctions_vote',
+					[
+						'stv_topic' => $uuid->getBinary(),
+						'stv_user' => $userId,
+						'stv_period' => $vote['stv_period'],
+						'stv_last_update_timestamp' => $vote['stv_last_update_timestamp']
+					]
+				);
+				$dbIsTouched = true;
+			} elseif (
+				$previous->stv_last_update_timestamp < $vote['stv_last_update_timestamp'] &&
+				$previous->stv_period != $vote['stv_period']
+			) {
+				$writableDb->update(
+					'sanctions_vote',
+					[
+						'stv_period' => $vote['stv_period'],
+						'stv_last_update_timestamp' => $vote['stv_last_update_timestamp'],
+					],
+					[
+						'stv_topic' => $uuid->getBinary(),
+						'stv_user' => $userId
+					]
+				);
+				$dbIsTouched = true;
+			}
+		}
+
+		if ( $dbIsTouched ) {
+			// Update the time of the sanction.
+			$writableDb->update(
+				'sanctions',
+				[
+					'st_last_update_timestamp' => $sanctionLastUpdate
+				],
+				[
+					'st_id' => $id
+				]
+			);
+			$this->onVotesChanged();
+		}
+
+		return true;
+	}
+
 	/**
 	 * @param string $to
 	 * @param string $content
 	 * @return bool
-	 * @deprecated Use FlowUtil::replyTo() instead.
 	 */
 	public function replyTo( $to, $content ) {
 		$topicTitleText = $this->getTopic()->getFullText();
 		$topicTitle = Title::newFromText( $topicTitleText );
 		$topicId = $this->mTopic;
 
-		/** @var \Flow\WorkflowLoaderFactory $factory */
 		$factory = Container::get( 'factory.loader.workflow' );
-
 		$loader = $factory->createWorkflowLoader( $topicTitle, $topicId );
 		$blocks = $loader->getBlocks();
 		$action = 'reply';
@@ -1014,7 +1214,7 @@ class Sanction {
 		if ( !count( $blocksToCommit ) ) {
 			return false;
 		}
-		$loader->commit( $blocksToCommit );
+		$commitMetadata = $loader->commit( $blocksToCommit );
 	}
 
 	/**
@@ -1072,10 +1272,20 @@ class Sanction {
 
 	/**
 	 * @return User
-	 * @deprecated Use Utils:getBot() instead
 	 */
 	public static function getBot() {
-		return Utils::getBot();
+		$botName = wfMessage( 'sanctions-bot-name' )->inContentLanguage()->text();
+		$bot = User::newSystemUser( $botName, [ 'steal' => true ] );
+
+		$userGroupManager = MediaWikiServices::getInstance()->getUserGroupManager();
+		$groups = $userGroupManager->getUserGroups( $bot );
+		foreach ( [ 'bot', 'flow-bot' ] as $group ) {
+			if ( !in_array( $group, $groups ) ) {
+				$userGroupManager->addUserToGroup( $bot, $group );
+			}
+		}
+
+		return $bot;
 	}
 
 	/**

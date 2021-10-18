@@ -69,11 +69,11 @@ class SpacialSanctions extends SpecialPage {
 
 		$data = [];
 
+		Sanction::checkAllSanctionNewVotes();
 		$pager = new SanctionsPager( $this->getContext(), (string)$this->mTargetName );
 		$pager->doQuery();
 		$data['html-body'] = $pager->getBody();
 
-		$reason = [];
 		if ( Utils::hasVoteRight( $this->getUser(), $reason ) ) {
 			$data['data-form'] = [
 				'content' => $this->makeDiffLink(),

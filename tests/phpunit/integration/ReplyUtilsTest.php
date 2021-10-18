@@ -2,11 +2,11 @@
 
 namespace MediaWiki\Extension\Sanctions\Tests\Integration;
 
-use MediaWiki\Extension\Sanctions\Vote;
+use MediaWiki\Extension\Sanctions\ReplyUtils;
 use MediaWikiIntegrationTestCase;
 
-/** @covers \MediaWiki\Extension\Sanctions\Vote */
-class VoteTest extends MediaWikiIntegrationTestCase {
+/** @covers \MediaWiki\Extension\Sanctions\ReplyUtils */
+class ReplyUtilsTest extends MediaWikiIntegrationTestCase {
 
 	public static function provideReplies() {
 		return [
@@ -24,12 +24,12 @@ class VoteTest extends MediaWikiIntegrationTestCase {
 	}
 
 	/**
-	 * @covers \MediaWiki\Extension\Sanctions\Vote::extractPeriodFromReply
+	 * @covers \MediaWiki\Extension\Sanctions\ReplyUtils::checkNewVote
 	 * @dataProvider provideReplies
 	 */
 	public function testCheckNewVote( $expected, $content, $flowContentType = 'html' ) {
 		$this->setMwGlobals( 'wgFlowContentFormat', $flowContentType );
-		$actual = Vote::extractPeriodFromReply( $content );
+		$actual = ReplyUtils::checkNewVote( $content, $newContent );
 		$this->assertSame( $expected, $actual );
 	}
 }
