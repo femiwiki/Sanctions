@@ -13,14 +13,12 @@ use MediaWiki\Extension\Sanctions\VoteStore;
 use MediaWiki\User\UserFactory;
 use OutputPage;
 use RequestContext;
-use SanctionsCreateTemplates;
 use SpecialPage;
 use Title;
 use User;
 
 class Main implements
 	\MediaWiki\Hook\RecentChange_saveHook,
-	\MediaWiki\Installer\Hook\LoadExtensionSchemaUpdatesHook,
 	\MediaWiki\ResourceLoader\Hook\ResourceLoaderGetConfigVarsHook
 {
 
@@ -37,28 +35,6 @@ class Main implements
 	public function __construct( UserFactory $userFactory, VoteStore $voteStore ) {
 		$this->userFactory = $userFactory;
 		$this->voteStore = $voteStore;
-	}
-
-	/**
-	 * Create tables in the database
-	 *
-	 * @inheritDoc
-	 */
-	public function onLoadExtensionSchemaUpdates( $updater ) {
-		$dir = __DIR__;
-
-		if ( $updater->getDB()->getType() == 'mysql' ) {
-			$updater->addExtensionUpdate(
-				[ 'addTable', 'sanctions',
-				"$dir/../../sql/sanctions.tables.sql", true ]
-			);
-		}
-		// @todo else
-
-		require_once "$dir/../../maintenance/SanctionsCreateTemplates.php";
-		$updater->addPostDatabaseUpdateMaintenance( SanctionsCreateTemplates::class );
-
-		return true;
 	}
 
 	/**

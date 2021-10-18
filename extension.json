@@ -99,7 +99,7 @@
     "EmailConfirmed": "Notification",
     "FlowAddModules": "main",
     "HistoryTools": "ToolLinks",
-    "LoadExtensionSchemaUpdates": "main",
+    "LoadExtensionSchemaUpdates": "SchemaChanges",
     "RecentChange_save": "main",
     "ResourceLoaderGetConfigVars": "main",
     "SidebarBeforeOutput": "ToolLinks",
@@ -109,6 +109,9 @@
     "main": {
       "class": "MediaWiki\\Extension\\Sanctions\\Hooks\\Main",
       "services": ["UserFactory", "VoteStore"]
+    },
+    "SchemaChanges": {
+      "class": "MediaWiki\\Extension\\Sanctions\\Hooks\\SchemaChanges"
     },
     "Notification": {
       "class": "MediaWiki\\Extension\\Sanctions\\Hooks\\Notification"
