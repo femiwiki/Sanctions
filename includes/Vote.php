@@ -51,7 +51,7 @@ class Vote {
 			$this->sanction = Sanction::newFromUUID( $uuid );
 		}
 		if ( isset( $row->stv_period ) ) {
-			$this->user = $userFactory->newFromId( (int)$row->stv_period );
+			$this->period = (int)$row->stv_period;
 		}
 	}
 
