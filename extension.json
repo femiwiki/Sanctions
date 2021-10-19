@@ -20,6 +20,7 @@
   "AutoloadClasses": {
     "SanctionsCreateTemplates": "maintenance/SanctionsCreateTemplates.php"
   },
+  "ServiceWiringFiles": ["includes/ServiceWiring.php"],
   "ResourceModules": {
     "ext.sanctions.special.sanctions.styles": {
       "styles": ["styles/spacial-sanctions.less"]
@@ -90,22 +91,27 @@
     "remoteExtPath": "Sanctions/modules"
   },
   "Hooks": {
-    "LoadExtensionSchemaUpdates": "main",
     "AbortEmailNotification": "Notification",
-    "BeforeEchoEventInsert": "MediaWiki\\Extension\\Sanctions\\Hooks\\Notification::onBeforeEchoEventInsert",
     "BeforeCreateEchoEvent": "MediaWiki\\Extension\\Sanctions\\Hooks\\Notification::onBeforeCreateEchoEvent",
-    "EmailConfirmed": "Notification",
-    "ResourceLoaderGetConfigVars": "main",
-    "UserToolLinksEdit": "ToolLinks",
-    "DiffTools": "ToolLinks",
-    "HistoryTools": "ToolLinks",
-    "SidebarBeforeOutput": "ToolLinks",
+    "BeforeEchoEventInsert": "MediaWiki\\Extension\\Sanctions\\Hooks\\Notification::onBeforeEchoEventInsert",
     "ContributionsToolLinks": "ToolLinks",
-    "FlowAddModules": "main"
+    "DiffTools": "ToolLinks",
+    "EmailConfirmed": "Notification",
+    "FlowAddModules": "main",
+    "HistoryTools": "ToolLinks",
+    "LoadExtensionSchemaUpdates": "SchemaChanges",
+    "RecentChange_save": "main",
+    "ResourceLoaderGetConfigVars": "main",
+    "SidebarBeforeOutput": "ToolLinks",
+    "UserToolLinksEdit": "ToolLinks"
   },
   "HookHandlers": {
     "main": {
-      "class": "MediaWiki\\Extension\\Sanctions\\Hooks\\Main"
+      "class": "MediaWiki\\Extension\\Sanctions\\Hooks\\Main",
+      "services": ["UserFactory", "VoteStore"]
+    },
+    "SchemaChanges": {
+      "class": "MediaWiki\\Extension\\Sanctions\\Hooks\\SchemaChanges"
     },
     "Notification": {
       "class": "MediaWiki\\Extension\\Sanctions\\Hooks\\Notification"
