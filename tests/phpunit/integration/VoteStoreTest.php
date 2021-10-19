@@ -21,6 +21,10 @@ class VoteStoreTest extends MediaWikiIntegrationTestCase {
 		$this->assertInstanceOf( VoteStore::class, $actual );
 	}
 
+	/**
+	 * @covers \MediaWiki\Extension\Sanctions\VoteStore::getVoteBySanction
+	 * @covers \MediaWiki\Extension\Sanctions\VoteStore::deleteOn
+	 */
 	public function testGetVoteBySanction() {
 		$uuid = UUID::create();
 		$user = new User();
