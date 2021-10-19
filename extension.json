@@ -92,7 +92,6 @@
   },
   "Hooks": {
     "BeforeCreateEchoEvent": "MediaWiki\\Extension\\Sanctions\\Hooks\\Notification::onBeforeCreateEchoEvent",
-    "BeforeEchoEventInsert": "MediaWiki\\Extension\\Sanctions\\Hooks\\Notification::onBeforeEchoEventInsert",
     "ContributionsToolLinks": "ToolLinks",
     "DiffTools": "ToolLinks",
     "EmailConfirmed": "Notification",
