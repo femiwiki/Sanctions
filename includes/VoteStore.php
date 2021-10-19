@@ -4,6 +4,7 @@ namespace MediaWiki\Extension\Sanctions;
 
 use User;
 use Wikimedia\Rdbms\DBConnRef;
+use Wikimedia\Rdbms\IDatabase;
 use Wikimedia\Rdbms\ILoadBalancer;
 
 class VoteStore {
@@ -41,6 +42,18 @@ class VoteStore {
 			return null;
 		}
 		return Vote::newFromRow( $row );
+	}
+
+	/**
+	 * @param Sanction $sanction
+	 * @param IDatabase|null $dbw
+	 */
+	public function deleteOn( Sanction $sanction, $dbw = null ) {
+		$dbw = $dbw ?: $this->getDBConnectionRef( DB_PRIMARY );
+		$dbw->delete(
+			'sanctions_vote',
+			[ 'stv_topic' => $sanction->getTopicUUID()->getBinary() ]
+		);
 	}
 
 	/**

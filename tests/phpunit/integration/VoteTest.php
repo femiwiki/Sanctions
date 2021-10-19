@@ -2,6 +2,7 @@
 
 namespace MediaWiki\Extension\Sanctions\Tests\Integration;
 
+use InvalidArgumentException;
 use MediaWiki\Extension\Sanctions\Vote;
 use MediaWikiIntegrationTestCase;
 
@@ -13,6 +14,8 @@ class VoteTest extends MediaWikiIntegrationTestCase {
 	 * @covers \MediaWiki\Extension\Sanctions\Vote::loadFromRow
 	 */
 	public function testNewFromRow() {
+		$this->expectException( InvalidArgumentException::class );
+		Vote::newFromRow( null );
 		$actual = Vote::newFromRow( (object)[
 			'stv_user' => 0,
 			'stv_topic' => false,
@@ -32,6 +35,21 @@ class VoteTest extends MediaWikiIntegrationTestCase {
 				10,
 				'{{Support|10}}',
 				'wikitext',
+			],
+			'Disagreement in wikitext should be caught' => [
+				0,
+				'{{Oppose}}',
+				'wikitext',
+			],
+			'Agreement without days in wikitext should be caught' => [
+				1,
+				'{{Support}}',
+				'wikitext',
+			],
+			'Plain reply should be handled' => [
+				null,
+				'lorem ipsum',
+				'html',
 			],
 		];
 	}

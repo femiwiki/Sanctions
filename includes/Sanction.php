@@ -545,10 +545,8 @@ class Sanction {
 			],
 			[ 'st_id' => $id ]
 		);
-		$db->delete(
-			'sanctions_vote',
-			[ 'stv_topic' => $topic->getBinary() ]
-		);
+		$voteStore = MediaWikiServices::getInstance()->getService( 'VoteStore' );
+		$voteStore->deleteOn( $this, $db );
 
 		return true;
 	}
