@@ -91,7 +91,6 @@
     "remoteExtPath": "Sanctions/modules"
   },
   "Hooks": {
-    "AbortEmailNotification": "Notification",
     "BeforeCreateEchoEvent": "MediaWiki\\Extension\\Sanctions\\Hooks\\Notification::onBeforeCreateEchoEvent",
     "BeforeEchoEventInsert": "MediaWiki\\Extension\\Sanctions\\Hooks\\Notification::onBeforeEchoEventInsert",
     "ContributionsToolLinks": "ToolLinks",

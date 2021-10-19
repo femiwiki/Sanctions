@@ -8,41 +8,8 @@ use RequestContext;
 use User;
 
 class Notification implements
-	\MediaWiki\Hook\AbortEmailNotificationHook,
 	\MediaWiki\User\Hook\EmailConfirmedHook
 	{
-
-	/**
-	 * Abort notifications regarding occupied pages coming from the RecentChange class.
-	 * Flow has its own notifications through Echo.
-	 *
-	 * Also don't notify for actions made by Sanction bot.
-	 *
-	 * Copied from
-	 * https://github.com/wikimedia/mediawiki-extensions-Flow/blob/de0b9ad/Hooks.php#L963-L996
-	 *
-	 * @inheritDoc
-	 */
-	public function onAbortEmailNotification( $editor, $title, $rc ) {
-		if ( $title->getContentModel() === CONTENT_MODEL_FLOW_BOARD ) {
-			// Since we are aborting the notification we need to manually update the watchlist
-			$config = RequestContext::getMain()->getConfig();
-			if ( $config->get( 'EnotifWatchlist' ) || $config->get( 'ShowUpdatedMarker' ) ) {
-				MediaWikiServices::getInstance()->getWatchedItemStore()->updateNotificationTimestamp(
-					$editor,
-					$title,
-					wfTimestampNow()
-				);
-			}
-			return false;
-		}
-
-		if ( self::isSanctionBot( $editor ) ) {
-			return false;
-		}
-
-		return true;
-	}
 
 	/**
 	 * allow edit even when $wgEmailAuthentication is set to true
