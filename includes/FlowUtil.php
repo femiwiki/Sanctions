@@ -39,13 +39,14 @@ class FlowUtil {
 	public static function findSummaryOfTopic( $workflow ) {
 		$summaryCollection = PostSummaryCollection::newFromId( $workflow );
 		try {
-			/** @var PostSummary $summary */
-			return $summaryCollection->getLastRevision();
-			'@phan-var PostSummary $summary';
+			$rev = $summaryCollection->getLastRevision();
+			if ( $rev instanceof PostSummary ) {
+				return $rev;
+			}
 		} catch ( \Exception $e ) {
 			// no summary - that's ok!
-			return null;
 		}
+		return null;
 	}
 
 	/**
