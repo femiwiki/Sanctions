@@ -47,7 +47,8 @@ describe('Special:Sanctions', () => {
     });
 
     it('a newly registered user that you are too new', () => {
-      Config.setVerifications(10, 0);
+      Config.verificationPeriod = 10;
+      Config.verificationEdits = 0;
       UserLoginPage.loginAdmin();
       SanctionsPage.open();
 
@@ -59,7 +60,8 @@ describe('Special:Sanctions', () => {
     });
 
     it('a user does not have enough edit count the edit count', () => {
-      Config.setVerifications(0, 10);
+      Config.verificationPeriod = 0;
+      Config.verificationEdits = 10;
 
       UserLoginPage.loginAdmin();
       SanctionsPage.open();
@@ -72,25 +74,30 @@ describe('Special:Sanctions', () => {
   });
 
   it('should hide and show the form as the conditions change', () => {
-    Config.setVerifications(10 /* seconds */ / (24 * 60 * 60), 1);
     const username = Util.getTestString('Sanction-user-');
     const password = Util.getTestString();
     browser.call(async () => {
       await Api.createAccount(bot, username, password);
     });
-
     UserLoginPage.login(username, password);
+
+    Config.verificationPeriod = 3;
     SanctionsPage.open();
     let warnings = SanctionsPage.reasonsDisabledParticipation.getText();
     assert.ok(
       /sanctions-reason-unsatisfying-verification-period/.test(warnings),
       'There should be a warning about the creation time. ' + warnings
     );
+    Config.verificationPeriod = 15 /* seconds */ / (24 * 60 * 60);
+
+    Config.verificationEdits = 1;
+    SanctionsPage.open();
+    warnings = SanctionsPage.reasonsDisabledParticipation.getText();
     assert.ok(
       /sanctions-reason-unsatisfying-verification-edits/.test(warnings),
       'There should be a warning about the edit count. ' + warnings
     );
-    SanctionsPage.open();
+
     SanctionsPage.waitUntilUserIsNotNew();
 
     // Do edit
@@ -108,7 +115,8 @@ describe('Special:Sanctions', () => {
   });
 
   it('should not show any warning user matches all conditions', () => {
-    Config.setVerifications(0, 0);
+    Config.verificationPeriod = 0;
+    Config.verificationEdits = 0;
 
     UserLoginPage.loginAdmin();
     SanctionsPage.open();
@@ -117,7 +125,8 @@ describe('Special:Sanctions', () => {
   });
 
   it('should remove voted tag on a sanction', () => {
-    Config.setVerifications(0, 0);
+    Config.verificationPeriod = 0;
+    Config.verificationEdits = 0;
     Config.votingPeriod = 1;
 
     const username = Util.getTestString('Sanction-other-');
@@ -144,10 +153,5 @@ describe('Special:Sanctions', () => {
         FlowApi.reply('{{Oppose}}', uuid, voters[count]);
       }
     });
-
-    SanctionsPage.open();
-    browser.refresh();
-    SanctionsPage.executeButton.waitForDisplayed();
-    SanctionsPage.executeButton.click();
   });
 });

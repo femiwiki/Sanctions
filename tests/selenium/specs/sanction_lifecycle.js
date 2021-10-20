@@ -17,7 +17,8 @@ describe('Sanction', () => {
 
   before(async () => {
     bot = await Api.bot();
-    Config.setVerifications(0, 0);
+    Config.verificationPeriod = 0;
+    Config.verificationEdits = 0;
     Config.votingPeriod = 10 /* seconds */ / (24 * 60 * 60);
     targetName = Util.getTestString('Sanction-target-');
     await Api.createAccount(bot, targetName, Util.getTestString());
@@ -64,7 +65,7 @@ describe('Sanction', () => {
 
     browser.refresh();
 
-    SanctionsPage.sanctionLink.click();
+    Sanction.open(uuid);
     assert.strictEqual(
       'Status: Immediately rejected (Rejected by first three participants.)',
       FlowTopic.topicSummary.getText()
@@ -84,8 +85,7 @@ describe('Sanction', () => {
     // Wait for topic summary is updated by the bot.
     browser.pause(1000);
 
-    SanctionsPage.open();
-    SanctionsPage.sanctionLink.click();
+    Sanction.open(uuid);
     assert.ok(
       FlowTopic.topicSummary
         .getText()
