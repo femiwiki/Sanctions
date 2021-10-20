@@ -38,6 +38,11 @@ class SpacialSanctions extends SpecialPage {
 		$this->templateParser = new TemplateParser( __DIR__ . '/templates' );
 	}
 
+	/** @inheritDoc */
+	public function doesWrites() {
+		return true;
+	}
+
 	/**
 	 * @param string $subpage
 	 */
