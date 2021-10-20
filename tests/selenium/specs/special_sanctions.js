@@ -129,29 +129,27 @@ describe('Special:Sanctions', () => {
     Config.verificationEdits = 0;
     Config.votingPeriod = 1;
 
+    // Create a Sanction
     const username = Util.getTestString('Sanction-other-');
     const password = Util.getTestString();
     Api.createAccount(bot, username, password);
     const uuid = Sanction.create(null, username, password);
 
+    // Store the number of voted mark
     UserLoginPage.loginAdmin();
     SanctionsPage.open();
-
     const voted = SanctionsPage.votedSanctions.length;
 
+    // Vote
     FlowApi.reply('{{Oppose}}', uuid, bot);
-
     SanctionsPage.open();
-    browser.refresh();
 
     const newVoted = SanctionsPage.votedSanctions.length;
-
     assert.equal(1, newVoted - voted);
 
-    browser.call(async () => {
-      for (let count = 0; count < 2; count++) {
-        FlowApi.reply('{{Oppose}}', uuid, voters[count]);
-      }
-    });
+    // Cancel the sanction
+    for (let count = 0; count < 2; count++) {
+      FlowApi.reply('{{Oppose}}', uuid, voters[count]);
+    }
   });
 });

@@ -27,8 +27,8 @@ class ToolLinks implements
 	 * @return bool|void True or no return value to continue or false to abort
 	 */
 	public function onUserToolLinksEdit( $userId, $userText, &$items ) {
-		$user = RequestContext::getMain()->getUser();
-		if ( $user == null || !Utils::hasVoteRight( $user ) ) {
+		$viewer = RequestContext::getMain()->getUser();
+		if ( $viewer == null || !Utils::hasVoteRight( $viewer ) ) {
 			return true;
 		}
 

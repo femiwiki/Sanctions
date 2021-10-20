@@ -113,6 +113,7 @@ class Sanction {
 			]
 		];
 		$context = RequestContext::getMain();
+		$context->setTitle( $page );
 		$blocksToCommit = $loader->handleSubmit(
 			$context,
 			$action,

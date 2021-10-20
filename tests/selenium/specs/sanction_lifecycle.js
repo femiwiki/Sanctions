@@ -63,8 +63,6 @@ describe('Sanction', () => {
       FlowApi.reply('{{Oppose}}', uuid, voters[count]);
     }
 
-    browser.refresh();
-
     Sanction.open(uuid);
     assert.strictEqual(
       'Status: Immediately rejected (Rejected by first three participants.)',
