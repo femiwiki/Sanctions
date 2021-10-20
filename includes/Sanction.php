@@ -521,7 +521,7 @@ class Sanction {
 	}
 
 	/**
-	 * @param $done if it is true, the sanction would be considered to be done and check for
+	 * @param bool $done if it is true, the sanction would be considered to be done and check for
 	 *   expiration would not be done.
 	 * @return bool
 	 */
