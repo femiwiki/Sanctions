@@ -896,47 +896,6 @@ class Sanction {
 	}
 
 	/**
-	 * @param string $to
-	 * @param string $content
-	 * @return bool
-	 * @deprecated Use FlowUtil::replyTo() instead.
-	 */
-	public function replyTo( $to, $content ) {
-		$topicTitleText = $this->getTopic()->getFullText();
-		$topicTitle = Title::newFromText( $topicTitleText );
-		$topicId = $this->mWorkflow;
-
-		/** @var \Flow\WorkflowLoaderFactory $factory */
-		$factory = Container::get( 'factory.loader.workflow' );
-
-		$loader = $factory->createWorkflowLoader( $topicTitle, $topicId );
-		$blocks = $loader->getBlocks();
-		$action = 'reply';
-		$params = [
-			'topic' => [
-				'page' => $topicTitleText,
-				'token' => self::getBot()->getEditToken(),
-				'action' => 'flow',
-				'submodule' => 'reply',
-				'replyTo' => $to,
-				'content' => $content,
-				'format' => 'wikitext'
-			]
-		];
-		$context = RequestContext::getMain();
-		$context->setUser( self::getBot() );
-		$blocksToCommit = $loader->handleSubmit(
-			$context,
-			$action,
-			$params
-		);
-		if ( !count( $blocksToCommit ) ) {
-			return false;
-		}
-		$loader->commit( $blocksToCommit );
-	}
-
-	/**
 	 * @param string $id
 	 * @return Sanction|null
 	 */

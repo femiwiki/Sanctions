@@ -139,6 +139,9 @@ class Main implements
 		}
 
 		$post = FlowUtil::findPostRevisionFromUUID( UUID::create( $change['revision'] ) );
+		if ( !$post ) {
+			return;
+		}
 
 		$period = Vote::extractPeriodFromReply( $post->getContentRaw() );
 		if ( $period === null ) {

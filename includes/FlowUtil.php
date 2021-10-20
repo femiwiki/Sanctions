@@ -15,13 +15,33 @@ use User;
 
 class FlowUtil {
 
+	/** @return ManagerGroup|null */
+	public static function getStorage() {
+		$storage = Container::get( 'storage' );
+		if ( $storage instanceof ManagerGroup ) {
+			return $storage;
+		}
+		return null;
+	}
+
+	/** @return WorkflowLoaderFactory|null */
+	public static function getWorkflowLoaderFactory() {
+		$storage = Container::get( 'factory.loader.workflow' );
+		if ( $storage instanceof WorkflowLoaderFactory ) {
+			return $storage;
+		}
+		return null;
+	}
+
 	/**
 	 * @param UUID $uuid
-	 * @return PostRevision
+	 * @return PostRevision|null
 	 */
 	public static function findPostRevisionFromUUID( UUID $uuid ) {
-		/** @var ManagerGroup $storage */
-		$storage = Container::get( 'storage' );
+		$storage = self::getStorage();
+		if ( !$storage ) {
+			return null;
+		}
 		$found = $storage->find(
 			'PostRevision',
 			[ 'rev_type_id' => $uuid ],
@@ -110,8 +130,10 @@ class FlowUtil {
 		$params += [
 			'action' => 'flow',
 		];
-		/** @var WorkflowLoaderFactory $factory */
-		$factory = Container::get( 'factory.loader.workflow' );
+		$factory = self::getWorkflowLoaderFactory();
+		if ( !$factory ) {
+			return false;
+		}
 
 		$loader = $factory->createWorkflowLoader( $title, $workflow );
 
