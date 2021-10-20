@@ -82,6 +82,7 @@ class Vote {
 	public function updateByPostRevision( PostRevision $post, $timestamp, IDatabase $dbw = null ) {
 		$dbw = $dbw ?: wfGetDB( DB_PRIMARY );
 		$period = self::extractPeriodFromReply( $post->getContentRaw() );
+
 		$dbw->update(
 			'sanctions_vote',
 			[
@@ -90,7 +91,7 @@ class Vote {
 			],
 			[
 				'stv_topic' => $this->sanction->getTopicUUID()->getBinary(),
-				'stv_user' => $this->user,
+				'stv_user' => $this->user->getId(),
 			]
 		);
 		$this->updateLastTouched( $timestamp, $dbw );

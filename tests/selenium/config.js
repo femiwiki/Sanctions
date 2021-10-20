@@ -3,16 +3,22 @@
 const Api = require('wdio-mediawiki/Api');
 
 class Config {
-  setVerifications(period, edits) {
+  set verificationPeriod(period) {
     browser.call(async () => {
       const bot = await Api.bot();
       await bot.edit(
         'MediaWiki:sanctions-voting-right-verification-period',
-        '' + period
+        period
       );
+    });
+  }
+
+  set verificationEdits(edits) {
+    browser.call(async () => {
+      const bot = await Api.bot();
       await bot.edit(
         'MediaWiki:sanctions-voting-right-verification-edits',
-        '' + edits
+        edits
       );
     });
   }

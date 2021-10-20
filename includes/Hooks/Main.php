@@ -138,7 +138,10 @@ class Main implements
 			return;
 		}
 
-		$post = FlowUtil::findPostRevisionFromUUID( $change['revision'] );
+		$post = FlowUtil::findPostRevisionFromUUID( UUID::create( $change['revision'] ) );
+		if ( !$post ) {
+			return;
+		}
 
 		$period = Vote::extractPeriodFromReply( $post->getContentRaw() );
 		if ( $period === null ) {

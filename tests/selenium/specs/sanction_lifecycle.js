@@ -17,7 +17,8 @@ describe('Sanction', () => {
 
   before(async () => {
     bot = await Api.bot();
-    Config.setVerifications(0, 0);
+    Config.verificationPeriod = 0;
+    Config.verificationEdits = 0;
     Config.votingPeriod = 10 /* seconds */ / (24 * 60 * 60);
     targetName = Util.getTestString('Sanction-target-');
     await Api.createAccount(bot, targetName, Util.getTestString());
@@ -48,19 +49,11 @@ describe('Sanction', () => {
 
     browser.pause(1000);
     browser.refresh();
-    // Wait for topic summary is updated by the bot.
-    browser.pause(1000);
-    browser.refresh();
 
     assert.strictEqual(
       "Status: Rejected (Canceled by the sanction's author.)",
       FlowTopic.topicSummary.getText()
     );
-
-    SanctionsPage.open();
-    SanctionsPage.executeButton.waitForDisplayed();
-    SanctionsPage.executeButton.click();
-    assert.ok(!SanctionsPage.executeButton.isExisting());
   });
 
   it('should be rejected if three users object', () => {
@@ -70,18 +63,11 @@ describe('Sanction', () => {
       FlowApi.reply('{{Oppose}}', uuid, voters[count]);
     }
 
-    browser.refresh();
-    // Wait for topic summary is updated by the bot.
-    browser.pause(1000);
-
-    SanctionsPage.sanctionLink.click();
+    Sanction.open(uuid);
     assert.strictEqual(
       'Status: Immediately rejected (Rejected by first three participants.)',
       FlowTopic.topicSummary.getText()
     );
-    SanctionsPage.open();
-    assert.ok(SanctionsPage.executeButton.isExisting());
-    SanctionsPage.executeButton.click();
   });
 
   it('should be passed if three users support before expired', () => {
@@ -97,8 +83,7 @@ describe('Sanction', () => {
     // Wait for topic summary is updated by the bot.
     browser.pause(1000);
 
-    SanctionsPage.open();
-    SanctionsPage.sanctionLink.click();
+    Sanction.open(uuid);
     assert.ok(
       FlowTopic.topicSummary
         .getText()

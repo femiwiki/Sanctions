@@ -225,7 +225,8 @@ class SpacialSanctions extends SpecialPage {
 			return false;
 		}
 
-		if ( !$request->wasPosted() ) { return false;
+		if ( !$request->wasPosted() ) {
+			return false;
 		}
 
 		$action = $request->getVal( 'sanction-action' );
