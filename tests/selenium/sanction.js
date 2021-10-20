@@ -9,8 +9,8 @@ const Api = require('wdio-mediawiki/Api');
 class Sanction {
   create(target = null, username = null, password = null) {
     target = target ? target : browser.config.mwUser;
-	Config.verificationPeriod = 0;
-    Config.verificationEdits = 0
+    Config.verificationPeriod = 0;
+    Config.verificationEdits = 0;
     if (username && password) {
       UserLoginPage.login(username, password);
     } else {
