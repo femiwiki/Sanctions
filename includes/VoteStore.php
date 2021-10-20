@@ -47,13 +47,20 @@ class VoteStore {
 	/**
 	 * @param Sanction $sanction
 	 * @param IDatabase|null $dbw
+	 * @return bool
 	 */
 	public function deleteOn( Sanction $sanction, $dbw = null ) {
 		$dbw = $dbw ?: $this->getDBConnectionRef( DB_PRIMARY );
+
 		$dbw->delete(
 			'sanctions_vote',
 			[ 'stv_topic' => $sanction->getTopicUUID()->getBinary() ]
 		);
+
+		if ( $dbw->affectedRows() == 0 ) {
+			return false;
+		}
+		return true;
 	}
 
 	/**

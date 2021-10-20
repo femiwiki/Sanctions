@@ -444,29 +444,21 @@ class Sanction {
 	 */
 	public function onVotesChanged() {
 		$this->countVotes( true );
-		$this->immediateRejectionIfNeeded();
-		$this->updateTopicSummary();
-	}
-
-	/**
-	 * Immediately check and run the rejection condition.
-	 * @return bool
-	 */
-	public function immediateRejectionIfNeeded() {
-		if ( $this->needToImmediateRejection() ) {
-			return $this->immediateRejection();
+		if ( $this->isNeededToImmediateRejection() ) {
+			$this->execute( true );
 		}
+		$this->updateTopicSummary();
 	}
 
 	/**
 	 * Examine opposition of three or more negative terms.
 	 * @return bool
 	 */
-	public function needToImmediateRejection() {
+	public function isNeededToImmediateRejection() {
 		$agree = $this->mAgreeVote;
 		$count = $this->mVoteNumber;
 
-		wfDebugLog( 'Sanctions', "\n\n\n" . "agree = $agree\ncount = $count" );
+		Utils::getLogger()->debug( "agree = $agree, count = $count" );
 
 		if ( $count - $agree >= 3 ||
 			( $agree == 0 && array_key_exists( $this->mAuthor->getId(), $this->mVotes )
@@ -475,41 +467,13 @@ class Sanction {
 		}
 	}
 
-	public function immediateRejection() {
-		// The votes disappears If the sanction is rejected, so write a summary of the topic before.
-		$this->countVotes( true );
-		$this->updateTopicSummary();
-
-		$this->mExpiry = wfTimestamp( TS_MW );
-
-		// If it was an emergency, remove the temporary measure.
-		if ( $this->mIsEmergency ) {
-			$reason = wfMessage(
-					'sanctions-log-immediate-rejection',
-					$this->mTopic->getAlphadecimal()
-				)->inContentLanguage()->text();
-			$this->removeTemporaryMeasure( $reason );
-		}
-
-		// Write to the database that sanctions have been processed.
-		$db = wfGetDB( DB_PRIMARY );
-		$now = wfTimestamp( TS_MW );
-		$res = $db->update(
-			'sanctions',
-			[
-				'st_expiry' => wfTimestamp( TS_MW ),
-				'st_last_update_timestamp' => $now
-			],
-			[ 'st_id' => $this->mId ]
-		);
-	}
-
 	/**
 	 * @todo Return false on failure
+	 * @param bool $force
 	 * @return bool
 	 */
-	public function execute() {
-		if ( !$this->isExpired() || $this->mIsHandled ) {
+	public function execute( bool $force = false ) {
+		if ( !$force && ( !$this->isExpired() || $this->mIsHandled ) ) {
 			return false;
 		}
 		$this->mIsHandled = true;
@@ -517,7 +481,6 @@ class Sanction {
 		$id = $this->mId;
 		$emergency = $this->mIsEmergency;
 		$passed = $this->isPassed();
-		$topic = $this->mTopic;
 
 		if ( $passed && !$emergency ) {
 			$this->justTakeMeasure();
@@ -526,7 +489,7 @@ class Sanction {
 					'sanctions-log-immediate-rejection',
 					$this->mTopic->getAlphadecimal()
 				)->inContentLanguage()->text();
-			$this->removeTemporaryMeasure( $reason, $this->getBot() );
+			$this->removeTemporaryMeasure( $reason, Utils::getBot() );
 		} elseif ( $passed && $emergency ) {
 			$this->replaceTemporaryMeasure();
 		}
@@ -545,6 +508,7 @@ class Sanction {
 			],
 			[ 'st_id' => $id ]
 		);
+		/** @var VoteStore $voteStore */
 		$voteStore = MediaWikiServices::getInstance()->getService( 'VoteStore' );
 		$voteStore->deleteOn( $this, $db );
 
@@ -1070,7 +1034,7 @@ class Sanction {
 
 	/**
 	 * @return User
-	 * @deprecated Use Utils:getBot() instead
+	 * @deprecated Use Utils::getBot() instead
 	 */
 	public static function getBot() {
 		return Utils::getBot();
