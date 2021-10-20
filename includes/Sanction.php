@@ -31,7 +31,7 @@ class Sanction {
 	protected $mAuthor;
 
 	/** @var UUID */
-	protected $mTopic;
+	protected $mWorkflow;
 
 	/** @var User */
 	protected $mTarget;
@@ -258,7 +258,7 @@ class Sanction {
 		} else {
 			$reason = wfMessage(
 					'sanctions-log-remove-temporary-measure',
-					$this->mTopic->getAlphadecimal()
+					$this->mWorkflow->getAlphadecimal()
 				)->inContentLanguage()->text();
 
 			$this->removeTemporaryMeasure( $reason, $user );
@@ -293,7 +293,7 @@ class Sanction {
 		$isForInsultingName = $this->isForInsultingName();
 		$reason = wfMessage(
 			'sanctions-log-take-measure',
-			$this->mTopic->getAlphadecimal()
+			$this->mWorkflow->getAlphadecimal()
 		)->inContentLanguage()->text();
 
 		if ( $isForInsultingName ) {
@@ -342,7 +342,7 @@ class Sanction {
 	public function replaceTemporaryMeasure() {
 		$target = $this->mTarget;
 		$isForInsultingName = $this->isForInsultingName();
-		$reason = wfMessage( 'sanctions-log-take-measure', $this->mTopic->getAlphadecimal() )
+		$reason = wfMessage( 'sanctions-log-take-measure', $this->mWorkflow->getAlphadecimal() )
 			->inContentLanguage()->text();
 
 		if ( $isForInsultingName ) {
@@ -373,7 +373,7 @@ class Sanction {
 		$insultingName = $this->isForInsultingName();
 		$reason = wfMessage(
 			'sanctions-log-take-temporary-measure',
-			$this->mTopic->getAlphadecimal()
+			$this->mWorkflow->getAlphadecimal()
 		)->inContentLanguage()->text();
 
 		if ( $insultingName ) {
@@ -446,8 +446,9 @@ class Sanction {
 		$this->countVotes( true );
 		if ( $this->isNeededToImmediateRejection() ) {
 			$this->execute( true );
+		} else {
+			$this->updateTopicSummary();
 		}
-		$this->updateTopicSummary();
 	}
 
 	/**
@@ -458,7 +459,7 @@ class Sanction {
 		$agree = $this->mAgreeVote;
 		$count = $this->mVoteNumber;
 
-		Utils::getLogger()->debug( "agree = $agree, count = $count" );
+		Utils::getLogger()->debug( "agree: $agree, count: $count" );
 
 		if ( $count - $agree >= 3 ||
 			( $agree == 0 && array_key_exists( $this->mAuthor->getId(), $this->mVotes )
@@ -469,7 +470,7 @@ class Sanction {
 
 	/**
 	 * @todo Return false on failure
-	 * @param bool $force
+	 * @param bool $force Execute anyway even if not expired.
 	 * @return bool
 	 */
 	public function execute( bool $force = false ) {
@@ -487,7 +488,7 @@ class Sanction {
 		} elseif ( !$passed && $emergency ) {
 			$reason = wfMessage(
 					'sanctions-log-immediate-rejection',
-					$this->mTopic->getAlphadecimal()
+					$this->mWorkflow->getAlphadecimal()
 				)->inContentLanguage()->text();
 			$this->removeTemporaryMeasure( $reason, Utils::getBot() );
 		} elseif ( $passed && $emergency ) {
@@ -495,98 +496,41 @@ class Sanction {
 		}
 
 		// Update the topic summary
-		$this->updateTopicSummary();
+		$result = $this->updateTopicSummary( $force );
 
 		// Write to DB
 		$db = wfGetDB( DB_PRIMARY );
-		$now = wfTimestamp( TS_MW );
-		$res = $db->update(
+		$db->startAtomic( __METHOD__ );
+		$db->update(
 			'sanctions',
 			[
 				'st_handled' => 1,
-				'st_last_update_timestamp' => $now
+				'st_last_update_timestamp' => wfTimestamp( TS_MW )
 			],
 			[ 'st_id' => $id ]
 		);
 		/** @var VoteStore $voteStore */
 		$voteStore = MediaWikiServices::getInstance()->getService( 'VoteStore' );
-		$voteStore->deleteOn( $this, $db );
+		if ( $voteStore->deleteOn( $this, $db ) ) {
+			$db->endAtomic( __METHOD__ );
+		} else {
+			$db->cancelAtomic( __METHOD__ );
+		}
 
 		return true;
 	}
 
 	/**
-	 * @todo If topic summary is already created (because etsprev_revision is empty), it will not work.
+	 * @param $done if it is true, the sanction would be considered to be done and check for
+	 *   expiration would not be done.
 	 * @return bool
 	 */
-	public function updateTopicSummary() {
-		$db = wfGetDB( DB_REPLICA );
-		$row = $db->selectRow(
-			'flow_revision',
-			[
-				'*'
-			],
-			[
-				'rev_type_id' => $this->mTopic->getBinary(),
-				'rev_type' => 'post-summary'
-			],
-			__METHOD__,
-			[
-				'LIMIT' => 1,
-				'ORDER BY' => 'rev_id DESC'
-			]
-		);
-		$previousIdText = $row == null
-			? null
-			: UUID::create( $row->rev_id )->getAlphadecimal();
-
-		$factory = Container::get( 'factory.loader.workflow' );
-
-		$topicTitleText = $this->getTopic()->getFullText();
-		$topicTitle = Title::newFromText( $topicTitleText );
-		$topicId = $this->mTopic;
-		$loader = $factory->createWorkflowLoader( $topicTitle, $topicId );
-		$blocks = $loader->getBlocks();
-		$action = 'edit-topic-summary';
-		$params = [
-			'topicsummary' => [
-				'page' => $topicTitleText,
-				'token' => self::getBot()->getEditToken(),
-				'action' => 'flow',
-				'submodule' => 'edit-topic-summary',
-				'prev_revision' => $previousIdText,
-				'summary' => $this->getSanctionSummary(),
-				'format' => 'wikitext'
-			]
-		];
-		$context = clone RequestContext::getMain();
-
-		// $loggedUser = $context->getUser();
-		$context->setUser( self::getBot() );
-		$blocksToCommit = $loader->handleSubmit(
-			$context,
-			$action,
-			$params
-		);
-		// $context->setUser( $loggedUser );
-		if ( !count( $blocksToCommit ) ) {
-			return false;
-		}
-		$commitMetadata = $loader->commit( $blocksToCommit );
-
-		return count( $commitMetadata ) > 0;
-	}
-
-	/**
-	 * @todo Add more detailed counting information
-	 * @return string
-	 */
-	public function getSanctionSummary() {
+	public function updateTopicSummary( bool $done = false ) {
 		$this->countVotes();
+
 		$agree = $this->mAgreeVote;
 		$count = $this->mVoteNumber;
-		$expired = $this->isExpired();
-		$passed = $this->isPassed();
+		$done = $done || $this->isExpired();
 
 		if ( $count == 0 ) {
 			$statusText = wfMessage( 'sanctions-topic-summary-status-rejected' );
@@ -621,6 +565,9 @@ class Sanction {
 
 		$statusText = $statusText->inContentLanguage()->text();
 		$reasonText = $reasonText->inContentLanguage()->text();
+		if ( $reasonText ) {
+			$reasonText = " ($reasonText)";
+		}
 
 		if ( !$this->isForInsultingName() ) {
 			$period = $this->getPeriod();
@@ -633,34 +580,35 @@ class Sanction {
 			}
 		}
 
-		$summary = [];
-		$summary[] = (
-				$expired ?
+		$lines = [];
+		if ( $done ) {
+			$lines[] = wfMessage( 'sanctions-topic-summary-status-label', $statusText )
+					->inContentLanguage()->text() . $reasonText;
+		} else {
+			$lines[] = wfMessage(
+				'sanctions-topic-summary-result-prediction-format',
 				wfMessage( 'sanctions-topic-summary-status-label', $statusText )
-					->inContentLanguage()->text() :
-				wfMessage(
-					'sanctions-topic-summary-result-prediction-format',
-					wfMessage( 'sanctions-topic-summary-status-label', $statusText )
-						->inContentLanguage()->text()
-				)->inContentLanguage()->text()
-			) .
-			( $reasonText ? ' (' . $reasonText . ')' : '' );
-		if ( !$expired && !( $count == 3 && $agree == 0 ) ) {
-			$summary[] .= wfMessage(
-				'sanctions-topic-summary-deadline',
-				MediaWikiServices::getInstance()->getContentLanguage()->formatExpiry( $this->mExpiry )
-			)->inContentLanguage()->text();
+					->inContentLanguage()->text()
+			)->inContentLanguage()->text() . $reasonText;
+			if ( !( $count == 3 && $agree == 0 ) ) {
+				$lines[] .= wfMessage(
+					'sanctions-topic-summary-deadline',
+					MediaWikiServices::getInstance()->getContentLanguage()->formatExpiry( $this->mExpiry )
+				)->inContentLanguage()->text();
+			}
 		}
 
-		$prefix = '* ';
-		$suffix = PHP_EOL;
+		$summary = '';
+		foreach ( $lines as $line ) {
+			$summary .= "* $line\n";
+		}
 
-		return implode( [
-			$this->getSanctionSummaryHeader(),
-			$prefix,
-			implode( $suffix . $prefix, $summary ),
-			$suffix
-		] );
+		return FlowUtil::updateSummary(
+			$this->getTopic(),
+			$this->getTopicUUID(),
+			Utils::getBot(),
+			$summary
+		);
 	}
 
 	/**
@@ -714,7 +662,7 @@ class Sanction {
 		}
 		if ( isset( $row->st_topic ) ) {
 			$topicUUIDBinary = $row->st_topic;
-			$this->mTopic = UUID::create( $topicUUIDBinary );
+			$this->mWorkflow = UUID::create( $topicUUIDBinary );
 		}
 		if ( isset( $row->st_target ) ) {
 			$this->mTarget = User::newFromId( $row->st_target );
@@ -873,7 +821,7 @@ class Sanction {
 				'sanctions_vote',
 				'*',
 				[
-					'stv_topic' => $this->mTopic->getBinary()
+					'stv_topic' => $this->mWorkflow->getBinary()
 				]
 			);
 			// Convert the wrapped result to an array
@@ -900,17 +848,25 @@ class Sanction {
 	 * @return Title
 	 */
 	public function getTopic() {
-		$UUIDText = $this->mTopic->getAlphadecimal();
+		$UUIDText = $this->mWorkflow->getAlphadecimal();
 
-		// @todo Replace with better way?
-		return Title::newFromText( 'Topic:' . $UUIDText );
+		// TODO Maybe there is a better way?
+		return Title::newFromText( $UUIDText, NS_TOPIC );
+	}
+
+	/**
+	 * @return UUID
+	 * @deprecated Use Sanction::getWorkflow() instead;
+	 */
+	public function getTopicUUID() {
+		return $this->getWorkFlow();
 	}
 
 	/**
 	 * @return UUID
 	 */
-	public function getTopicUUID() {
-		return $this->mTopic;
+	public function getWorkFlow() {
+		return $this->mWorkflow;
 	}
 
 	/**
@@ -947,7 +903,7 @@ class Sanction {
 	public function replyTo( $to, $content ) {
 		$topicTitleText = $this->getTopic()->getFullText();
 		$topicTitle = Title::newFromText( $topicTitleText );
-		$topicId = $this->mTopic;
+		$topicId = $this->mWorkflow;
 
 		/** @var \Flow\WorkflowLoaderFactory $factory */
 		$factory = Container::get( 'factory.loader.workflow' );
@@ -977,13 +933,6 @@ class Sanction {
 			return false;
 		}
 		$loader->commit( $blocksToCommit );
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getSanctionSummaryHeader() {
-		return '';
 	}
 
 	/**

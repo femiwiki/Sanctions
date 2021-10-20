@@ -81,7 +81,10 @@ class Vote {
 	 */
 	public function updateByPostRevision( PostRevision $post, $timestamp, IDatabase $dbw = null ) {
 		$dbw = $dbw ?: wfGetDB( DB_PRIMARY );
+		\MediaWiki\Logger\LoggerFactory::getInstance( 'femiwiki-log' )->warning( $post->getContentRaw() );
 		$period = self::extractPeriodFromReply( $post->getContentRaw() );
+		\MediaWiki\Logger\LoggerFactory::getInstance( 'femiwiki-log' )->warning( 'period: ' . $period );
+
 		$dbw->update(
 			'sanctions_vote',
 			[
@@ -90,7 +93,7 @@ class Vote {
 			],
 			[
 				'stv_topic' => $this->sanction->getTopicUUID()->getBinary(),
-				'stv_user' => $this->user,
+				'stv_user' => $this->user->getId(),
 			]
 		);
 		$this->updateLastTouched( $timestamp, $dbw );

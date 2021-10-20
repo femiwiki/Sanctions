@@ -48,19 +48,11 @@ describe('Sanction', () => {
 
     browser.pause(1000);
     browser.refresh();
-    // Wait for topic summary is updated by the bot.
-    browser.pause(1000);
-    browser.refresh();
 
     assert.strictEqual(
       "Status: Rejected (Canceled by the sanction's author.)",
       FlowTopic.topicSummary.getText()
     );
-
-    SanctionsPage.open();
-    SanctionsPage.executeButton.waitForDisplayed();
-    SanctionsPage.executeButton.click();
-    assert.ok(!SanctionsPage.executeButton.isExisting());
   });
 
   it('should be rejected if three users object', () => {
@@ -71,17 +63,12 @@ describe('Sanction', () => {
     }
 
     browser.refresh();
-    // Wait for topic summary is updated by the bot.
-    browser.pause(1000);
 
     SanctionsPage.sanctionLink.click();
     assert.strictEqual(
       'Status: Immediately rejected (Rejected by first three participants.)',
       FlowTopic.topicSummary.getText()
     );
-    SanctionsPage.open();
-    assert.ok(SanctionsPage.executeButton.isExisting());
-    SanctionsPage.executeButton.click();
   });
 
   it('should be passed if three users support before expired', () => {
