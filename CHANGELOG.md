@@ -4,14 +4,17 @@ Versions and bullets are arranged chronologically from latest to oldest.
 
 ## Unreleased
 
-ENHANCEMENTS:
-
+- The immediately rejected sanctions required explicit execution. It doesn't now.
+- The notifications which are sent by the sanction bot was blocked, are now enabled.
+- The wikitext format option of StructuredDiscussions is now supported.
+- The images of the templates which are auto generated are removed.
 - Localisations update.
 
 BUG FIXES:
 
--
+- Auto conversion not would be done if the sanctions board not yet created. (https://github.com/femiwiki/Sanctions/pull/127)
 
 ## Previous Releases
 
+- [REL1_36](https://github.com/femiwiki/Sanctions/blob/REL1_36/CHANGELOG.md)
 - [REL1_35](https://github.com/femiwiki/Sanctions/blob/REL1_35/CHANGELOG.md)
