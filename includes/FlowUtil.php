@@ -70,7 +70,7 @@ class FlowUtil {
 		}
 		if ( $title->getContentModel() != CONTENT_MODEL_FLOW_BOARD ) {
 			if ( !self::convertToFlow( $title ) ) {
-				return false;
+				return null;
 			}
 		}
 
@@ -188,7 +188,7 @@ class FlowUtil {
 			$user,
 			$title,
 			$workflow
-		);
+		) !== null;
 	}
 
 	/**
@@ -211,7 +211,7 @@ class FlowUtil {
 			$user,
 			$post->getCollection()->getTitle(),
 			$post->getCollection()->getWorkflowId()
-		);
+		) !== null;
 	}
 
 	/**
@@ -225,7 +225,7 @@ class FlowUtil {
 	protected static function action( string $action, array $params, User $user, Title $title, UUID $workflow = null ) {
 		$factory = self::getWorkflowLoaderFactory();
 		if ( !$factory ) {
-			return false;
+			return null;
 		}
 
 		$loader = $factory->createWorkflowLoader( $title, $workflow );
@@ -248,7 +248,7 @@ class FlowUtil {
 					$errors[] = $block->getErrorMessage( $errorKey );
 				}
 				Utils::getLogger()->warning( 'Errors: ' . implode( '. ', $errors ) );
-				return false;
+				return null;
 			}
 		}
 
