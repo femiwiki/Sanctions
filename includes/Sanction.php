@@ -3,10 +3,6 @@
 namespace MediaWiki\Extension\Sanctions;
 
 use EchoEvent;
-use Flow\Container;
-use Flow\Import\Converter;
-use Flow\Import\EnableFlow\EnableFlowWikitextConversionStrategy;
-use Flow\Import\SourceStore\NullImportSourceStore;
 use Flow\Model\UUID;
 use ManualLogEntry;
 use MediaWiki\Block\CompositeBlock;
@@ -15,13 +11,12 @@ use MediaWiki\Extension\Sanctions\Hooks\SanctionsHookRunner;
 use MediaWiki\MediaWikiServices;
 use MovePage;
 use MWTimestamp;
-use Psr\Log\NullLogger;
 use RenameuserSQL;
-use RequestContext;
 use stdClass;
 use Title;
 use User;
 use Wikimedia\IPUtils;
+use Wikimedia\Rdbms\DBError;
 
 class Sanction {
 	/** @var int */
@@ -48,7 +43,7 @@ class Sanction {
 	/** @var bool */
 	protected $mIsEmergency;
 
-	/** @var array */
+	/** @var array|null */
 	protected $mVotes = null;
 
 	/** @var bool $mIsPassed, $mVoteNumber and $mAgreeVote are valid when $mCounted is true. */
@@ -63,18 +58,19 @@ class Sanction {
 	/** @var int */
 	protected $mAgreeVote;
 
+	/** @var string TS_MW timestamp from the DB */
+	public $mTouched;
+
 	/**
 	 * Create a new sanction and write it to database
 	 *
-	 * @param User $user Who impose the sanction
+	 * @param User $author Who impose the sanction
 	 * @param User $target
 	 * @param bool $forInsultingName
 	 * @param string $content Description of the sanction(written in wikitext)
 	 * @return Sanction|bool
 	 */
-	public static function write( User $user, User $target, $forInsultingName, $content ) {
-		$authorId = $user->getId();
-
+	public static function write( User $author, User $target, $forInsultingName, $content ) {
 		$targetId = $target->getId();
 		$targetName = $target->getName();
 
@@ -85,160 +81,46 @@ class Sanction {
 
 		// Create a Flow topic
 		$discussionPageName = wfMessage( 'sanctions-discussion-page-name' )->inContentLanguage()->text();
-
-		$topicTitle = wfMessage( 'sanctions-topic-title', [
+		$discussionPage = Title::newFromText( $discussionPageName );
+		$topic = wfMessage( 'sanctions-topic-title', [
 			"[[Special:redirect/user/${targetId}|${targetName}]]",
 			wfMessage( $forInsultingName ? 'sanctions-type-insulting-name' : 'sanctions-type-block' )
 				->inContentLanguage()->text()
 		] )->inContentLanguage()->text();
 
-		$factory = Container::get( 'factory.loader.workflow' );
-		$page = Title::newFromText( $discussionPageName );
-		if ( $page->getContentModel() != CONTENT_MODEL_FLOW_BOARD ) {
-			if ( !self::convertToFlow( $page ) ) {
-				return false;
-			}
-		}
-		$loader = $factory->createWorkflowLoader( $page );
-		$blocks = $loader->getBlocks();
-		$action = 'new-topic';
-		$params = [
-			'topiclist' => [
-				'page' => $discussionPageName,
-				'token' => $user->getEditToken(),
-				'action' => 'flow',
-				'submodule' => 'new-topic',
-				'topic' => $topicTitle,
-				'content' => $content
-			]
-		];
-		$context = RequestContext::getMain();
-		$context->setTitle( $page );
-		$blocksToCommit = $loader->handleSubmit(
-			$context,
-			$action,
-			$params
-		);
-		if ( !count( $blocksToCommit ) ) {
-			return false;
-		}
-
-		$commitMetadata = $loader->commit( $blocksToCommit );
-
-		// $topicTitleText = $commitMetadata['topiclist']['topic-page'];
-		$topicId = $commitMetadata['topiclist']['topic-id'];
-
-		if ( $topicId == null ) {
-			return false;
-		}
+		$uuid = FlowUtil::createTopic( $discussionPage, $author, $topic, $content );
 
 		// Write to DB
 		$votingPeriod = (float)wfMessage( 'sanctions-voting-period' )->text();
-		$now = wfTimestamp( TS_MW );
 		$expiry = wfTimestamp( TS_MW, time() + ( 60 * 60 * 24 * $votingPeriod ) );
 
-		$uuid = UUID::create( $topicId )->getBinary();
-		$data = [
-			'st_author' => $authorId,
+		$data = (object)[
+			'st_author' => $author->getId(),
 			'st_target' => $targetId,
-			'st_topic' => $uuid,
+			'st_topic' => $uuid->getBinary(),
 			'st_expiry' => $expiry,
 			'st_original_name' => $forInsultingName ? $targetName : '',
-			'st_last_update_timestamp' => $now
+			'st_last_update_timestamp' => wfTimestamp( TS_MW )
 		];
 
-		$db = wfGetDB( DB_PRIMARY );
-		$db->insert( 'sanctions', $data, __METHOD__ );
-
-		$sanction = new self();
-
-		if ( !$sanction->loadFrom( 'st_topic', $uuid ) ) {
+		$sanction = self::newFromRow( $data );
+		$id = $sanction->insert();
+		if ( $id === null ) {
 			return false;
 		}
-
-		if ( !$sanction->updateTopicSummary() ) {
-			// @todo
-		}
+		$sanction->updateTopicSummary();
 
 		EchoEvent::create( [
 			'type' => 'sanctions-proposed',
-			'title' => $sanction->getTopic(),
+			'title' => $sanction->getWorkflow(),
 			'extra' => [
 				'target-id' => $targetId,
 				'is-for-insulting-name' => $forInsultingName,
 			],
-			'agent' => $user,
+			'agent' => $author,
 		] );
 
 		return $sanction;
-	}
-
-	/**
-	 * @param Title $title
-	 * @return bool
-	 */
-	public static function convertToFlow( $title ) {
-		$logger = new NullLogger;
-		$user = self::getBot();
-		if ( $title->exists( Title::GAID_FOR_UPDATE ) ) {
-			$converter = new Converter(
-				wfGetDB( DB_PRIMARY ),
-				Container::get( 'importer' ),
-				$logger,
-				$user,
-				new EnableFlowWikitextConversionStrategy(
-					MediaWikiServices::getInstance()->getParser(),
-					new NullImportSourceStore(),
-					$logger,
-					$user
-				)
-			);
-
-			try {
-				$converter->convert( $title );
-			} catch ( \Exception $e ) {
-				return false;
-			}
-		} else {
-			$loaderFactory = Container::get( 'factory.loader.workflow' );
-			$occupationController = Container::get( 'occupation_controller' );
-
-			$creationStatus = $occupationController->safeAllowCreation( $title, $user, false );
-			if ( !$creationStatus->isGood() ) {
-				return false;
-			}
-
-			$loader = $loaderFactory->createWorkflowLoader( $title );
-			$blocks = $loader->getBlocks();
-
-			$action = 'edit-header';
-			$params = [
-				'header' => [
-					'content' => '',
-					'format' => 'wikitext',
-				],
-			];
-
-			$blocksToCommit = $loader->handleSubmit(
-				clone RequestContext::getMain(),
-				$action,
-				$params
-			);
-
-			foreach ( $blocks as $block ) {
-				if ( $block->hasErrors() ) {
-					$errors = $block->getErrors();
-
-					foreach ( $errors as $errorKey ) {
-						Utils::getLogger()->warning( $block->getErrorMessage( $errorKey ) );
-					}
-					return false;
-				}
-			}
-
-			$loader->commit( $blocksToCommit );
-		}
-		return true;
 	}
 
 	/**
@@ -310,7 +192,7 @@ class Sanction {
 				wfMessage( 'sanctions-temporary-username', wfTimestamp( TS_MW ) )
 					->inContentLanguage()->text(),
 				$target,
-				$this->getBot(),
+				Utils::getBot(),
 				$reason
 			);
 			if ( !$renameIsDone ) {
@@ -434,7 +316,7 @@ class Sanction {
 			// this sanction, compare the time periods and reduce the block period if the expiry
 			// of this sanction is later than the unblock time.
 			if ( $target->isBlocked() && $target->getBlock()->getExpiry() == $this->mExpiry ) {
-				self::unblock( $target, true, $reason, $user == null ? $this->getBot() : $user );
+				self::unblock( $target, true, $reason, $user == null ? Utils::getBot() : $user );
 			}
 			return true;
 		}
@@ -605,8 +487,8 @@ class Sanction {
 		}
 
 		return FlowUtil::updateSummary(
-			$this->getTopic(),
-			$this->getTopicUUID(),
+			$this->getWorkflow(),
+			$this->getWorkFlowId(),
 			Utils::getBot(),
 			$summary
 		);
@@ -655,18 +537,20 @@ class Sanction {
 			throw new \InvalidArgumentException( '$row must be an object' );
 		}
 
+		$userFactory = MediaWikiServices::getInstance()->getUserFactory();
+
 		if ( isset( $row->st_id ) ) {
 			$this->mId = $row->st_id;
 		}
 		if ( isset( $row->st_author ) ) {
-			$this->mAuthor = User::newFromId( $row->st_author );
+			$this->mAuthor = $userFactory->newFromId( (int)$row->st_author );
 		}
 		if ( isset( $row->st_topic ) ) {
 			$topicUUIDBinary = $row->st_topic;
 			$this->mWorkflow = UUID::create( $topicUUIDBinary );
 		}
 		if ( isset( $row->st_target ) ) {
-			$this->mTarget = User::newFromId( $row->st_target );
+			$this->mTarget = $userFactory->newFromId( (int)$row->st_target );
 		}
 		if ( isset( $row->st_original_name ) ) {
 			$this->mTargetOriginalName = $row->st_original_name;
@@ -685,12 +569,37 @@ class Sanction {
 	}
 
 	/**
+	 * @return int|null ID of the sanction
+	 */
+	public function insert() {
+		$dbw = wfGetDB( DB_PRIMARY );
+
+		$data = [
+			'st_author' => $this->mAuthor->getId(),
+			'st_target' => $this->mTarget->getId(),
+			'st_topic' => $this->mWorkflow->getBinary(),
+			'st_expiry' => $this->mExpiry,
+			'st_original_name' => $this->mTargetOriginalName,
+			'st_last_update_timestamp' => $dbw->timestamp( $this->mTouched ),
+		];
+
+		try {
+			$dbw->insert( 'sanctions', $data, __METHOD__ );
+		} catch ( DBError $e ) {
+			Utils::getLogger()->warning( $e->getMessage() );
+			return null;
+		}
+		$this->mId = $dbw->insertId();
+		return $this->mId;
+	}
+
+	/**
 	 * @param bool $getAnyway If true, return only the average sanction period, regardless of whether
 	 * it is approved or rejected.
 	 * @return int
 	 */
 	public function getPeriod( $getAnyway = false ) {
-		$votes = $this->getvotes();
+		$votes = $this->getVotes();
 		$count = count( $votes );
 
 		// If there is no vote, it is 0 days.
@@ -782,37 +691,27 @@ class Sanction {
 		return $this->mIsEmergency;
 	}
 
-	/**
-	 * @return int
-	 */
+	/** @return int */
 	public function getId() {
 		return $this->mId;
 	}
 
-	/**
-	 * @return User
-	 */
+	/** @return User */
 	public function getAuthor() {
 		return $this->mAuthor;
 	}
 
-	/**
-	 * @return string
-	 */
+	/** @return string */
 	public function getExpiry() {
 		return $this->mExpiry;
 	}
 
-	/**
-	 * @return User
-	 */
+	/** @return User */
 	public function getTarget() {
 		return $this->mTarget;
 	}
 
-	/**
-	 * @return array
-	 */
+	/** @return array */
 	public function getVotes() {
 		if ( $this->mVotes === null ) {
 			$this->mVotes = [];
@@ -838,17 +737,21 @@ class Sanction {
 		return $this->mTargetOriginalName != null;
 	}
 
-	/**
-	 * @return string
-	 */
+	/** @return string */
 	public function getTargetOriginalName() {
 		return $this->mTargetOriginalName;
 	}
 
 	/**
 	 * @return Title
+	 * @deprecated Use Sanction::getWorkflow() instead;
 	 */
 	public function getTopic() {
+		return $this->getWorkflow();
+	}
+
+	/** @return Title */
+	public function getWorkflow() {
 		$UUIDText = $this->mWorkflow->getAlphadecimal();
 
 		// TODO Maybe there is a better way?
@@ -857,16 +760,14 @@ class Sanction {
 
 	/**
 	 * @return UUID
-	 * @deprecated Use Sanction::getWorkflow() instead;
+	 * @deprecated Use Sanction::getWorkflowId() instead;
 	 */
 	public function getTopicUUID() {
-		return $this->getWorkFlow();
+		return $this->getWorkFlowId();
 	}
 
-	/**
-	 * @return UUID
-	 */
-	public function getWorkFlow() {
+	/** @return UUID */
+	public function getWorkFlowId() {
 		return $this->mWorkflow;
 	}
 
@@ -951,7 +852,7 @@ class Sanction {
 
 	/**
 	 * Rename the given User.
-	 * This funcion includes some code that originally are in SpecialRenameuser.php
+	 * This function includes some code that originally are in SpecialRenameuser.php
 	 *
 	 * @param string $oldName
 	 * @param string $newName
@@ -961,7 +862,7 @@ class Sanction {
 	 * @return bool
 	 */
 	protected static function doRename( $oldName, $newName, $target, $renamer, $reason ) {
-		$bot = self::getBot();
+		$bot = Utils::getBot();
 		$targetId = $target->idForName();
 		$oldUser = User::newFromName( $oldName );
 		$newUser = User::newFromName( $newName );
@@ -1058,7 +959,7 @@ class Sanction {
 	 */
 	protected static function doBlock( $target, $expiry, $reason,
 			$preventEditOwnUserTalk = true, $user = null ) {
-		$bot = self::getBot();
+		$bot = Utils::getBot();
 
 		$block = new DatabaseBlock();
 		$block->setTarget( $target );
@@ -1134,7 +1035,7 @@ class Sanction {
 		}
 
 		if ( $withLog ) {
-			$bot = self::getBot();
+			$bot = Utils::getBot();
 
 			$logEntry = new ManualLogEntry( 'block', 'unblock' );
 			$logEntry->setTarget( $page );

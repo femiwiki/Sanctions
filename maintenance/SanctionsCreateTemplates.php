@@ -1,6 +1,6 @@
 <?php
 
-use MediaWiki\Extension\Sanctions\Sanction;
+use MediaWiki\Extension\Sanctions\Utils;
 
 require_once getenv( 'MW_INSTALL_PATH' ) !== false
 	? getenv( 'MW_INSTALL_PATH' ) . '/maintenance/Maintenance.php'
@@ -98,7 +98,7 @@ class SanctionsCreateTemplates extends LoggedUpdateMaintenance {
 
 		return $page->doUserEditContent(
 			$content,
-			Sanction::getBot(),
+			Utils::getBot(),
 			'/* Automatically created by Sanctions */',
 			EDIT_FORCE_BOT | EDIT_SUPPRESS_RC
 		);
