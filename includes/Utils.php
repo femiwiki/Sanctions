@@ -176,17 +176,19 @@ class Utils {
 	 * @return User
 	 */
 	public static function getBot() {
-		$botName = wfMessage( 'sanctions-bot-name' )->inContentLanguage()->text();
-		$bot = User::newSystemUser( $botName, [ 'steal' => true ] );
+		static $bot;
+		if ( !$bot ) {
+			$botName = wfMessage( 'sanctions-bot-name' )->inContentLanguage()->text();
+			$bot = User::newSystemUser( $botName, [ 'steal' => true ] );
 
-		$userGroupManager = MediaWikiServices::getInstance()->getUserGroupManager();
-		$groups = $userGroupManager->getUserGroups( $bot );
-		foreach ( [ 'bot', 'flow-bot' ] as $group ) {
-			if ( !in_array( $group, $groups ) ) {
-				$userGroupManager->addUserToGroup( $bot, $group );
+			$userGroupManager = MediaWikiServices::getInstance()->getUserGroupManager();
+			$groups = $userGroupManager->getUserGroups( $bot );
+			foreach ( [ 'bot', 'flow-bot' ] as $group ) {
+				if ( !in_array( $group, $groups ) ) {
+					$userGroupManager->addUserToGroup( $bot, $group );
+				}
 			}
 		}
-
 		return $bot;
 	}
 }
