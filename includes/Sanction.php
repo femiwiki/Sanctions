@@ -543,14 +543,14 @@ class Sanction {
 			$this->mId = $row->st_id;
 		}
 		if ( isset( $row->st_author ) ) {
-			$this->mAuthor = $userFactory->newFromId( $row->st_author );
+			$this->mAuthor = $userFactory->newFromId( (int)$row->st_author );
 		}
 		if ( isset( $row->st_topic ) ) {
 			$topicUUIDBinary = $row->st_topic;
 			$this->mWorkflow = UUID::create( $topicUUIDBinary );
 		}
 		if ( isset( $row->st_target ) ) {
-			$this->mTarget = $userFactory->newFromId( $row->st_target );
+			$this->mTarget = $userFactory->newFromId( (int)$row->st_target );
 		}
 		if ( isset( $row->st_original_name ) ) {
 			$this->mTargetOriginalName = $row->st_original_name;

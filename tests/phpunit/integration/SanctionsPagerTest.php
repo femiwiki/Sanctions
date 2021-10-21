@@ -90,6 +90,7 @@ class SanctionsPagerTest extends MediaWikiIntegrationTestCase {
 	public function testGetClasses( $expected, $row ) {
 		$you = new User();
 		$you->setName( 'You' );
+		$you->setId( 10 );
 		$row += [
 			'st_id' => 0,
 			'st_author' => '',
