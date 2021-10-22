@@ -13,7 +13,7 @@ use User;
 /**
  * @covers \MediaWiki\Extension\Sanctions\VoteStore
  * @group Database
- * */
+ */
 class VoteStoreTest extends MediaWikiIntegrationTestCase {
 
 	protected static function getVoteStore(): VoteStore {
