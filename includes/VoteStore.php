@@ -34,7 +34,7 @@ class VoteStore {
 				'stv_period',
 			],
 			[
-				'stv_topic' => $sanction->getTopicUUID()->getBinary(),
+				'stv_topic' => $sanction->getWorkflowId()->getBinary(),
 				'stv_user' => $user->getId(),
 			]
 		);
@@ -54,7 +54,8 @@ class VoteStore {
 
 		$dbw->delete(
 			'sanctions_vote',
-			[ 'stv_topic' => $sanction->getTopicUUID()->getBinary() ]
+			[ 'stv_topic' => $sanction->getWorkflowId()->getBinary() ],
+			__METHOD__
 		);
 
 		if ( $dbw->affectedRows() == 0 ) {

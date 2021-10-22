@@ -10,27 +10,36 @@ use MediaWiki\MediaWikiServices;
 use MediaWikiIntegrationTestCase;
 use User;
 
-/** @covers \MediaWiki\Extension\Sanctions\VoteStore */
+/**
+ * @covers \MediaWiki\Extension\Sanctions\VoteStore
+ * @group Database
+ */
 class VoteStoreTest extends MediaWikiIntegrationTestCase {
+
+	protected static function getVoteStore(): VoteStore {
+		return new VoteStore( MediaWikiServices::getInstance()->getDBLoadBalancer() );
+	}
 
 	/**
 	 * @covers \MediaWiki\Extension\Sanctions\VoteStore::__construct
 	 */
 	public function testConstruct() {
-		$actual = new VoteStore( MediaWikiServices::getInstance()->getDBLoadBalancer() );
+		$actual = $this->getVoteStore();
 		$this->assertInstanceOf( VoteStore::class, $actual );
 	}
 
 	/**
 	 * @covers \MediaWiki\Extension\Sanctions\VoteStore::getVoteBySanction
 	 * @covers \MediaWiki\Extension\Sanctions\VoteStore::deleteOn
+	 * @covers \MediaWiki\Extension\Sanctions\Vote::insert
 	 */
 	public function testGetVoteBySanction() {
 		$uuid = UUID::create();
 		$user = new User();
 		$user->setId( 1 );
-		$sanction = $this->createMock( Sanction::class );
-		$sanction->method( 'getTopicUUID' )->will( $this->returnValue( $uuid ) );
+		$sanction = new Sanction();
+		$sanction->setWorkflowId( $uuid );
+
 		$vote = Vote::newFromRow( (object)[
 			'stv_user' => $user->getId(),
 			'stv_period' => 10,

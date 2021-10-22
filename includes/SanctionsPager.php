@@ -19,16 +19,21 @@ class SanctionsPager extends IndexPager {
 	/** @var string */
 	private $targetName;
 
+	/** @var SanctionStore */
+	private $sanctionStore;
+
 	/** @var TemplateParser */
 	private $templateParser;
 
 	/**
 	 * @param IContextSource $context
+	 * @param SanctionStore $sanctionStore
 	 * @param string|null $targetName
 	 */
-	public function __construct( IContextSource $context, string $targetName = null ) {
+	public function __construct( IContextSource $context, SanctionStore $sanctionStore, string $targetName = null ) {
 		parent::__construct( $context );
 		$this->targetName = $targetName;
+		$this->sanctionStore = $sanctionStore;
 		$this->templateParser = new TemplateParser( __DIR__ . '/templates' );
 	}
 
@@ -117,7 +122,7 @@ class SanctionsPager extends IndexPager {
 	 * @return string
 	 */
 	public function formatRow( $row ) {
-		$sanction = Sanction::newFromId( $row->st_id );
+		$sanction = $this->sanctionStore->newFromId( $row->st_id );
 		$isMySanction = $sanction->getAuthor()->equals( $this->getUser() );
 		$expired = $sanction->isExpired();
 		$handled = $sanction->isHandled();
@@ -208,7 +213,7 @@ class SanctionsPager extends IndexPager {
 				[ 'class' => 'sanction-target' ]
 			),
 			Linker::link(
-				$sanction->getTopic(),
+				$sanction->getWorkflow(),
 				$this->msg( 'sanctions-type-' . ( $isForInsultingName ? 'insulting-name' : 'block' ) )
 					->text(),
 				[ 'class' => 'sanction-type' ]

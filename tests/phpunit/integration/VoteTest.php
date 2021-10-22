@@ -2,6 +2,7 @@
 
 namespace MediaWiki\Extension\Sanctions\Tests\Integration;
 
+use Flow\Model\UUID;
 use InvalidArgumentException;
 use MediaWiki\Extension\Sanctions\Vote;
 use MediaWikiIntegrationTestCase;
@@ -18,10 +19,11 @@ class VoteTest extends MediaWikiIntegrationTestCase {
 		Vote::newFromRow( null );
 		$actual = Vote::newFromRow( (object)[
 			'stv_user' => 0,
-			'stv_topic' => false,
+			'stv_topic' => UUID::create(),
 			'stv_period' => 1,
 		] );
 		$this->assertInstanceOf( Vote::class, $actual );
+		$this->assertNull( $actual->getSanction() );
 	}
 
 	public static function provideReplies() {

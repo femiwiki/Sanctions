@@ -2,12 +2,20 @@
 
 namespace MediaWiki\Extension\Sanctions;
 
+use ManualLogEntry;
+use MediaWiki\Block\CompositeBlock;
+use MediaWiki\Block\DatabaseBlock;
+use MediaWiki\Extension\Sanctions\Hooks\SanctionsHookRunner;
 use MediaWiki\Logger\LoggerFactory;
 use MediaWiki\MediaWikiServices;
 use Message;
+use MovePage;
 use MWTimestamp;
 use Psr\Log\LoggerInterface;
+use RenameuserSQL;
+use Title;
 use User;
+use Wikimedia\IPUtils;
 
 class Utils {
 	/**
@@ -159,6 +167,202 @@ class Utils {
 			$msg = $msg->inContentLanguage();
 		}
 		$reasons[] = $msg->text();
+	}
+
+	/**
+	 * Rename the given User.
+	 * This function includes some code that originally are in SpecialRenameuser.php
+	 *
+	 * @param string $oldName
+	 * @param string $newName
+	 * @param User $target
+	 * @param User $renamer
+	 * @param string $reason
+	 * @return bool
+	 */
+	public static function doRename( $oldName, $newName, $target, $renamer, $reason ) {
+		$bot = self::getBot();
+		$targetId = $target->idForName();
+		$oldUser = User::newFromName( $oldName );
+		$newUser = User::newFromName( $newName );
+		$oldUserPageTitle = Title::makeTitle( NS_USER, $oldName );
+		$newUserPageTitle = Title::makeTitle( NS_USER, $newName );
+
+		if ( $targetId === 0 || $newUser->idForName() !== 0 ) {
+			return false;
+		}
+
+		// Give other affected extensions a chance to validate or abort
+		$hookRunner = new SanctionsHookRunner(
+			MediaWikiServices::getInstance()->getHookContainer()
+		);
+		if ( $hookRunner->onRenameUserAbort( $targetId, $oldName, $newName ) ) {
+			return false;
+		}
+
+		// Do the heavy lifting...
+		$rename = new RenameuserSQL(
+			$oldName,
+			$newName,
+			$targetId,
+			$renamer,
+			[ 'reason' => $reason ]
+		);
+		if ( !$rename->rename() ) {
+			return false;
+		}
+
+		// If this user is renaming his/herself, make sure that Title::moveTo()
+		// doesn't make a bunch of null move edits under the old name!
+		if ( $renamer->getId() === $targetId ) {
+			$renamer->setName( $newName );
+		}
+
+		// Move any user pages
+		if ( $bot->isAllowed( 'move' ) ) {
+			$dbr = wfGetDB( DB_REPLICA );
+			$pages = $dbr->select(
+				'page',
+				[ 'page_namespace', 'page_title' ],
+				[
+					'page_namespace' => [ NS_USER, NS_USER_TALK ],
+					$dbr->makeList(
+						[
+							'page_title ' . $dbr->buildLike( $oldUserPageTitle->getDBkey() . '/', $dbr->anyString() ),
+							'page_title = ' . $dbr->addQuotes( $oldUserPageTitle->getDBkey() ),
+						], LIST_OR
+					),
+				],
+				__METHOD__
+			);
+			foreach ( $pages as $row ) {
+				$oldPage = Title::makeTitleSafe( $row->page_namespace, $row->page_title );
+				$newPage = Title::makeTitleSafe(
+					$row->page_namespace,
+					preg_replace( '!^[^/]+!', $newUserPageTitle->getDBkey(), $row->page_title )
+				);
+
+				$movePage = new MovePage( $oldPage, $newPage );
+
+				if ( !$movePage->isValidMove() ) {
+					return false;
+				} else {
+					$success = $movePage->move(
+						$bot,
+						wfMessage(
+							'renameuser-move-log',
+							$oldUserPageTitle->getText(),
+							$newUserPageTitle->getText()
+						)->inContentLanguage()->text(),
+						true
+					);
+
+					if ( !$success->isGood() ) {
+						return false;
+					}
+				}
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * @param User $target
+	 * @param string $expiry
+	 * @param string $reason
+	 * @param bool $preventEditOwnUserTalk
+	 * @param User|null $user
+	 *
+	 * @return bool
+	 */
+	public static function doBlock( $target, $expiry, $reason,
+			$preventEditOwnUserTalk = true, $user = null ) {
+		$bot = self::getBot();
+
+		$block = new DatabaseBlock();
+		$block->setTarget( $target );
+		$block->setBlocker( $bot );
+		$block->setReason( $reason );
+		$block->isHardblock( true );
+		$block->isAutoblocking( boolval( wfMessage( 'sanctions-autoblock' )->text() ) );
+		$block->isCreateAccountBlocked( true );
+		$block->isUsertalkEditAllowed( $preventEditOwnUserTalk );
+		$block->setExpiry( $expiry );
+
+		$success = $block->insert();
+
+		if ( !$success ) {
+			return false;
+		}
+
+		$logParams = [];
+		$time = MWTimestamp::getInstance( $expiry );
+		// Even if done as below, it comes out in local time.
+		$logParams['5::duration'] = $time->getTimestamp( TS_ISO_8601 );
+		$flags = [ 'nocreate' ];
+		if ( !$block->isAutoblocking() && !IPUtils::isIPAddress( $target ) ) {
+			// Conditionally added same as SpecialBlock
+			$flags[] = 'noautoblock';
+		}
+		$logParams['6::flags'] = implode( ',', $flags );
+
+		$logEntry = new ManualLogEntry( 'block', 'block' );
+		$logEntry->setTarget( Title::makeTitle( NS_USER, $target ) );
+		$logEntry->setComment( $reason );
+		$logEntry->setPerformer( $user == null ? $bot : $user );
+		$logEntry->setParameters( $logParams );
+		$blockIds = array_merge( [ $success['id'] ], $success['autoIds'] );
+		$logEntry->setRelations( [ 'ipb_id' => $blockIds ] );
+		$logId = $logEntry->insert();
+		$logEntry->publish( $logId );
+
+		return true;
+	}
+
+	/**
+	 * @param User $target
+	 * @param bool $withLog
+	 * @param string|null $reason
+	 * @param User|null $user
+	 * @return bool
+	 */
+	public static function unblock( $target, $withLog = false, $reason = null, $user = null ) {
+		$block = $target->getBlock();
+
+		if ( $block != null ) {
+			if ( $block instanceof CompositeBlock ) {
+				foreach ( $block->getOriginalBlocks() as $originalBlock ) {
+					if ( $originalBlock instanceof DatabaseBlock ) {
+						'@phan-var DatabaseBlock $originalBlock';
+						return $originalBlock->delete();
+					}
+				}
+			} elseif ( $block instanceof DatabaseBlock ) {
+				'@phan-var DatabaseBlock $block';
+				return $block->delete();
+			}
+		}
+
+		// Below's the same thing that is on SpecialUnblock SpecialUnblock.php
+		if ( $block->getType() == DatabaseBlock::TYPE_AUTO ) {
+			$page = Title::makeTitle( NS_USER, '#' . $block->getId() );
+		} else {
+			$page = $block->getTarget() instanceof User
+			? $block->getTarget()->getUserPage()
+			: Title::makeTitle( NS_USER, $block->getTarget() );
+		}
+
+		if ( $withLog ) {
+			$bot = self::getBot();
+
+			$logEntry = new ManualLogEntry( 'block', 'unblock' );
+			$logEntry->setTarget( $page );
+			$logEntry->setComment( $reason );
+			$logEntry->setPerformer( $user == null ? $bot : $user );
+			$logId = $logEntry->insert();
+			$logEntry->publish( $logId );
+		}
 	}
 
 	/**

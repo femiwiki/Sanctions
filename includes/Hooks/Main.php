@@ -6,10 +6,11 @@ use Config;
 use Flow\Exception\InvalidInputException;
 use Flow\Model\UUID;
 use MediaWiki\Extension\Sanctions\FlowUtil;
-use MediaWiki\Extension\Sanctions\Sanction;
+use MediaWiki\Extension\Sanctions\SanctionStore;
 use MediaWiki\Extension\Sanctions\Utils;
 use MediaWiki\Extension\Sanctions\Vote;
 use MediaWiki\Extension\Sanctions\VoteStore;
+use MediaWiki\MediaWikiServices;
 use MediaWiki\User\UserFactory;
 use OutputPage;
 use RequestContext;
@@ -25,15 +26,20 @@ class Main implements
 	/** @var UserFactory */
 	private $userFactory;
 
+	/** @var SanctionStore */
+	private $sanctionStore;
+
 	/** @var VoteStore */
 	private $voteStore;
 
 	/**
 	 * @param UserFactory $userFactory
+	 * @param SanctionStore $sanctionStore
 	 * @param VoteStore $voteStore
 	 */
-	public function __construct( UserFactory $userFactory, VoteStore $voteStore ) {
+	public function __construct( UserFactory $userFactory, SanctionStore $sanctionStore, VoteStore $voteStore ) {
 		$this->userFactory = $userFactory;
+		$this->sanctionStore = $sanctionStore;
 		$this->voteStore = $voteStore;
 	}
 
@@ -80,7 +86,9 @@ class Main implements
 		}
 
 		// Do nothing if the topic is not about sanction.
-		$sanction = Sanction::newFromUUID( $uuid );
+		/** @var SanctionStore $store */
+		$store = MediaWikiServices::getInstance()->getService( 'SanctionStore' );
+		$sanction = $store->newFromWorkflowId( $uuid );
 		if ( $sanction === false ) {
 			return true;
 		}
@@ -133,7 +141,7 @@ class Main implements
 	 * @param User $user
 	 */
 	public function handleReply( array $change, User $user ) {
-		$sanction = Sanction::newFromUUID( $change['workflow'] );
+		$sanction = $this->sanctionStore->newFromWorkflowId( UUID::create( $change['workflow'] ) );
 		if ( !$sanction || $sanction->isHandled() ) {
 			return;
 		}

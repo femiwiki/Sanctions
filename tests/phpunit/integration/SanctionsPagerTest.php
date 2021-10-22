@@ -4,6 +4,8 @@ namespace MediaWiki\Extension\Sanctions\Tests\Integration;
 
 use Flow\Model\UUID;
 use MediaWiki\Extension\Sanctions\SanctionsPager;
+use MediaWiki\Extension\Sanctions\SanctionStore;
+use MediaWiki\MediaWikiServices;
 use MediaWikiIntegrationTestCase;
 use MessageCache;
 use RequestContext;
@@ -20,7 +22,8 @@ class SanctionsPagerTest extends MediaWikiIntegrationTestCase {
 		if ( $viewer ) {
 			$request->setUser( $viewer );
 		}
-		return new SanctionsPager( $request, $targetName );
+		$sanctionStore = new SanctionStore( MediaWikiServices::getInstance()->getDBLoadBalancer() );
+		return new SanctionsPager( $request, $sanctionStore, $targetName );
 	}
 
 	/**

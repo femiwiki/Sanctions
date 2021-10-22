@@ -4,29 +4,21 @@ namespace MediaWiki\Extension\Sanctions;
 
 use EchoEvent;
 use Flow\Model\UUID;
-use ManualLogEntry;
-use MediaWiki\Block\CompositeBlock;
-use MediaWiki\Block\DatabaseBlock;
-use MediaWiki\Extension\Sanctions\Hooks\SanctionsHookRunner;
 use MediaWiki\MediaWikiServices;
-use MovePage;
-use MWTimestamp;
-use RenameuserSQL;
 use stdClass;
 use Title;
 use User;
-use Wikimedia\IPUtils;
 use Wikimedia\Rdbms\DBError;
 
 class Sanction {
 	/** @var int */
-	protected $mId;
+	public $mId;
 
 	/** @var User */
 	protected $mAuthor;
 
 	/** @var UUID */
-	protected $mWorkflow;
+	protected $mWorkflowId;
 
 	/** @var User */
 	protected $mTarget;
@@ -141,7 +133,7 @@ class Sanction {
 		} else {
 			$reason = wfMessage(
 					'sanctions-log-remove-temporary-measure',
-					$this->mWorkflow->getAlphadecimal()
+					$this->mWorkflowId->getAlphadecimal()
 				)->inContentLanguage()->text();
 
 			$this->removeTemporaryMeasure( $reason, $user );
@@ -176,7 +168,7 @@ class Sanction {
 		$isForInsultingName = $this->isForInsultingName();
 		$reason = wfMessage(
 			'sanctions-log-take-measure',
-			$this->mWorkflow->getAlphadecimal()
+			$this->mWorkflowId->getAlphadecimal()
 		)->inContentLanguage()->text();
 
 		if ( $isForInsultingName ) {
@@ -187,7 +179,7 @@ class Sanction {
 				return true;
 			}
 
-			$renameIsDone = self::doRename(
+			$renameIsDone = Utils::doRename(
 				$targetName,
 				wfMessage( 'sanctions-temporary-username', wfTimestamp( TS_MW ) )
 					->inContentLanguage()->text(),
@@ -206,13 +198,13 @@ class Sanction {
 				// If the expiry of the block determined by this sanction is later than the existing expiry,
 				// remove it.
 				if ( $target->getBlock()->getExpiry() < $blockExpiry ) {
-					self::unblock( $target, false );
+					Utils::unblock( $target, false );
 				} else {
 					return true;
 				}
 			}
 
-			self::doBlock( $target, $blockExpiry, $reason, true );
+			Utils::doBlock( $target, $blockExpiry, $reason, true );
 			return true;
 		}
 	}
@@ -225,7 +217,7 @@ class Sanction {
 	public function replaceTemporaryMeasure() {
 		$target = $this->mTarget;
 		$isForInsultingName = $this->isForInsultingName();
-		$reason = wfMessage( 'sanctions-log-take-measure', $this->mWorkflow->getAlphadecimal() )
+		$reason = wfMessage( 'sanctions-log-take-measure', $this->mWorkflowId->getAlphadecimal() )
 			->inContentLanguage()->text();
 
 		if ( $isForInsultingName ) {
@@ -236,13 +228,13 @@ class Sanction {
 				// If the expiry of the block determined by this sanction is later than the existing expiry,
 				// remove it.
 				if ( $target->getBlock()->getExpiry() < $blockExpiry ) {
-					self::unblock( $target, false );
+					Utils::unblock( $target, false );
 				} else {
 					return true;
 				}
 			}
 
-			self::doBlock( $target, $blockExpiry, $reason, true );
+			Utils::doBlock( $target, $blockExpiry, $reason, true );
 			return true;
 		}
 	}
@@ -256,14 +248,14 @@ class Sanction {
 		$insultingName = $this->isForInsultingName();
 		$reason = wfMessage(
 			'sanctions-log-take-temporary-measure',
-			$this->mWorkflow->getAlphadecimal()
+			$this->mWorkflowId->getAlphadecimal()
 		)->inContentLanguage()->text();
 
 		if ( $insultingName ) {
 			$originalName = $this->mTargetOriginalName;
 
 			if ( $target->getName() == $originalName ) {
-				self::doRename(
+				Utils::doRename(
 					$target->getName(),
 					wfMessage( 'sanctions-temporary-username', wfTimestamp( TS_MW ) )
 						->inContentLanguage()->text(),
@@ -278,11 +270,11 @@ class Sanction {
 			// If already blocked, compare the ranges and extend it if the expiry for this sanction is
 			// after the unblock time.
 			if ( $target->isBlocked() && $target->getBlock()->getExpiry() < $expiry ) {
-				self::unblock( $target, false );
+				Utils::unblock( $target, false );
 			}
 
 			$blockExpiry = $expiry;
-			self::doBlock( $target, $blockExpiry, $reason, false, $user );
+			Utils::doBlock( $target, $blockExpiry, $reason, false, $user );
 		}
 		return true;
 	}
@@ -304,7 +296,7 @@ class Sanction {
 			if ( $targetName == $originalName ) {
 				return true;
 			} else {
-				if ( !self::doRename( $targetName, $originalName, $target, $user, $reason ) ) {
+				if ( !Utils::doRename( $targetName, $originalName, $target, $user, $reason ) ) {
 					return false;
 				}
 				return true;
@@ -316,7 +308,7 @@ class Sanction {
 			// this sanction, compare the time periods and reduce the block period if the expiry
 			// of this sanction is later than the unblock time.
 			if ( $target->isBlocked() && $target->getBlock()->getExpiry() == $this->mExpiry ) {
-				self::unblock( $target, true, $reason, $user == null ? Utils::getBot() : $user );
+				Utils::unblock( $target, true, $reason, $user == null ? Utils::getBot() : $user );
 			}
 			return true;
 		}
@@ -371,7 +363,7 @@ class Sanction {
 		} elseif ( !$passed && $emergency ) {
 			$reason = wfMessage(
 					'sanctions-log-immediate-rejection',
-					$this->mWorkflow->getAlphadecimal()
+					$this->getWorkflowId()->getAlphadecimal()
 				)->inContentLanguage()->text();
 			$this->removeTemporaryMeasure( $reason, Utils::getBot() );
 		} elseif ( $passed && $emergency ) {
@@ -379,25 +371,23 @@ class Sanction {
 		}
 
 		// Update the topic summary
-		$result = $this->updateTopicSummary( $force );
+		$this->updateTopicSummary( $force );
 
 		// Write to DB
-		$db = wfGetDB( DB_PRIMARY );
-		$db->startAtomic( __METHOD__ );
-		$db->update(
+		$dbw = wfGetDB( DB_PRIMARY );
+		$dbw->update(
 			'sanctions',
 			[
 				'st_handled' => 1,
 				'st_last_update_timestamp' => wfTimestamp( TS_MW )
 			],
-			[ 'st_id' => $id ]
+			[ 'st_id' => $id ],
+			__METHOD__
 		);
 		/** @var VoteStore $voteStore */
 		$voteStore = MediaWikiServices::getInstance()->getService( 'VoteStore' );
-		if ( $voteStore->deleteOn( $this, $db ) ) {
-			$db->endAtomic( __METHOD__ );
-		} else {
-			$db->cancelAtomic( __METHOD__ );
+		if ( !$voteStore->deleteOn( $this, $dbw ) ) {
+			Utils::getLogger()->warning( "Deleting votes on {$this->getId()} failed" );
 		}
 
 		return true;
@@ -488,7 +478,7 @@ class Sanction {
 
 		return FlowUtil::updateSummary(
 			$this->getWorkflow(),
-			$this->getWorkFlowId(),
+			$this->getWorkflowId(),
 			Utils::getBot(),
 			$summary
 		);
@@ -547,7 +537,7 @@ class Sanction {
 		}
 		if ( isset( $row->st_topic ) ) {
 			$topicUUIDBinary = $row->st_topic;
-			$this->mWorkflow = UUID::create( $topicUUIDBinary );
+			$this->mWorkflowId = UUID::create( $topicUUIDBinary );
 		}
 		if ( isset( $row->st_target ) ) {
 			$this->mTarget = $userFactory->newFromId( (int)$row->st_target );
@@ -577,7 +567,7 @@ class Sanction {
 		$data = [
 			'st_author' => $this->mAuthor->getId(),
 			'st_target' => $this->mTarget->getId(),
-			'st_topic' => $this->mWorkflow->getBinary(),
+			'st_topic' => $this->mWorkflowId->getBinary(),
 			'st_expiry' => $this->mExpiry,
 			'st_original_name' => $this->mTargetOriginalName,
 			'st_last_update_timestamp' => $dbw->timestamp( $this->mTouched ),
@@ -696,9 +686,19 @@ class Sanction {
 		return $this->mId;
 	}
 
+	/** @param int $id */
+	public function setId( $id ) {
+		$this->mId = $id;
+	}
+
 	/** @return User */
 	public function getAuthor() {
 		return $this->mAuthor;
+	}
+
+	/** @param User $user */
+	public function setAuthor( User $user ) {
+		$this->mAuthor = $user;
 	}
 
 	/** @return string */
@@ -706,9 +706,19 @@ class Sanction {
 		return $this->mExpiry;
 	}
 
+	/** @param string $expiry */
+	public function setExpiry( $expiry ) {
+		$this->mExpiry = $expiry;
+	}
+
 	/** @return User */
 	public function getTarget() {
 		return $this->mTarget;
+	}
+
+	/** @param User $user */
+	public function setTarget( User $user ) {
+		$this->mTarget = $user;
 	}
 
 	/** @return array */
@@ -721,7 +731,7 @@ class Sanction {
 				'sanctions_vote',
 				'*',
 				[
-					'stv_topic' => $this->mWorkflow->getBinary()
+					'stv_topic' => $this->mWorkflowId->getBinary()
 				]
 			);
 			// Convert the wrapped result to an array
@@ -733,6 +743,7 @@ class Sanction {
 		return $this->mVotes;
 	}
 
+	/** @return bool */
 	public function isForInsultingName() {
 		return $this->mTargetOriginalName != null;
 	}
@@ -742,307 +753,26 @@ class Sanction {
 		return $this->mTargetOriginalName;
 	}
 
-	/**
-	 * @return Title
-	 * @deprecated Use Sanction::getWorkflow() instead;
-	 */
-	public function getTopic() {
-		return $this->getWorkflow();
+	/** @param string $name */
+	public function setTargetOriginalName( $name ) {
+		$this->mTargetOriginalName = $name;
 	}
 
 	/** @return Title */
 	public function getWorkflow() {
-		$UUIDText = $this->mWorkflow->getAlphadecimal();
+		$UUIDText = $this->mWorkflowId->getAlphadecimal();
 
 		// TODO Maybe there is a better way?
 		return Title::newFromText( $UUIDText, NS_TOPIC );
 	}
 
-	/**
-	 * @return UUID
-	 * @deprecated Use Sanction::getWorkflowId() instead;
-	 */
-	public function getTopicUUID() {
-		return $this->getWorkFlowId();
-	}
-
 	/** @return UUID */
-	public function getWorkFlowId() {
-		return $this->mWorkflow;
+	public function getWorkflowId() {
+		return $this->mWorkflowId;
 	}
 
-	/**
-	 * Find out if there is an inappropriate username change suggestion for the user.
-	 *
-	 * @param User $user
-	 * @return Sanction|null
-	 */
-	public static function existingSanctionForInsultingNameOf( $user ) {
-		$db = wfGetDB( DB_REPLICA );
-		$targetId = $user->getId();
-
-		$row = $db->selectRow(
-			'sanctions',
-			'*',
-			[
-				'st_target' => $targetId,
-				"st_original_name <> ''",
-				'st_expiry > ' . wfTimestamp( TS_MW )
-			]
-		);
-		if ( $row !== false ) {
-			return self::newFromId( $row->st_id );
-		}
-		return null;
-	}
-
-	/**
-	 * @param string $id
-	 * @return Sanction|null
-	 */
-	public static function newFromId( $id ) {
-		$rt = new self();
-		if ( $rt->loadFrom( 'st_id', $id ) ) {
-			return $rt;
-		}
-		return null;
-	}
-
-	/**
-	 * @param UUID|string $uuid
-	 * @return Sanction|null
-	 */
-	public static function newFromUUID( $uuid ) {
-		if ( $uuid instanceof UUID ) {
-			$uuid = $uuid->getBinary();
-		} elseif ( is_string( $uuid ) ) {
-			$uuid = UUID::create( strtolower( $uuid ) )->getBinary();
-		}
-
-		$rt = new self();
-		if ( $rt->loadFrom( 'st_topic', $uuid ) ) {
-			return $rt;
-		}
-		return null;
-	}
-
-	/**
-	 * @param UUID $vote
-	 * @return Sanction|bool
-	 */
-	public static function newFromVoteId( $vote ) {
-		$db = wfGetDB( DB_REPLICA );
-
-		$sanctionId = $db->selectField(
-			'sanctions_vote',
-			'stv_topic',
-			[ 'stv_id' => $vote ]
-		);
-
-		return self::newFromId( $sanctionId );
-	}
-
-	/**
-	 * @return User
-	 * @deprecated Use Utils::getBot() instead
-	 */
-	public static function getBot() {
-		return Utils::getBot();
-	}
-
-	/**
-	 * Rename the given User.
-	 * This function includes some code that originally are in SpecialRenameuser.php
-	 *
-	 * @param string $oldName
-	 * @param string $newName
-	 * @param User $target
-	 * @param User $renamer
-	 * @param string $reason
-	 * @return bool
-	 */
-	protected static function doRename( $oldName, $newName, $target, $renamer, $reason ) {
-		$bot = Utils::getBot();
-		$targetId = $target->idForName();
-		$oldUser = User::newFromName( $oldName );
-		$newUser = User::newFromName( $newName );
-		$oldUserPageTitle = Title::makeTitle( NS_USER, $oldName );
-		$newUserPageTitle = Title::makeTitle( NS_USER, $newName );
-
-		if ( $targetId === 0 || $newUser->idForName() !== 0 ) {
-			return false;
-		}
-
-		// Give other affected extensions a chance to validate or abort
-		$hookRunner = new SanctionsHookRunner(
-			MediaWikiServices::getInstance()->getHookContainer()
-		);
-		if ( $hookRunner->onRenameUserAbort( $targetId, $oldName, $newName ) ) {
-			return false;
-		}
-
-		// Do the heavy lifting...
-		$rename = new RenameuserSQL(
-			$oldName,
-			$newName,
-			$targetId,
-			$renamer,
-			[ 'reason' => $reason ]
-		);
-		if ( !$rename->rename() ) {
-			return false;
-		}
-
-		// If this user is renaming his/herself, make sure that Title::moveTo()
-		// doesn't make a bunch of null move edits under the old name!
-		if ( $renamer->getId() === $targetId ) {
-			$renamer->setName( $newName );
-		}
-
-		// Move any user pages
-		if ( $bot->isAllowed( 'move' ) ) {
-			$dbr = wfGetDB( DB_REPLICA );
-			$pages = $dbr->select(
-				'page',
-				[ 'page_namespace', 'page_title' ],
-				[
-					'page_namespace' => [ NS_USER, NS_USER_TALK ],
-					$dbr->makeList(
-						[
-							'page_title ' . $dbr->buildLike( $oldUserPageTitle->getDBkey() . '/', $dbr->anyString() ),
-							'page_title = ' . $dbr->addQuotes( $oldUserPageTitle->getDBkey() ),
-						], LIST_OR
-					),
-				],
-				__METHOD__
-			);
-			foreach ( $pages as $row ) {
-				$oldPage = Title::makeTitleSafe( $row->page_namespace, $row->page_title );
-				$newPage = Title::makeTitleSafe(
-					$row->page_namespace,
-					preg_replace( '!^[^/]+!', $newUserPageTitle->getDBkey(), $row->page_title )
-				);
-
-				$movePage = new MovePage( $oldPage, $newPage );
-
-				if ( !$movePage->isValidMove() ) {
-					return false;
-				} else {
-					$success = $movePage->move(
-						$bot,
-						wfMessage(
-							'renameuser-move-log',
-							$oldUserPageTitle->getText(),
-							$newUserPageTitle->getText()
-						)->inContentLanguage()->text(),
-						true
-					);
-
-					if ( !$success->isGood() ) {
-						return false;
-					}
-				}
-			}
-		}
-
-		return true;
-	}
-
-	/**
-	 * @param User $target
-	 * @param string $expiry
-	 * @param string $reason
-	 * @param bool $preventEditOwnUserTalk
-	 * @param User|null $user
-	 *
-	 * @return bool
-	 */
-	protected static function doBlock( $target, $expiry, $reason,
-			$preventEditOwnUserTalk = true, $user = null ) {
-		$bot = Utils::getBot();
-
-		$block = new DatabaseBlock();
-		$block->setTarget( $target );
-		$block->setBlocker( $bot );
-		$block->setReason( $reason );
-		$block->isHardblock( true );
-		$block->isAutoblocking( boolval( wfMessage( 'sanctions-autoblock' )->text() ) );
-		$block->isCreateAccountBlocked( true );
-		$block->isUsertalkEditAllowed( $preventEditOwnUserTalk );
-		$block->setExpiry( $expiry );
-
-		$success = $block->insert();
-
-		if ( !$success ) {
-			return false;
-		}
-
-		$logParams = [];
-		$time = MWTimestamp::getInstance( $expiry );
-		// Even if done as below, it comes out in local time.
-		$logParams['5::duration'] = $time->getTimestamp( TS_ISO_8601 );
-		$flags = [ 'nocreate' ];
-		if ( !$block->isAutoblocking() && !IPUtils::isIPAddress( $target ) ) {
-			// Conditionally added same as SpecialBlock
-			$flags[] = 'noautoblock';
-		}
-		$logParams['6::flags'] = implode( ',', $flags );
-
-		$logEntry = new ManualLogEntry( 'block', 'block' );
-		$logEntry->setTarget( Title::makeTitle( NS_USER, $target ) );
-		$logEntry->setComment( $reason );
-		$logEntry->setPerformer( $user == null ? $bot : $user );
-		$logEntry->setParameters( $logParams );
-		$blockIds = array_merge( [ $success['id'] ], $success['autoIds'] );
-		$logEntry->setRelations( [ 'ipb_id' => $blockIds ] );
-		$logId = $logEntry->insert();
-		$logEntry->publish( $logId );
-
-		return true;
-	}
-
-	/**
-	 * @param User $target
-	 * @param bool $withLog
-	 * @param string|null $reason
-	 * @param User|null $user
-	 * @return bool
-	 */
-	protected static function unblock( $target, $withLog = false, $reason = null, $user = null ) {
-		$block = $target->getBlock();
-
-		if ( $block != null ) {
-			if ( $block instanceof CompositeBlock ) {
-				foreach ( $block->getOriginalBlocks() as $originalBlock ) {
-					if ( $originalBlock instanceof DatabaseBlock ) {
-						'@phan-var DatabaseBlock $originalBlock';
-						return $originalBlock->delete();
-					}
-				}
-			} elseif ( $block instanceof DatabaseBlock ) {
-				'@phan-var DatabaseBlock $block';
-				return $block->delete();
-			}
-		}
-
-		// Below's the same thing that is on SpecialUnblock SpecialUnblock.php
-		if ( $block->getType() == DatabaseBlock::TYPE_AUTO ) {
-			$page = Title::makeTitle( NS_USER, '#' . $block->getId() );
-		} else {
-			$page = $block->getTarget() instanceof User
-			? $block->getTarget()->getUserPage()
-			: Title::makeTitle( NS_USER, $block->getTarget() );
-		}
-
-		if ( $withLog ) {
-			$bot = Utils::getBot();
-
-			$logEntry = new ManualLogEntry( 'block', 'unblock' );
-			$logEntry->setTarget( $page );
-			$logEntry->setComment( $reason );
-			$logEntry->setPerformer( $user == null ? $bot : $user );
-			$logId = $logEntry->insert();
-			$logEntry->publish( $logId );
-		}
+	/** @param UUID $uuid */
+	public function setWorkflowId( UUID $uuid ) {
+		$this->mWorkflowId = $uuid;
 	}
 }
