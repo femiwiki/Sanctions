@@ -5,7 +5,6 @@ namespace MediaWiki\Extension\Sanctions;
 use Flow\Model\UUID;
 use Html;
 use Linker;
-use MediaWiki\MediaWikiServices;
 use MediaWiki\Revision\RevisionLookup;
 use OutputPage;
 use SpecialPage;
@@ -28,13 +27,21 @@ class SpacialSanctions extends SpecialPage {
 	/** @var RevisionLookup */
 	protected $revLookup;
 
+	/** @var SanctionStore */
+	protected $sanctionStore;
+
 	/** @var TemplateParser */
 	private $templateParser;
 
-	public function __construct() {
+	/**
+	 * @param RevisionLookup $revisionLookup
+	 * @param SanctionStore $sanctionStore
+	 */
+	public function __construct( RevisionLookup $revisionLookup, SanctionStore $sanctionStore ) {
 		parent::__construct( 'Sanctions' );
 
-		$this->revLookup = MediaWikiServices::getInstance()->getRevisionLookup();
+		$this->revLookup = $revisionLookup;
+		$this->sanctionStore = $sanctionStore;
 		$this->templateParser = new TemplateParser( __DIR__ . '/templates' );
 	}
 
@@ -74,7 +81,7 @@ class SpacialSanctions extends SpecialPage {
 
 		$data = [];
 
-		$pager = new SanctionsPager( $this->getContext(), (string)$this->mTargetName );
+		$pager = new SanctionsPager( $this->getContext(), $this->sanctionStore, (string)$this->mTargetName );
 		$pager->doQuery();
 		$data['html-body'] = $pager->getBody();
 
@@ -277,7 +284,7 @@ class SpacialSanctions extends SpecialPage {
 
 				// 만일 동일 사용자명에 대한 부적절한 사용자명 변경 건의안이 이미 있다면 중복 작성을 막습니다.
 				if ( $forInsultingName ) {
-					$existingSanction = Sanction::existingSanctionForInsultingNameOf( $target );
+					$existingSanction = $this->sanctionStore->findExistingSanctionForInsultingNameOf( $target );
 					if ( $existingSanction != null ) {
 						list(
 							$query['showResult'],
@@ -288,7 +295,7 @@ class SpacialSanctions extends SpecialPage {
 							true,
 							102,
 							$targetName,
-							$existingSanction->getTopicUUID()->getAlphaDecimal()
+							$existingSanction->getWorkFlowId()->getAlphaDecimal()
 						];
 						break;
 					}
@@ -302,9 +309,8 @@ class SpacialSanctions extends SpecialPage {
 					break;
 				}
 
-				$topicTitleText = $sanction->getTopic()->getFullText();
 				list( $query['showResult'], $query['code'], $query['uuid'] )
-					= [ true, 0, $sanction->getTopicUUID()->getAlphaDecimal() ];
+					= [ true, 0, $sanction->getWorkFlowId()->getAlphaDecimal() ];
 				// '제재안 '.Linker::link( $sanction->getTopic() ).'가 작성되었습니다.'
 				break;
 			case 'toggle-emergency':
@@ -318,22 +324,22 @@ class SpacialSanctions extends SpecialPage {
 					break;
 				}
 
-				$sanctionId = $request->getVal( 'sanctionId' );
-				$sanction = Sanction::newFromId( $sanctionId );
+				$sanctionId = (int)$request->getVal( 'sanctionId' );
+				$sanction = $this->sanctionStore->newFromId( $sanctionId );
 
 				if ( !$sanction || !$sanction->toggleEmergency( $user ) ) {
 					list( $query['showResult'], $query['errorCode'], $query['uuid'] )
-					= [ true, 3, $sanction->getTopicUUID()->getAlphaDecimal() ];
+					= [ true, 3, $sanction->getWorkFlowId()->getAlphaDecimal() ];
 					// '절차 변경에 실패하였습니다.'
 					break;
 				}
 				if ( $sanction->isEmergency() ) {
 					list( $query['showResult'], $query['code'], $query['uuid'] )
-					= [ true, 1, $sanction->getTopicUUID()->getAlphaDecimal() ];
+					= [ true, 1, $sanction->getWorkFlowId()->getAlphaDecimal() ];
 					// '절차를 긴급으로 바꾸었습니다.'
 				} else {
 					list( $query['showResult'], $query['code'], $query['uuid'] )
-					= [ true, 2, $sanction->getTopicUUID()->getAlphaDecimal() ];
+					= [ true, 2, $sanction->getWorkFlowId()->getAlphaDecimal() ];
 					// '절차를 일반으로 바꾸었습니다.'
 				}
 				break;
@@ -346,17 +352,17 @@ class SpacialSanctions extends SpecialPage {
 					break;
 				}
 
-				$sanctionId = $request->getVal( 'sanctionId' );
-				$sanction = Sanction::newFromId( $sanctionId );
+				$sanctionId = (int)$request->getVal( 'sanctionId' );
+				$sanction = $this->sanctionStore->newFromId( $sanctionId );
 
 				if ( !$sanction->execute() ) {
 					list( $query['showResult'], $query['errorCode'], $query['uuid'] )
-						= [ true, 4, $sanction->getTopicUUID()->getAlphaDecimal() ];
+						= [ true, 4, $sanction->getWorkFlowId()->getAlphaDecimal() ];
 					// '제재안 집행에 실패하였습니다.'
 					break;
 				}
 				list( $query['showResult'], $query['code'], $query['uuid'] )
-					= [ true, 3, $sanction->getTopicUUID()->getAlphaDecimal() ];
+					= [ true, 3, $sanction->getWorkFlowId()->getAlphaDecimal() ];
 				// '제재안을 처리하였습니다.'
 				break;
 		}
@@ -374,7 +380,7 @@ class SpacialSanctions extends SpecialPage {
 	 * @return string Error Message
 	 */
 	protected function makeErrorMessage( $errorCode, $uuid, $targetName ) {
-		$link = $uuid ? Linker::link( Sanction::newFromUUID( $uuid )->getTopic() ) : '';
+		$link = $uuid ? Linker::link( $this->sanctionStore->newFromWorkflowId( $uuid )->getWorkflow() ) : '';
 		switch ( $errorCode ) {
 		case 0:
 			return $this->msg( "sanctions-submit-error-invalid-token" )->text();
@@ -406,7 +412,7 @@ class SpacialSanctions extends SpecialPage {
 	 * @return string Message
 	 */
 	protected function makeMessage( $code, $uuid, $targetName ) {
-		$link = $uuid ? Linker::link( Sanction::newFromUUID( $uuid )->getTopic() ) : '';
+		$link = $uuid ? Linker::link( $this->sanctionStore->newFromWorkflowId( $uuid )->getWorkflow() ) : '';
 		switch ( $code ) {
 		case 0:
 			return $this->msg( "sanctions-submit-massage-added-topic", $link )->text();

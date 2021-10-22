@@ -48,7 +48,9 @@ class Vote {
 		}
 		if ( isset( $row->stv_topic ) ) {
 			$uuid = UUID::create( $row->stv_topic );
-			$this->sanction = Sanction::newFromUUID( $uuid );
+			/** @var SanctionStore $store */
+			$store = MediaWikiServices::getInstance()->getService( 'SanctionStore' );
+			$this->sanction = $store->newFromWorkflowId( $uuid );
 		}
 		if ( isset( $row->stv_period ) ) {
 			$this->period = (int)$row->stv_period;
@@ -65,7 +67,7 @@ class Vote {
 		$dbw->insert(
 			'sanctions_vote',
 			[
-				'stv_topic' => $this->sanction->getTopicUUID()->getBinary(),
+				'stv_topic' => $this->sanction->getWorkFlowId()->getBinary(),
 				'stv_user' => $this->user->getId(),
 				'stv_period' => $this->period,
 				'stv_last_update_timestamp' => $timestamp
@@ -90,7 +92,7 @@ class Vote {
 				'stv_last_update_timestamp' => $timestamp,
 			],
 			[
-				'stv_topic' => $this->sanction->getTopicUUID()->getBinary(),
+				'stv_topic' => $this->sanction->getWorkFlowId()->getBinary(),
 				'stv_user' => $this->user->getId(),
 			]
 		);
