@@ -11,7 +11,10 @@ use User;
 use Wikimedia\Rdbms\ILoadBalancer;
 use Wikimedia\TestingAccessWrapper;
 
-/** @covers \MediaWiki\Extension\Sanctions\SanctionStore */
+/**
+ * @covers \MediaWiki\Extension\Sanctions\SanctionStore
+ * @group Database
+ */
 class SanctionStoreTest extends MediaWikiIntegrationTestCase {
 
 	protected function getSanctionStore(): SanctionStore {
