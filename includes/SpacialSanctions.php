@@ -210,7 +210,7 @@ class SpacialSanctions extends SpecialPage {
 						[ 'class' => 'sanction-execute-result' ],
 						$this->makeErrorMessage(
 							(int)$request->getVal( 'errorCode' ),
-							UUID::create( $request->getVal( 'uuid' ) ),
+							$request->getVal( 'uuid' ) ? UUID::create( $request->getVal( 'uuid' ) ) : null,
 							$request->getVal( 'targetName' )
 						)
 					)
@@ -222,8 +222,7 @@ class SpacialSanctions extends SpecialPage {
 						[ 'class' => 'sanction-execute-result' ],
 						$this->makeMessage(
 							(int)$request->getVal( 'code' ),
-							UUID::create( $request->getVal( 'uuid' ) ),
-							$request->getVal( 'targetName' )
+							$request->getVal( 'uuid' ) ? UUID::create( $request->getVal( 'uuid' ) ) : null
 						)
 					)
 				);
@@ -375,11 +374,11 @@ class SpacialSanctions extends SpecialPage {
 
 	/**
 	 * @param int $errorCode
-	 * @param UUID $uuid
+	 * @param UUID|null $uuid
 	 * @param string $targetName
 	 * @return string Error Message
 	 */
-	protected function makeErrorMessage( $errorCode, UUID $uuid, $targetName ) {
+	protected function makeErrorMessage( $errorCode, $uuid, $targetName ) {
 		$link = $uuid ? Linker::link( $this->sanctionStore->newFromWorkflowId( $uuid )->getWorkflow() ) : '';
 		switch ( $errorCode ) {
 		case 0:
@@ -407,11 +406,10 @@ class SpacialSanctions extends SpecialPage {
 
 	/**
 	 * @param int $code
-	 * @param UUID $uuid
-	 * @param string $targetName
+	 * @param UUID|null $uuid
 	 * @return string Message
 	 */
-	protected function makeMessage( $code, UUID $uuid, $targetName ) {
+	protected function makeMessage( $code, $uuid ) {
 		$link = $uuid ? Linker::link( $this->sanctionStore->newFromWorkflowId( $uuid )->getWorkflow() ) : '';
 		switch ( $code ) {
 		case 0:
