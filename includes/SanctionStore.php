@@ -2,8 +2,8 @@
 
 namespace MediaWiki\Extension\Sanctions;
 
-use User;
 use Flow\Model\UUID;
+use User;
 use Wikimedia\Rdbms\DBConnRef;
 use Wikimedia\Rdbms\ILoadBalancer;
 
