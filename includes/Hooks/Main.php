@@ -141,7 +141,7 @@ class Main implements
 	 * @param User $user
 	 */
 	public function handleReply( array $change, User $user ) {
-		$sanction = $this->sanctionStore->newFromWorkflowId( $change['workflow'] );
+		$sanction = $this->sanctionStore->newFromWorkflowId( UUID::create( $change['workflow'] ) );
 		if ( !$sanction || $sanction->isHandled() ) {
 			return;
 		}
