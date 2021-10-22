@@ -363,7 +363,7 @@ class Sanction {
 		} elseif ( !$passed && $emergency ) {
 			$reason = wfMessage(
 					'sanctions-log-immediate-rejection',
-					$this->getWorkFlowId()->getAlphadecimal()
+					$this->getWorkflowId()->getAlphadecimal()
 				)->inContentLanguage()->text();
 			$this->removeTemporaryMeasure( $reason, Utils::getBot() );
 		} elseif ( $passed && $emergency ) {
@@ -478,7 +478,7 @@ class Sanction {
 
 		return FlowUtil::updateSummary(
 			$this->getWorkflow(),
-			$this->getWorkFlowId(),
+			$this->getWorkflowId(),
 			Utils::getBot(),
 			$summary
 		);
@@ -691,6 +691,11 @@ class Sanction {
 		return $this->mAuthor;
 	}
 
+	/** @param User $user */
+	public function setAuthor( User $user ) {
+		$this->mAuthor = $user;
+	}
+
 	/** @return string */
 	public function getExpiry() {
 		return $this->mExpiry;
@@ -699,6 +704,11 @@ class Sanction {
 	/** @return User */
 	public function getTarget() {
 		return $this->mTarget;
+	}
+
+	/** @param User $user */
+	public function setTarget( User $user ) {
+		$this->mTarget = $user;
 	}
 
 	/** @return array */
@@ -742,7 +752,12 @@ class Sanction {
 	}
 
 	/** @return UUID */
-	public function getWorkFlowId() {
+	public function getWorkflowId() {
 		return $this->mWorkflowId;
+	}
+
+	/** @param UUID $uuid */
+	public function setWorkflowId( UUID $uuid ) {
+		$this->mWorkflowId = $uuid;
 	}
 }

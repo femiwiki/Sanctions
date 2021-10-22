@@ -58,19 +58,19 @@ class Vote {
 	}
 
 	/**
-	 * @param string $timestamp
+	 * @param string|null $timestamp
 	 * @param IDatabase|null $dbw
 	 */
-	public function insert( $timestamp, IDatabase $dbw = null ) {
+	public function insert( $timestamp = null, IDatabase $dbw = null ) {
 		$dbw = $dbw ?: wfGetDB( DB_PRIMARY );
 
 		$dbw->insert(
 			'sanctions_vote',
 			[
-				'stv_topic' => $this->sanction->getWorkFlowId()->getBinary(),
-				'stv_user' => $this->user->getId(),
-				'stv_period' => $this->period,
-				'stv_last_update_timestamp' => $timestamp
+				'stv_topic' => $this->getSanction()->getWorkflowId()->getBinary(),
+				'stv_user' => $this->getUser()->getId(),
+				'stv_period' => $this->getPeriod(),
+				'stv_last_update_timestamp' => $timestamp ?? $dbw->timestamp(),
 			]
 		);
 		$this->updateLastTouched( $timestamp, $dbw );
@@ -92,7 +92,7 @@ class Vote {
 				'stv_last_update_timestamp' => $timestamp,
 			],
 			[
-				'stv_topic' => $this->sanction->getWorkFlowId()->getBinary(),
+				'stv_topic' => $this->getSanction()->getWorkflowId()->getBinary(),
 				'stv_user' => $this->user->getId(),
 			]
 		);
@@ -166,11 +166,23 @@ class Vote {
 		$this->sanction = $sanction;
 	}
 
+	/** @return Sanction */
+	public function getSanction(): Sanction {
+		return $this->sanction;
+	}
+
 	/**
 	 * @param User $user
 	 */
 	public function setUser( User $user ) {
 		$this->user = $user;
+	}
+
+	/**
+	 * @return User
+	 */
+	public function getUser() {
+		return $this->user;
 	}
 
 	/**

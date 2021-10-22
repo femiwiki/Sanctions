@@ -81,21 +81,21 @@ class SanctionStore {
 	}
 
 	/**
-	 * @param UUID|string $uuid
+	 * @param UUID $uuid
 	 * @return Sanction|null
 	 */
-	public function newFromWorkflowId( $uuid ) {
-		if ( $uuid instanceof UUID ) {
-			$uuid = $uuid->getBinary();
-		} elseif ( is_string( $uuid ) ) {
-			$uuid = UUID::create( strtolower( $uuid ) )->getBinary();
-		}
+	public function newFromWorkflowId( UUID $uuid ) {
+		$db = $this->getDBConnectionRef( DB_REPLICA );
 
-		$rt = new Sanction();
-		if ( $rt->loadFrom( 'st_topic', $uuid ) ) {
-			return $rt;
+		$row = $db->selectRow(
+			'sanctions',
+			'*',
+			[ 'st_topic' => $uuid->getBinary() ]
+		);
+		if ( !$row ) {
+			return null;
 		}
-		return null;
+		return Sanction::newFromRow( $row );
 	}
 
 }

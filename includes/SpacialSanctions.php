@@ -295,7 +295,7 @@ class SpacialSanctions extends SpecialPage {
 							true,
 							102,
 							$targetName,
-							$existingSanction->getWorkFlowId()->getAlphaDecimal()
+							$existingSanction->getWorkflowId()->getAlphaDecimal()
 						];
 						break;
 					}
@@ -310,7 +310,7 @@ class SpacialSanctions extends SpecialPage {
 				}
 
 				list( $query['showResult'], $query['code'], $query['uuid'] )
-					= [ true, 0, $sanction->getWorkFlowId()->getAlphaDecimal() ];
+					= [ true, 0, $sanction->getWorkflowId()->getAlphaDecimal() ];
 				// '제재안 '.Linker::link( $sanction->getTopic() ).'가 작성되었습니다.'
 				break;
 			case 'toggle-emergency':
@@ -329,17 +329,17 @@ class SpacialSanctions extends SpecialPage {
 
 				if ( !$sanction || !$sanction->toggleEmergency( $user ) ) {
 					list( $query['showResult'], $query['errorCode'], $query['uuid'] )
-					= [ true, 3, $sanction->getWorkFlowId()->getAlphaDecimal() ];
+					= [ true, 3, $sanction->getWorkflowId()->getAlphaDecimal() ];
 					// '절차 변경에 실패하였습니다.'
 					break;
 				}
 				if ( $sanction->isEmergency() ) {
 					list( $query['showResult'], $query['code'], $query['uuid'] )
-					= [ true, 1, $sanction->getWorkFlowId()->getAlphaDecimal() ];
+					= [ true, 1, $sanction->getWorkflowId()->getAlphaDecimal() ];
 					// '절차를 긴급으로 바꾸었습니다.'
 				} else {
 					list( $query['showResult'], $query['code'], $query['uuid'] )
-					= [ true, 2, $sanction->getWorkFlowId()->getAlphaDecimal() ];
+					= [ true, 2, $sanction->getWorkflowId()->getAlphaDecimal() ];
 					// '절차를 일반으로 바꾸었습니다.'
 				}
 				break;
@@ -357,12 +357,12 @@ class SpacialSanctions extends SpecialPage {
 
 				if ( !$sanction->execute() ) {
 					list( $query['showResult'], $query['errorCode'], $query['uuid'] )
-						= [ true, 4, $sanction->getWorkFlowId()->getAlphaDecimal() ];
+						= [ true, 4, $sanction->getWorkflowId()->getAlphaDecimal() ];
 					// '제재안 집행에 실패하였습니다.'
 					break;
 				}
 				list( $query['showResult'], $query['code'], $query['uuid'] )
-					= [ true, 3, $sanction->getWorkFlowId()->getAlphaDecimal() ];
+					= [ true, 3, $sanction->getWorkflowId()->getAlphaDecimal() ];
 				// '제재안을 처리하였습니다.'
 				break;
 		}
