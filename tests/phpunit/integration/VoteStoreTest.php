@@ -30,7 +30,7 @@ class VoteStoreTest extends MediaWikiIntegrationTestCase {
 		$user = new User();
 		$user->setId( 1 );
 		$sanction = $this->createMock( Sanction::class );
-		$sanction->method( 'getTopicUUID' )->will( $this->returnValue( $uuid ) );
+		$sanction->method( 'getWorkflowId' )->willReturn( $uuid );
 		$vote = Vote::newFromRow( (object)[
 			'stv_user' => $user->getId(),
 			'stv_period' => 10,
