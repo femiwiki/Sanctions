@@ -63,13 +63,12 @@ class SanctionStore {
 	 */
 	public function findExistingSanctionForInsultingNameOf( $user ) {
 		$db = $this->getDBConnectionRef( DB_REPLICA );
-		$targetId = $user->getId();
 
 		$row = $db->selectRow(
 			'sanctions',
 			'*',
 			[
-				'st_target' => $targetId,
+				'st_target' => $user->getId(),
 				"st_original_name <> ''",
 				'st_expiry > ' . wfTimestamp( TS_MW )
 			]

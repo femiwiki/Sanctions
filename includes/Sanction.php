@@ -686,6 +686,11 @@ class Sanction {
 		return $this->mId;
 	}
 
+	/** @param int $id */
+	public function setId( $id ) {
+		$this->mId = $id;
+	}
+
 	/** @return User */
 	public function getAuthor() {
 		return $this->mAuthor;
@@ -699,6 +704,11 @@ class Sanction {
 	/** @return string */
 	public function getExpiry() {
 		return $this->mExpiry;
+	}
+
+	/** @param string $expiry */
+	public function setExpiry( $expiry ) {
+		$this->mExpiry = $expiry;
 	}
 
 	/** @return User */
@@ -741,6 +751,11 @@ class Sanction {
 	/** @return string */
 	public function getTargetOriginalName() {
 		return $this->mTargetOriginalName;
+	}
+
+	/** @param string $name */
+	public function setTargetOriginalName( $name ) {
+		$this->mTargetOriginalName = $name;
 	}
 
 	/** @return Title */
