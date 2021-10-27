@@ -106,7 +106,7 @@
   "HookHandlers": {
     "main": {
       "class": "MediaWiki\\Extension\\Sanctions\\Hooks\\Main",
-      "services": ["UserFactory", "SanctionStore", "VoteStore"]
+      "services": ["SanctionStore", "VoteStore", "UserFactory"]
     },
     "SchemaChanges": {
       "class": "MediaWiki\\Extension\\Sanctions\\Hooks\\SchemaChanges"
@@ -122,7 +122,7 @@
   "SpecialPages": {
     "Sanctions": {
       "class": "MediaWiki\\Extension\\Sanctions\\SpacialSanctions",
-      "services": ["UserFactory", "RevisionLookup", "SanctionStore"]
+      "services": ["SanctionStore", "UserFactory", "RevisionLookup"]
     }
   },
   "DefaultUserOptions": {
