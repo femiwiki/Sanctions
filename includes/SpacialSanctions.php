@@ -6,10 +6,11 @@ use Flow\Model\UUID;
 use Html;
 use Linker;
 use MediaWiki\Revision\RevisionLookup;
+use MediaWiki\User\UserFactory;
 use OutputPage;
+use RequestContext;
 use SpecialPage;
 use TemplateParser;
-use User;
 
 class SpacialSanctions extends SpecialPage {
 	/** @var string */
@@ -24,6 +25,9 @@ class SpacialSanctions extends SpecialPage {
 	/** @var int */
 	protected $mNewRevisionId;
 
+	/** @var UserFactory */
+	protected $userFactory;
+
 	/** @var RevisionLookup */
 	protected $revLookup;
 
@@ -34,12 +38,18 @@ class SpacialSanctions extends SpecialPage {
 	private $templateParser;
 
 	/**
+	 * @param UserFactory $userFactory *
 	 * @param RevisionLookup $revisionLookup
 	 * @param SanctionStore $sanctionStore
 	 */
-	public function __construct( RevisionLookup $revisionLookup, SanctionStore $sanctionStore ) {
+	public function __construct(
+		UserFactory $userFactory,
+		RevisionLookup $revisionLookup,
+		SanctionStore $sanctionStore
+	) {
 		parent::__construct( 'Sanctions' );
 
+		$this->userFactory = $userFactory;
 		$this->revLookup = $revisionLookup;
 		$this->sanctionStore = $sanctionStore;
 		$this->templateParser = new TemplateParser( __DIR__ . '/templates' );
@@ -81,7 +91,12 @@ class SpacialSanctions extends SpecialPage {
 
 		$data = [];
 
-		$pager = new SanctionsPager( $this->getContext(), $this->sanctionStore, (string)$this->mTargetName );
+		$pager = new SanctionsPager(
+			$this->getContext(),
+			$this->userFactory,
+			$this->sanctionStore,
+			(string)$this->mTargetName
+		);
 		$pager->doQuery();
 		$data['html-body'] = $pager->getBody();
 
@@ -97,7 +112,7 @@ class SpacialSanctions extends SpecialPage {
 				'label-insulting-name' => $this->msg( 'sanctions-form-for-insulting-name' )->text(),
 				'textarea-placeholder' => $this->msg( 'sanctions-content-placeholder' )->text(),
 				'submit-label' => $this->msg( 'sanctions-submit' )->text(),
-				'token' => $this->getUser()->getEditToken( 'sanctions' ),
+				'token' => RequestContext::getMain()->getCsrfTokenSet()->getToken( 'sanctions' )->toString(),
 			];
 		} else {
 			if ( $this->getUser()->isAnon() ) {
@@ -143,7 +158,7 @@ class SpacialSanctions extends SpecialPage {
 			break;
 		}
 
-		$target = User::newFromName( $targetName );
+		$target = $this->userFactory->newFromName( $targetName );
 		if ( !$target ) {
 			return;
 		}
@@ -254,7 +269,8 @@ class SpacialSanctions extends SpecialPage {
 		// 100    사용자명 미입력
 		// 101 사용자 없음
 		// 102 중복된 부적절한 사용자명 변경 건의
-		if ( !$this->getUser()->matchEditToken( $request->getVal( 'token' ), 'sanctions' ) ) {
+		if ( !RequestContext::getMain()->getCsrfTokenSet()->getToken( 'sanctions' )->match(
+			$request->getVal( 'token' ), 'sanctions' ) ) {
 			list( $query['showResult'], $query['errorCode'] ) = [ true, 0 ];
 			// '토큰이 일치하지 않습니다.'
 		} else { switch ( $action ) {
@@ -272,7 +288,7 @@ class SpacialSanctions extends SpecialPage {
 					break;
 				}
 
-				$target = User::newFromName( $targetName );
+				$target = $this->userFactory->newFromName( $targetName );
 
 				if ( $target->getId() === 0 ) {
 					list( $query['showResult'], $query['errorCode'], $query['targetName'] )
