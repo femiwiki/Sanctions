@@ -15,6 +15,7 @@ use MWTimestamp;
 use Psr\Log\LoggerInterface;
 use RenameuserSQL;
 use Title;
+use TitleValue;
 use User;
 use Wikimedia\IPUtils;
 
@@ -282,9 +283,15 @@ class Utils {
 	 *
 	 * @return bool
 	 */
-	public static function doBlock( $target, $expiry, $reason,
-			$preventEditOwnUserTalk = true, $user = null ) {
+	public static function doBlock(
+			$target,
+			$expiry,
+			$reason,
+			$preventEditOwnUserTalk = true,
+			$user = null
+		) {
 		$bot = self::getBot();
+		$blockStore = MediaWikiServices::getInstance()->getDatabaseBlockStore();
 
 		$block = new DatabaseBlock();
 		$block->setTarget( $target );
@@ -296,7 +303,7 @@ class Utils {
 		$block->isUsertalkEditAllowed( $preventEditOwnUserTalk );
 		$block->setExpiry( $expiry );
 
-		$success = $block->insert();
+		$success = $blockStore->insertBlock( $block );
 
 		if ( !$success ) {
 			return false;
@@ -334,6 +341,7 @@ class Utils {
 	 * @return bool
 	 */
 	public static function unblock( $target, $withLog = false, $reason = null, $user = null ) {
+		$blockStore = MediaWikiServices::getInstance()->getDatabaseBlockStore();
 		$block = $target->getBlock();
 
 		if ( $block != null ) {
@@ -341,29 +349,24 @@ class Utils {
 				foreach ( $block->getOriginalBlocks() as $originalBlock ) {
 					if ( $originalBlock instanceof DatabaseBlock ) {
 						'@phan-var DatabaseBlock $originalBlock';
-						return $originalBlock->delete();
+						return $blockStore->deleteBlock( $originalBlock );
 					}
 				}
 			} elseif ( $block instanceof DatabaseBlock ) {
 				'@phan-var DatabaseBlock $block';
-				return $block->delete();
+				return $blockStore->deleteBlock( $block );
 			}
 		}
 
-		// Below's the same thing that is on SpecialUnblock SpecialUnblock.php
-		if ( $block->getType() == DatabaseBlock::TYPE_AUTO ) {
-			$page = Title::makeTitle( NS_USER, '#' . $block->getId() );
-		} else {
-			$page = $block->getTarget() instanceof User
-			? $block->getTarget()->getUserPage()
-			: Title::makeTitle( NS_USER, $block->getTarget() );
-		}
+		$page = TitleValue::tryNew( NS_USER, $block->getTargetName() );
 
 		if ( $withLog ) {
 			$bot = self::getBot();
 
 			$logEntry = new ManualLogEntry( 'block', 'unblock' );
-			$logEntry->setTarget( $page );
+			if ( $page !== null ) {
+				$logEntry->setTarget( $page );
+			}
 			$logEntry->setComment( $reason );
 			$logEntry->setPerformer( $user == null ? $bot : $user );
 			$logId = $logEntry->insert();

@@ -194,7 +194,7 @@ class Sanction {
 		} else {
 			$period = $this->getPeriod();
 			$blockExpiry = wfTimestamp( TS_MW, time() + ( 60 * 60 * 24 * $period ) );
-			if ( $target->isBlocked() ) {
+			if ( $target->getBlock() !== null ) {
 				// If the expiry of the block determined by this sanction is later than the existing expiry,
 				// remove it.
 				if ( $target->getBlock()->getExpiry() < $blockExpiry ) {
@@ -224,7 +224,7 @@ class Sanction {
 			return true;
 		} else {
 			$blockExpiry = wfTimestamp( TS_MW, time() + ( 60 * 60 * 24 * $this->getPeriod() ) );
-			if ( $target->isBlocked() ) {
+			if ( $target->getBlock() !== null ) {
 				// If the expiry of the block determined by this sanction is later than the existing expiry,
 				// remove it.
 				if ( $target->getBlock()->getExpiry() < $blockExpiry ) {
@@ -269,7 +269,7 @@ class Sanction {
 			// Block until voting expires.
 			// If already blocked, compare the ranges and extend it if the expiry for this sanction is
 			// after the unblock time.
-			if ( $target->isBlocked() && $target->getBlock()->getExpiry() < $expiry ) {
+			if ( $target->getBlock() !== null && $target->getBlock()->getExpiry() < $expiry ) {
 				Utils::unblock( $target, false );
 			}
 
@@ -307,7 +307,7 @@ class Sanction {
 			// other words, look at the block record and if there is a block record that is not related to
 			// this sanction, compare the time periods and reduce the block period if the expiry
 			// of this sanction is later than the unblock time.
-			if ( $target->isBlocked() && $target->getBlock()->getExpiry() == $this->mExpiry ) {
+			if ( $target->getBlock() !== null && $target->getBlock()->getExpiry() == $this->mExpiry ) {
 				Utils::unblock( $target, true, $reason, $user == null ? Utils::getBot() : $user );
 			}
 			return true;
