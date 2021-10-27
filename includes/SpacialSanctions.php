@@ -270,7 +270,7 @@ class SpacialSanctions extends SpecialPage {
 		// 101 사용자 없음
 		// 102 중복된 부적절한 사용자명 변경 건의
 		if ( !RequestContext::getMain()->getCsrfTokenSet()->getToken( 'sanctions' )->match(
-			$request->getVal( 'token' ), 'sanctions' ) ) {
+			$request->getVal( 'token' ) ) ) {
 			list( $query['showResult'], $query['errorCode'] ) = [ true, 0 ];
 			// '토큰이 일치하지 않습니다.'
 		} else { switch ( $action ) {
@@ -290,9 +290,9 @@ class SpacialSanctions extends SpecialPage {
 
 				$target = $this->userFactory->newFromName( $targetName );
 
-				if ( $target->getId() === 0 ) {
+				if ( !$target || !$target->isRegistered() ) {
 					list( $query['showResult'], $query['errorCode'], $query['targetName'] )
-					= [ true, 101, $targetName ];
+						= [ true, 101, $targetName ];
 					// '"'.$targetName.'"라는 이름의 사용자가 존재하지 않습니다.'
 					break;
 				}
