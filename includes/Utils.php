@@ -15,6 +15,7 @@ use MWTimestamp;
 use Psr\Log\LoggerInterface;
 use RenameuserSQL;
 use Title;
+use TitleValue;
 use User;
 use Wikimedia\IPUtils;
 
@@ -357,19 +358,15 @@ class Utils {
 			}
 		}
 
-		// Below's the same thing that is on SpecialUnblock SpecialUnblock.php
-		if ( $block->getType() == DatabaseBlock::TYPE_AUTO ) {
-			$page = Title::makeTitle( NS_USER, '#' . $block->getId() );
-		} else {
-			$userFactory = MediaWikiServices::getInstance()->getUserFactory();
-			$page = $userFactory->newFromUserIdentity( $block->getTargetUserIdentity() )->getUserPage();
-		}
+		$page = TitleValue::tryNew( NS_USER, $block->getTargetName() );
 
 		if ( $withLog ) {
 			$bot = self::getBot();
 
 			$logEntry = new ManualLogEntry( 'block', 'unblock' );
-			$logEntry->setTarget( $page );
+			if ( $page !== null ) { // Sanity
+				$logEntry->setTarget( $page );
+			}
 			$logEntry->setComment( $reason );
 			$logEntry->setPerformer( $user == null ? $bot : $user );
 			$logId = $logEntry->insert();
