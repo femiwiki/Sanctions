@@ -116,7 +116,7 @@
     },
     "ToolLinks": {
       "class": "MediaWiki\\Extension\\Sanctions\\Hooks\\ToolLinks",
-      "services": ["UserFactory"]
+      "services": ["UserFactory", "LinkRenderer"]
     }
   },
   "SpecialPages": {
