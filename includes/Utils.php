@@ -364,7 +364,7 @@ class Utils {
 			$bot = self::getBot();
 
 			$logEntry = new ManualLogEntry( 'block', 'unblock' );
-			if ( $page !== null ) { // Sanity
+			if ( $page !== null ) {
 				$logEntry->setTarget( $page );
 			}
 			$logEntry->setComment( $reason );
