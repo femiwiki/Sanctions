@@ -8,6 +8,7 @@ use MediaWiki\Block\DatabaseBlock;
 use MediaWiki\Extension\Sanctions\Hooks\SanctionsHookRunner;
 use MediaWiki\Logger\LoggerFactory;
 use MediaWiki\MediaWikiServices;
+use MediaWiki\User\UserIdentity;
 use Message;
 use MovePage;
 use MWTimestamp;
@@ -19,13 +20,16 @@ use Wikimedia\IPUtils;
 
 class Utils {
 	/**
-	 * @param User $user
+	 * @param UserIdentity $user
 	 * @param string[]|bool &$reasons An array of reasons why can't participate.
 	 * @param bool $contentLang
 	 * @return bool
 	 */
-	public static function hasVoteRight( User $user, &$reasons = false, $contentLang = false ) {
+	public static function hasVoteRight( UserIdentity $user, &$reasons = false, $contentLang = false ) {
 		global $wgActorTableSchemaMigrationStage;
+
+		$userFactory = MediaWikiServices::getInstance()->getUserFactory();
+		$user = $userFactory->newFromUserIdentity( $user );
 
 		// If the user is not logged in
 		if ( $user->isAnon() ) {
@@ -122,7 +126,7 @@ class Utils {
 			}
 		}
 
-		if ( $user->isBlocked() ) {
+		if ( $user->getBlock() !== null ) {
 			if ( $reasons !== false ) {
 				self::addReason( wfMessage( 'sanctions-reason-blocked' ), $reasons, $contentLang );
 			} else {
@@ -181,10 +185,12 @@ class Utils {
 	 * @return bool
 	 */
 	public static function doRename( $oldName, $newName, $target, $renamer, $reason ) {
+		$userFactory = MediaWikiServices::getInstance()->getUserFactory();
+
 		$bot = self::getBot();
 		$targetId = $target->idForName();
-		$oldUser = User::newFromName( $oldName );
-		$newUser = User::newFromName( $newName );
+		$oldUser = $userFactory->newFromName( $oldName );
+		$newUser = $userFactory->newFromName( $newName );
 		$oldUserPageTitle = Title::makeTitle( NS_USER, $oldName );
 		$newUserPageTitle = Title::makeTitle( NS_USER, $newName );
 

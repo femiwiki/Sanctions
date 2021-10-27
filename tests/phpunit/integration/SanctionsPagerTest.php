@@ -22,8 +22,9 @@ class SanctionsPagerTest extends MediaWikiIntegrationTestCase {
 		if ( $viewer ) {
 			$request->setUser( $viewer );
 		}
+		$userFactory = MediaWikiServices::getInstance()->getUserFactory();
 		$sanctionStore = new SanctionStore( MediaWikiServices::getInstance()->getDBLoadBalancer() );
-		return new SanctionsPager( $request, $sanctionStore, $targetName );
+		return new SanctionsPager( $request, $userFactory, $sanctionStore, $targetName );
 	}
 
 	/**

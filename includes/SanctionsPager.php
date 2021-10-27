@@ -6,7 +6,9 @@ use Html;
 use IContextSource;
 use IndexPager;
 use Linker;
+use MediaWiki\User\UserFactory;
 use MWTimestamp;
+use RequestContext;
 use stdClass;
 use TemplateParser;
 use Title;
@@ -19,6 +21,9 @@ class SanctionsPager extends IndexPager {
 	/** @var string */
 	private $targetName;
 
+	/** @var UserFactory */
+	private $userFactory;
+
 	/** @var SanctionStore */
 	private $sanctionStore;
 
@@ -27,12 +32,19 @@ class SanctionsPager extends IndexPager {
 
 	/**
 	 * @param IContextSource $context
+	 * @param UserFactory $userFactory
 	 * @param SanctionStore $sanctionStore
 	 * @param string|null $targetName
 	 */
-	public function __construct( IContextSource $context, SanctionStore $sanctionStore, string $targetName = null ) {
+	public function __construct(
+		IContextSource $context,
+		UserFactory $userFactory,
+		SanctionStore $sanctionStore,
+		string $targetName = null
+	) {
 		parent::__construct( $context );
 		$this->targetName = $targetName;
+		$this->userFactory = $userFactory;
 		$this->sanctionStore = $sanctionStore;
 		$this->templateParser = new TemplateParser( __DIR__ . '/templates' );
 	}
@@ -80,7 +92,7 @@ class SanctionsPager extends IndexPager {
 		];
 
 		if ( $this->targetName ) {
-			$query['conds'][] = 'st_target = ' . User::newFromName( $this->targetName )->getId();
+			$query['conds'][] = 'st_target = ' . $this->userFactory->newFromName( $this->targetName )->getId();
 		} else {
 			$query['conds']['st_handled'] = 0;
 		}
@@ -169,7 +181,7 @@ class SanctionsPager extends IndexPager {
 					$data['data-toggle-process'] = [
 						'action' => $this->getContext()->getTitle()->getFullURL(),
 						'label' => $this->msg( 'sanctions-row-button-toggle-emergency' )->text(),
-						'token' => $this->getUser()->getEditToken( 'sanctions' ),
+						'token' => RequestContext::getMain()->getCsrfTokenSet()->getToken( 'sanctions' )->toString(),
 						'sanction-id' => (string)$row->st_id,
 					];
 				}
@@ -185,7 +197,7 @@ class SanctionsPager extends IndexPager {
 					$data['data-execute'] = [
 						'action' => $this->getContext()->getTitle()->getFullURL(),
 						'label' => $this->msg( 'sanctions-row-button-execute' )->text(),
-						'token' => $this->getUser()->getEditToken( 'sanctions' ),
+						'token' => RequestContext::getMain()->getCsrfTokenSet()->getToken( 'sanctions' )->toString(),
 						'sanction-id' => (string)$row->st_id,
 					];
 				}

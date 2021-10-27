@@ -5,11 +5,11 @@ namespace MediaWiki\Extension\Sanctions\Hooks;
 use Linker;
 use MediaWiki\Extension\Sanctions\Utils;
 use MediaWiki\Revision\RevisionRecord;
+use MediaWiki\User\UserFactory;
 use MediaWiki\User\UserIdentity;
 use RequestContext;
 use SpecialPage;
 use Title;
-use User;
 
 class ToolLinks implements
 	\MediaWiki\Diff\Hook\DiffToolsHook,
@@ -18,6 +18,17 @@ class ToolLinks implements
 	\MediaWiki\Hook\SidebarBeforeOutputHook,
 	\MediaWiki\Hook\UserToolLinksEditHook
 	{
+		/**
+		 * @var UserFactory
+		 */
+		private $userFactory;
+
+		/**
+		 * @param UserFactory $userFactory
+		 */
+		public function __construct( UserFactory $userFactory ) {
+			$this->userFactory = $userFactory;
+		}
 
 	/**
 	 * (talk|contribs)
@@ -47,7 +58,7 @@ class ToolLinks implements
 	 * @return bool|void True or no return value to continue or false to abort
 	 */
 	public function onDiffTools( $newRevRecord, &$links, $oldRevRecord, $userIdentity ) {
-		if ( !Utils::hasVoteRight( User::newFromIdentity( $userIdentity ) ) ) {
+		if ( !Utils::hasVoteRight( $userIdentity ) ) {
 			return true;
 		}
 
@@ -70,7 +81,7 @@ class ToolLinks implements
 	 * @inheritDoc
 	 */
 	public function onHistoryTools( $revRecord, &$links, $prevRevRecord, $userIdentity ) {
-		if ( !Utils::hasVoteRight( User::newFromIdentity( $userIdentity ) ) ) {
+		if ( !Utils::hasVoteRight( $userIdentity ) ) {
 			return true;
 		}
 
@@ -121,7 +132,7 @@ class ToolLinks implements
 	 */
 	public function onContributionsToolLinks( $id, Title $title, array &$tools, SpecialPage $specialPage ) {
 		$tools['sanctions'] = $specialPage->getLinkRenderer()->makeKnownLink(
-				SpecialPage::getTitleFor( 'Sanctions', User::newFromId( $id ) ),
+				SpecialPage::getTitleFor( 'Sanctions', $this->userFactory->newFromId( $id )->getName() ),
 				wfMessage( 'sanctions-link-on-user-contributes' )->text()
 			);
 	}

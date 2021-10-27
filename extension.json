@@ -115,13 +115,14 @@
       "class": "MediaWiki\\Extension\\Sanctions\\Hooks\\Notification"
     },
     "ToolLinks": {
-      "class": "MediaWiki\\Extension\\Sanctions\\Hooks\\ToolLinks"
+      "class": "MediaWiki\\Extension\\Sanctions\\Hooks\\ToolLinks",
+      "services": ["UserFactory"]
     }
   },
   "SpecialPages": {
     "Sanctions": {
       "class": "MediaWiki\\Extension\\Sanctions\\SpacialSanctions",
-      "services": ["RevisionLookup", "SanctionStore"]
+      "services": ["UserFactory", "RevisionLookup", "SanctionStore"]
     }
   },
   "DefaultUserOptions": {
