@@ -2,8 +2,8 @@
 
 namespace MediaWiki\Extension\Sanctions\Hooks;
 
-use Linker;
 use MediaWiki\Extension\Sanctions\Utils;
+use MediaWiki\Linker\LinkRenderer;
 use MediaWiki\Revision\RevisionRecord;
 use MediaWiki\User\UserFactory;
 use MediaWiki\User\UserIdentity;
@@ -18,16 +18,19 @@ class ToolLinks implements
 	\MediaWiki\Hook\SidebarBeforeOutputHook,
 	\MediaWiki\Hook\UserToolLinksEditHook
 	{
-		/**
-		 * @var UserFactory
-		 */
+		/** @var UserFactory */
 		private $userFactory;
+
+		/** @var LinkRenderer */
+		private $linkRenderer;
 
 		/**
 		 * @param UserFactory $userFactory
+		 * @param LinkRenderer $linkRenderer
 		 */
-		public function __construct( UserFactory $userFactory ) {
+		public function __construct( UserFactory $userFactory, LinkRenderer $linkRenderer ) {
 			$this->userFactory = $userFactory;
+			$this->linkRenderer = $linkRenderer;
 		}
 
 	/**
@@ -43,7 +46,7 @@ class ToolLinks implements
 			return true;
 		}
 
-		$items[] = Linker::link(
+		$items[] = $this->linkRenderer->makeLink(
 			SpecialPage::getTitleFor( 'Sanctions', $userText ),
 			wfMessage( 'sanctions-link-on-user-tool' )->text()
 		);
@@ -69,7 +72,7 @@ class ToolLinks implements
 		$ids .= $newRevRecord->getId();
 
 		$titleText = $newRevRecord->getUser()->getName() . '/' . $ids;
-		$links[] = Linker::link(
+		$links[] = $this->linkRenderer->makeLink(
 			SpecialPage::getTitleFor( 'Sanctions', $titleText ),
 			wfMessage( 'sanctions-link-on-diff' )->text()
 		);
@@ -86,7 +89,7 @@ class ToolLinks implements
 		}
 
 		$titleText = $revRecord->getUser()->getName() . '/' . $revRecord->getId();
-		$links[] = Linker::link(
+		$links[] = $this->linkRenderer->makeLink(
 			SpecialPage::getTitleFor( 'Sanctions', $titleText ),
 			wfMessage( 'sanctions-link-on-history' )->text()
 		);

@@ -4,7 +4,7 @@ namespace MediaWiki\Extension\Sanctions;
 
 use Flow\Model\UUID;
 use Html;
-use Linker;
+use MediaWiki\Linker\LinkRenderer;
 use MediaWiki\Revision\RevisionLookup;
 use MediaWiki\User\UserFactory;
 use OutputPage;
@@ -14,7 +14,7 @@ use TemplateParser;
 
 class SpacialSanctions extends SpecialPage {
 	/** @var string */
-	protected $mTargetName;
+	protected $targetName;
 
 	/** @var int */
 	protected $mTargetId;
@@ -25,33 +25,40 @@ class SpacialSanctions extends SpecialPage {
 	/** @var int */
 	protected $mNewRevisionId;
 
+	/** @var SanctionStore */
+	protected $sanctionStore;
+
 	/** @var UserFactory */
 	protected $userFactory;
 
 	/** @var RevisionLookup */
 	protected $revLookup;
 
-	/** @var SanctionStore */
-	protected $sanctionStore;
+	/** @var LinkRenderer */
+	private $linkRenderer;
 
 	/** @var TemplateParser */
 	private $templateParser;
 
 	/**
-	 * @param UserFactory $userFactory *
-	 * @param RevisionLookup $revisionLookup
 	 * @param SanctionStore $sanctionStore
+	 * @param UserFactory $userFactory
+	 * @param RevisionLookup $revisionLookup
+	 * @param LinkRenderer $linkRenderer
 	 */
 	public function __construct(
+		SanctionStore $sanctionStore,
 		UserFactory $userFactory,
 		RevisionLookup $revisionLookup,
-		SanctionStore $sanctionStore
+		LinkRenderer $linkRenderer
 	) {
 		parent::__construct( 'Sanctions' );
 
+		$this->sanctionStore = $sanctionStore;
 		$this->userFactory = $userFactory;
 		$this->revLookup = $revisionLookup;
-		$this->sanctionStore = $sanctionStore;
+		$this->linkRenderer = $linkRenderer;
+
 		$this->templateParser = new TemplateParser( __DIR__ . '/templates' );
 	}
 
@@ -81,9 +88,9 @@ class SpacialSanctions extends SpecialPage {
 		$output->addModules( 'ext.sanctions.special.sanctions' );
 
 		// 대상자가 있다면 제목을 변경하고 전체 목록을 보는 링크를 추가합니다.
-		if ( $this->mTargetName != null ) {
-			$output->setPageTitle( $this->msg( 'sanctions-title-with-target', $this->mTargetName ) );
-			$output->setSubTitle( '< ' . Linker::link(
+		if ( $this->targetName ) {
+			$output->setPageTitle( $this->msg( 'sanctions-title-with-target', $this->targetName ) );
+			$output->setSubTitle( '< ' . $this->linkRenderer->makeLink(
 				$this->getPageTitle(),
 				$this->msg( 'sanctions-show-all-sanctions-link' )->text()
 			) );
@@ -93,9 +100,10 @@ class SpacialSanctions extends SpecialPage {
 
 		$pager = new SanctionsPager(
 			$this->getContext(),
-			$this->userFactory,
 			$this->sanctionStore,
-			(string)$this->mTargetName
+			$this->userFactory,
+			$this->linkRenderer,
+			$this->targetName
 		);
 		$pager->doQuery();
 		$data['html-body'] = $pager->getBody();
@@ -107,8 +115,8 @@ class SpacialSanctions extends SpecialPage {
 				'header' => $this->msg( 'sanctions-sactions-form-header' )->text(),
 				'action' => $this->getPageTitle()->getFullURL(),
 				'target-label' => $this->msg( 'sanctions-form-target' )->text(),
-				'target-name' => $this->mTargetName,
-				'is-for-insulting-name' => $this->mNewRevisionId == null && $this->mTargetName != null,
+				'target-name' => $this->targetName,
+				'is-for-insulting-name' => $this->mNewRevisionId == null && $this->targetName != null,
 				'label-insulting-name' => $this->msg( 'sanctions-form-for-insulting-name' )->text(),
 				'textarea-placeholder' => $this->msg( 'sanctions-content-placeholder' )->text(),
 				'submit-label' => $this->msg( 'sanctions-submit' )->text(),
@@ -167,7 +175,7 @@ class SpacialSanctions extends SpecialPage {
 			return;
 		}
 
-		$this->mTargetName = $targetName;
+		$this->targetName = $targetName;
 		$this->mTargetId = $targetId;
 
 		if ( count( $parts ) == 1 ) {
@@ -395,7 +403,9 @@ class SpacialSanctions extends SpecialPage {
 	 * @return string Error Message
 	 */
 	protected function makeErrorMessage( $errorCode, $uuid, $targetName ) {
-		$link = $uuid ? Linker::link( $this->sanctionStore->newFromWorkflowId( $uuid )->getWorkflow() ) : '';
+		$link = $uuid ?
+			$this->linkRenderer->makeLink( $this->sanctionStore->newFromWorkflowId( $uuid )->getWorkflow() ) :
+			'';
 		switch ( $errorCode ) {
 		case 0:
 			return $this->msg( "sanctions-submit-error-invalid-token" )->text();
@@ -426,7 +436,9 @@ class SpacialSanctions extends SpecialPage {
 	 * @return string Message
 	 */
 	protected function makeMessage( $code, $uuid ) {
-		$link = $uuid ? Linker::link( $this->sanctionStore->newFromWorkflowId( $uuid )->getWorkflow() ) : '';
+		$link = $uuid ?
+			$this->linkRenderer->makeLink( $this->sanctionStore->newFromWorkflowId( $uuid )->getWorkflow() ) :
+			'';
 		switch ( $code ) {
 		case 0:
 			return $this->msg( "sanctions-submit-massage-added-topic", $link )->text();

@@ -5,7 +5,7 @@ namespace MediaWiki\Extension\Sanctions;
 use Html;
 use IContextSource;
 use IndexPager;
-use Linker;
+use MediaWiki\Linker\LinkRenderer;
 use MediaWiki\User\UserFactory;
 use MWTimestamp;
 use RequestContext;
@@ -27,25 +27,32 @@ class SanctionsPager extends IndexPager {
 	/** @var SanctionStore */
 	private $sanctionStore;
 
+	/** @var LinkRenderer */
+	private $linkRenderer;
+
 	/** @var TemplateParser */
 	private $templateParser;
 
 	/**
 	 * @param IContextSource $context
-	 * @param UserFactory $userFactory
 	 * @param SanctionStore $sanctionStore
+	 * @param UserFactory $userFactory
+	 * @param LinkRenderer $linkRenderer
 	 * @param string|null $targetName
 	 */
 	public function __construct(
 		IContextSource $context,
-		UserFactory $userFactory,
 		SanctionStore $sanctionStore,
+		UserFactory $userFactory,
+		LinkRenderer $linkRenderer,
 		string $targetName = null
 	) {
 		parent::__construct( $context );
 		$this->targetName = $targetName;
-		$this->userFactory = $userFactory;
 		$this->sanctionStore = $sanctionStore;
+		$this->userFactory = $userFactory;
+		$this->linkRenderer = $linkRenderer;
+
 		$this->templateParser = new TemplateParser( __DIR__ . '/templates' );
 	}
 
@@ -219,12 +226,12 @@ class SanctionsPager extends IndexPager {
 		);
 
 		$data['title'] = $this->msg( 'sanctions-topic-title', [
-			Linker::link(
+			$this->linkRenderer->makeLink(
 				$userLinkTitle,
 				$targetNameForDisplay,
 				[ 'class' => 'sanction-target' ]
 			),
-			Linker::link(
+			$this->linkRenderer->makeLink(
 				$sanction->getWorkflow(),
 				$this->msg( 'sanctions-type-' . ( $isForInsultingName ? 'insulting-name' : 'block' ) )
 					->text(),

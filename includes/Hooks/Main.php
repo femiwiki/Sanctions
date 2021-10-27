@@ -33,14 +33,18 @@ class Main implements
 	private $voteStore;
 
 	/**
-	 * @param UserFactory $userFactory
 	 * @param SanctionStore $sanctionStore
 	 * @param VoteStore $voteStore
+	 * @param UserFactory $userFactory
 	 */
-	public function __construct( UserFactory $userFactory, SanctionStore $sanctionStore, VoteStore $voteStore ) {
-		$this->userFactory = $userFactory;
+	public function __construct(
+		SanctionStore $sanctionStore,
+		VoteStore $voteStore,
+		UserFactory $userFactory
+	) {
 		$this->sanctionStore = $sanctionStore;
 		$this->voteStore = $voteStore;
+		$this->userFactory = $userFactory;
 	}
 
 	/**
