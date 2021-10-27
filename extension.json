@@ -122,7 +122,12 @@
   "SpecialPages": {
     "Sanctions": {
       "class": "MediaWiki\\Extension\\Sanctions\\SpacialSanctions",
-      "services": ["SanctionStore", "UserFactory", "RevisionLookup"]
+      "services": [
+        "SanctionStore",
+        "UserFactory",
+        "RevisionLookup",
+        "LinkRenderer"
+      ]
     }
   },
   "DefaultUserOptions": {
