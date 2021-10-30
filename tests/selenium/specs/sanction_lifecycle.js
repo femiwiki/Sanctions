@@ -95,8 +95,6 @@ describe('Sanction', () => {
     browser.pause(10000 - spentTime);
 
     SanctionsPage.open();
-    assert.ok(SanctionsPage.executeButton.isExisting());
-    SanctionsPage.executeButton.click();
 
     new Page().openTitle(`User:${targetName}`);
     assert.ok($('.warningbox').getText().includes('Sanction passed.'));

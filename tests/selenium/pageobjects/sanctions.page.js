@@ -17,9 +17,6 @@ class SanctionsPage extends Page {
   get sanctions() {
     return $('.sanctions');
   }
-  get executeButton() {
-    return $('.sanction-execute-button');
-  }
   get sanctionLink() {
     return $('.sanction a.sanction-type');
   }

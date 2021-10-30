@@ -80,6 +80,32 @@ class SanctionStore {
 	}
 
 	/**
+	 *
+	 * @return stdClass[]
+	 */
+	public function findNotHandledExpired() {
+		$db = $this->getDBConnectionRef( DB_REPLICA );
+		$rows = $db->select(
+			'sanctions',
+			'*',
+			[
+				'st_expiry <= ' . wfTimestamp( TS_MW ),
+				'st_handled' => 0,
+			]
+		);
+		if ( !$rows ) {
+			return [];
+		}
+
+		$sanctions = [];
+		foreach ( $rows as $row ) {
+			$sanctions[] = Sanction::newFromRow( $row );
+		}
+
+		return $sanctions;
+	}
+
+	/**
 	 * @param UUID $uuid
 	 * @return Sanction|null
 	 */
