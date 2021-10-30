@@ -81,7 +81,7 @@ class SanctionStore {
 
 	/**
 	 *
-	 * @return stdClass[]
+	 * @return Sanction[]
 	 */
 	public function findNotHandledExpired() {
 		$db = $this->getDBConnectionRef( DB_REPLICA );
