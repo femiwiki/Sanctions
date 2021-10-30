@@ -4,6 +4,7 @@ Versions and bullets are arranged chronologically from latest to oldest.
 
 ## Unreleased
 
+- The expired sanctions required explicit execution. It doesn't now.
 - The immediately rejected sanctions required explicit execution. It doesn't now.
 - The notifications which are sent by the sanction bot was blocked, are now enabled.
 - The wikitext format option of StructuredDiscussions is now supported.

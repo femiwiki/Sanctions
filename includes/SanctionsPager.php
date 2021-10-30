@@ -199,15 +199,6 @@ class SanctionsPager extends IndexPager {
 					// sanctions-row-label-rejected
 					'sanctions-row-label-' . ( $sanction->isPassed() ? 'passed' : 'rejected' )
 				)->text();
-
-				if ( $this->getUserHasVoteRight() ) {
-					$data['data-execute'] = [
-						'action' => $this->getContext()->getTitle()->getFullURL(),
-						'label' => $this->msg( 'sanctions-row-button-execute' )->text(),
-						'token' => RequestContext::getMain()->getCsrfTokenSet()->getToken( 'sanctions' )->toString(),
-						'sanction-id' => (string)$row->st_id,
-					];
-				}
 			}
 		}
 

@@ -83,6 +83,8 @@ class SpacialSanctions extends SpecialPage {
 			return;
 		}
 
+		$this->executeExpiredSanctions();
+
 		$output->addModuleStyles( 'mediawiki.special' );
 		$output->addModuleStyles( 'ext.sanctions.special.sanctions.styles' );
 		$output->addModules( 'ext.sanctions.special.sanctions' );
@@ -366,34 +368,26 @@ class SpacialSanctions extends SpecialPage {
 					// '절차를 일반으로 바꾸었습니다.'
 				}
 				break;
-			case 'execute':
-				// 결과에 따른 제재안 집행
-				$user = $this->getUser();
-				if ( !Utils::hasVoteRight( $user ) ) {
-					list( $query['showResult'], $query['errorCode'] ) = [ true, 1 ];
-					// '권한이 없습니다.'
-					break;
-				}
-
-				$sanctionId = (int)$request->getVal( 'sanctionId' );
-				$sanction = $this->sanctionStore->newFromId( $sanctionId );
-
-				if ( !$sanction->execute() ) {
-					list( $query['showResult'], $query['errorCode'], $query['uuid'] )
-						= [ true, 4, $sanction->getWorkflowId()->getAlphaDecimal() ];
-					// '제재안 집행에 실패하였습니다.'
-					break;
-				}
-				list( $query['showResult'], $query['code'], $query['uuid'] )
-					= [ true, 3, $sanction->getWorkflowId()->getAlphaDecimal() ];
-				// '제재안을 처리하였습니다.'
-				break;
 		}
 		}
 
 		$output->redirect( $this->getPageTitle()->getLocalURL( $query ) );
 
 		return true;
+	}
+
+	/**
+	 * 결과에 따른 제재안 집행
+	 */
+	protected function executeExpiredSanctions() {
+		if ( !Utils::hasVoteRight( $this->getUser() ) ) {
+			return;
+		}
+
+		$sanctions = $this->sanctionStore->findNotHandledExpired();
+		foreach ( $sanctions as $sanction ) {
+			$sanction->execute();
+		}
 	}
 
 	/**

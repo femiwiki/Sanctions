@@ -96,6 +96,9 @@ class Main implements
 		if ( $sanction === false ) {
 			return true;
 		}
+		if ( $sanction->isExpired() ) {
+			$sanction->execute();
+		}
 
 		$out->addModules( 'ext.sanctions.flow-topic' );
 
