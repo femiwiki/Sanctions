@@ -91,6 +91,7 @@ class SanctionStore {
 			'sanctions',
 			'*',
 			$conds,
+			__METHOD__
 		);
 		if ( !$rows ) {
 			return [];
