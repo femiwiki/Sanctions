@@ -64,10 +64,7 @@ class Block implements \MediaWiki\Block\Hook\GetUserBlockHook {
 				$user->getId()
 			),
 			self::getDefaultTtl(),
-			$callback,
-			[
-				// TODO
-			]
+			$callback
 		);
 
 		foreach ( $sanctionsToExecute as $sanction ) {
