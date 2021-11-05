@@ -32,7 +32,7 @@ class SanctionStore {
 	 * @param array $groups
 	 * @return DBConnRef
 	 */
-	private function getDBConnectionRef( $mode, $groups = [] ) {
+	public function getDBConnectionRef( $mode, $groups = [] ) {
 		$lb = $this->getDBLoadBalancer();
 		return $lb->getConnectionRef( $mode, $groups );
 	}
@@ -56,27 +56,52 @@ class SanctionStore {
 	}
 
 	/**
-	 * Find out if there is an inappropriate username change suggestion for the user.
-	 *
 	 * @param User $user
-	 * @return Sanction|null
+	 * @param bool|null $forInsertingName
+	 * @param bool|null $expired If true, only returns expired sanctions.
+	 * @param bool|null $handled
+	 * @return Sanction[]
 	 */
-	public function findExistingSanctionForInsultingNameOf( $user ) {
+	public function findByTarget( User $user, $forInsertingName = null, $expired = null, $handled = null ) {
 		$db = $this->getDBConnectionRef( DB_REPLICA );
 
-		$row = $db->selectRow(
+		$conds = [
+			'st_target' => $user->getId(),
+		];
+
+		if ( $expired !== null ) {
+			$operator = $expired ? '<=' : '>';
+			$now = wfTimestamp( TS_MW );
+			$conds[] = "st_expiry $operator $now";
+		}
+
+		if ( $forInsertingName !== null ) {
+			if ( $forInsertingName ) {
+				$conds[] = "st_original_name <> ''";
+			} else {
+				// TODO
+			}
+		}
+
+		if ( $handled !== null ) {
+			$conds['st_handled'] = $handled ? 1 : 0;
+		}
+
+		$rows = $db->select(
 			'sanctions',
 			'*',
-			[
-				'st_target' => $user->getId(),
-				"st_original_name <> ''",
-				'st_expiry > ' . wfTimestamp( TS_MW )
-			]
+			$conds,
 		);
-		if ( !$row ) {
-			return null;
+		if ( !$rows ) {
+			return [];
 		}
-		return Sanction::newFromRow( $row );
+
+		$sanctions = [];
+		foreach ( $rows as $row ) {
+			$sanctions[] = Sanction::newFromRow( $row );
+		}
+
+		return $sanctions;
 	}
 
 	/**
@@ -122,5 +147,4 @@ class SanctionStore {
 		}
 		return Sanction::newFromRow( $row );
 	}
-
 }

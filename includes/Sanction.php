@@ -265,7 +265,7 @@ class Sanction {
 				);
 			}
 		} else {
-			$expiry = $this->mExpiry;
+			$expiry = $this->getExpiry();
 			// Block until voting expires.
 			// If already blocked, compare the ranges and extend it if the expiry for this sanction is
 			// after the unblock time.
@@ -708,7 +708,7 @@ class Sanction {
 
 	/** @param string $expiry */
 	public function setExpiry( $expiry ) {
-		$this->mExpiry = $expiry;
+		$this->mExpiry = (string)$expiry;
 	}
 
 	/** @return User */

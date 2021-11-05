@@ -8,10 +8,11 @@ const FlowTopic = require('../pageobjects/flow_topic.page');
 const Page = require('wdio-mediawiki/Page');
 const Sanction = require('../sanction');
 const SanctionsPage = require('../pageobjects/sanctions.page');
+const UserLoginPage = require('wdio-mediawiki/LoginPage');
 const Util = require('wdio-mediawiki/Util');
 
 describe('Sanction', () => {
-  let targetName;
+  let targetName, targetPassword;
   const voters = [];
   let bot;
 
@@ -21,7 +22,8 @@ describe('Sanction', () => {
     Config.verificationEdits = 0;
     Config.votingPeriod = 10 /* seconds */ / (24 * 60 * 60);
     targetName = Util.getTestString('Sanction-target-');
-    await Api.createAccount(bot, targetName, Util.getTestString());
+    targetPassword = Util.getTestString();
+    await Api.createAccount(bot, targetName, targetPassword);
 
     // Create voter accounts
     for (let count = 0; count < 3; count++) {
@@ -95,6 +97,36 @@ describe('Sanction', () => {
     browser.pause(10000 - spentTime);
 
     SanctionsPage.open();
+
+    new Page().openTitle(`User:${targetName}`);
+    assert.ok($('.warningbox').getText().includes('Sanction passed.'));
+  });
+
+  it('should block the target user who logs in and has a passed sanction', () => {
+    // Create a sanction
+    const uuid = Sanction.create(targetName);
+    const created = new Date().getTime();
+
+    for (let count = 0; count < 3; count++) {
+      FlowApi.reply('{{Support}}', uuid, voters[count]);
+    }
+
+    browser.refresh();
+    // Wait for topic summary is updated by the bot.
+    browser.pause(1000);
+
+    Sanction.open(uuid);
+    assert.ok(
+      FlowTopic.topicSummary
+        .getText()
+        .includes('Status: Passed to block 1 day(s) (prediction)'),
+      FlowTopic.topicSummary.getText()
+    );
+
+    const spentTime = new Date().getTime() - created;
+    browser.pause(10000 - spentTime);
+
+    UserLoginPage.login(targetName, targetPassword);
 
     new Page().openTitle(`User:${targetName}`);
     assert.ok($('.warningbox').getText().includes('Sanction passed.'));
