@@ -39,13 +39,13 @@ class Block implements \MediaWiki\Block\Hook\GetUserBlockHook {
 		$store = $this->sanctionStore;
 		$callback = static function ( $old, &$ttl, array &$setOpts ) use ( $user, $store ) {
 			$setOpts += Database::getCacheSetOptions( $store->getDBConnectionRef( DB_REPLICA ) );
-			$sanctions = $store->findByTarget( $user, null, null, false );
-			if ( $sanctions ) {
+			$open = $store->findByTarget( $user, null, false );
+			if ( $open ) {
 				$expiries = array_map(
 					static function ( Sanction $sanction ) {
 						return $sanction->getExpiry();
 					},
-					$sanctions
+					$open
 				);
 				$earliestExpiry = min( $expiries );
 
@@ -53,7 +53,8 @@ class Block implements \MediaWiki\Block\Hook\GetUserBlockHook {
 				$ttl = (int)MWTimestamp::getInstance( $earliestExpiry )->getTimestamp() -
 					(int)MWTimestamp::getInstance()->getTimestamp();
 			}
-			return $sanctions;
+			$shouldBeExecuted = $store->findByTarget( $user, null, true, false );
+			return $shouldBeExecuted;
 		};
 
 		/** @var Sanction[] $sanctionsToExecute */
