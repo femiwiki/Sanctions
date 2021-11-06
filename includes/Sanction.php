@@ -9,6 +9,7 @@ use MediaWiki\MediaWikiServices;
 use stdClass;
 use Title;
 use User;
+use Wikimedia\LightweightObjectStore\ExpirationAwareness;
 use Wikimedia\Rdbms\DBError;
 
 class Sanction {
@@ -85,7 +86,7 @@ class Sanction {
 
 		// Write to DB
 		$votingPeriod = (float)wfMessage( 'sanctions-voting-period' )->text();
-		$expiry = wfTimestamp( TS_MW, time() + ( 60 * 60 * 24 * $votingPeriod ) );
+		$expiry = wfTimestamp( TS_MW, time() + ( ExpirationAwareness::TTL_DAY * $votingPeriod ) );
 
 		$data = (object)[
 			'st_author' => $author->getId(),
@@ -193,6 +194,9 @@ class Sanction {
 			}
 			return true;
 		} else {
+			$period = $this->getPeriod();
+			$blockExpiry = wfTimestamp( TS_MW, time() + ( ExpirationAwareness::TTL_DAY * $period ) );
+
 			$block = $oldBlock;
 			if ( $block === false ) {
 				$block = $target->getBlock();
@@ -200,8 +204,6 @@ class Sanction {
 			if ( $block !== null ) {
 				// If the expiry of the block determined by this sanction is later than the existing expiry,
 				// remove it.
-				$period = $this->getPeriod();
-				$blockExpiry = wfTimestamp( TS_MW, time() + ( 60 * 60 * 24 * $period ) );
 				if ( $block->getExpiry() < $blockExpiry ) {
 					Utils::unblock( $target, false );
 				} else {
@@ -228,7 +230,7 @@ class Sanction {
 		if ( $isForInsultingName ) {
 			return true;
 		} else {
-			$blockExpiry = wfTimestamp( TS_MW, time() + ( 60 * 60 * 24 * $this->getPeriod() ) );
+			$blockExpiry = wfTimestamp( TS_MW, time() + ( ExpirationAwareness::TTL_DAY * $this->getPeriod() ) );
 			if ( $target->getBlock() !== null ) {
 				// If the expiry of the block determined by this sanction is later than the existing expiry,
 				// remove it.
