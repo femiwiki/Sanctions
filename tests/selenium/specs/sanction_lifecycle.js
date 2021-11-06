@@ -49,7 +49,8 @@ describe('Sanction', () => {
 
     FlowTopic.reply('{{Oppose}}');
 
-    browser.pause(1000);
+    browser.refresh();
+    browser.pause(500);
     browser.refresh();
 
     assert.strictEqual(
@@ -83,7 +84,7 @@ describe('Sanction', () => {
 
     browser.refresh();
     // Wait for topic summary is updated by the bot.
-    browser.pause(1000);
+    browser.pause(500);
 
     Sanction.open(uuid);
     assert.ok(
@@ -102,7 +103,7 @@ describe('Sanction', () => {
     assert.ok($('.warningbox').getText().includes('Sanction passed.'));
   });
 
-  it('should block the target user who logs in and has a passed sanction', () => {
+  it('should block the target user of the passed sanction when logged in', () => {
     // Create a sanction
     const uuid = Sanction.create(targetName);
     const created = new Date().getTime();
@@ -113,7 +114,7 @@ describe('Sanction', () => {
 
     browser.refresh();
     // Wait for topic summary is updated by the bot.
-    browser.pause(1000);
+    browser.pause(500);
 
     Sanction.open(uuid);
     assert.ok(

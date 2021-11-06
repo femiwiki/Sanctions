@@ -69,7 +69,7 @@ class Block implements \MediaWiki\Block\Hook\GetUserBlockHook {
 		);
 
 		foreach ( $sanctionsToExecute as $sanction ) {
-			$sanction->execute();
+			$sanction->execute( false, $block );
 		}
 	}
 

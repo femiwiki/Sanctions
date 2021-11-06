@@ -4,6 +4,7 @@ namespace MediaWiki\Extension\Sanctions;
 
 use EchoEvent;
 use Flow\Model\UUID;
+use MediaWiki\Block\AbstractBlock;
 use MediaWiki\MediaWikiServices;
 use stdClass;
 use Title;
@@ -160,10 +161,10 @@ class Sanction {
 
 	/**
 	 * Block the user or rename the username by result of the sanction.
-	 *
+	 * @param AbstractBlock|bool $oldBlock
 	 * @return bool true when success.
 	 */
-	public function justTakeMeasure() {
+	public function justTakeMeasure( $oldBlock = false ) {
 		$target = $this->mTarget;
 		$isForInsultingName = $this->isForInsultingName();
 		$reason = wfMessage(
@@ -192,12 +193,16 @@ class Sanction {
 			}
 			return true;
 		} else {
-			$period = $this->getPeriod();
-			$blockExpiry = wfTimestamp( TS_MW, time() + ( 60 * 60 * 24 * $period ) );
-			if ( $target->getBlock() !== null ) {
+			$block = $oldBlock;
+			if ( $block === false ) {
+				$block = $target->getBlock();
+			}
+			if ( $block !== null ) {
 				// If the expiry of the block determined by this sanction is later than the existing expiry,
 				// remove it.
-				if ( $target->getBlock()->getExpiry() < $blockExpiry ) {
+				$period = $this->getPeriod();
+				$blockExpiry = wfTimestamp( TS_MW, time() + ( 60 * 60 * 24 * $period ) );
+				if ( $block->getExpiry() < $blockExpiry ) {
 					Utils::unblock( $target, false );
 				} else {
 					return true;
@@ -346,9 +351,10 @@ class Sanction {
 	/**
 	 * @todo Return false on failure
 	 * @param bool $force Execute anyway even if not expired.
+	 * @param AbstractBlock|bool $oldBlock
 	 * @return bool
 	 */
-	public function execute( bool $force = false ) {
+	public function execute( bool $force = false, $oldBlock = false ) {
 		if ( !$force && ( !$this->isExpired() || $this->mIsHandled ) ) {
 			return false;
 		}
@@ -359,7 +365,7 @@ class Sanction {
 		$passed = $this->isPassed();
 
 		if ( $passed && !$emergency ) {
-			$this->justTakeMeasure();
+			$this->justTakeMeasure( $oldBlock );
 		} elseif ( !$passed && $emergency ) {
 			$reason = wfMessage(
 					'sanctions-log-immediate-rejection',
