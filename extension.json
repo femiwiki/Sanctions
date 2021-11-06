@@ -95,6 +95,7 @@
     "ContributionsToolLinks": "ToolLinks",
     "DiffTools": "ToolLinks",
     "EmailConfirmed": "Notification",
+    "GetUserBlock": "Block",
     "FlowAddModules": "main",
     "HistoryTools": "ToolLinks",
     "LoadExtensionSchemaUpdates": "SchemaChanges",
@@ -110,6 +111,10 @@
     },
     "SchemaChanges": {
       "class": "MediaWiki\\Extension\\Sanctions\\Hooks\\SchemaChanges"
+    },
+    "Block": {
+      "class": "MediaWiki\\Extension\\Sanctions\\Hooks\\Block",
+      "services": ["SanctionStore", "MainWANObjectCache"]
     },
     "Notification": {
       "class": "MediaWiki\\Extension\\Sanctions\\Hooks\\Notification"

@@ -71,9 +71,9 @@ class SanctionStoreTest extends MediaWikiIntegrationTestCase {
 	}
 
 	/**
-	 * @covers \MediaWiki\Extension\Sanctions\SanctionStore::findExistingSanctionForInsultingNameOf
+	 * @covers \MediaWiki\Extension\Sanctions\SanctionStore::findByTarget
 	 */
-	public function testFindExistingSanctionForInsultingNameOf() {
+	public function testFindByTarget() {
 		$store = $this->getSanctionStore();
 		$find = $store->newFromId( 111 );
 		$this->assertNull( $find, 'should be null if the given id is not found' );
@@ -97,7 +97,10 @@ class SanctionStoreTest extends MediaWikiIntegrationTestCase {
 		$this->assertIsInt( $id );
 
 		$store = $this->getSanctionStore();
-		$find = $store->findExistingSanctionForInsultingNameOf( $target );
+		$find = $store->findByTarget( $target, true, false );
+
+		$this->assertCount( 1, $find );
+		$find = $find[0];
 		$this->assertInstanceOf( Sanction::class, $find );
 		$this->assertEquals( $id, $sanction->getId() );
 		$this->assertEquals( $author, $sanction->getAuthor() );

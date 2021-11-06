@@ -309,8 +309,9 @@ class SpacialSanctions extends SpecialPage {
 
 				// 만일 동일 사용자명에 대한 부적절한 사용자명 변경 건의안이 이미 있다면 중복 작성을 막습니다.
 				if ( $forInsultingName ) {
-					$existingSanction = $this->sanctionStore->findExistingSanctionForInsultingNameOf( $target );
-					if ( $existingSanction != null ) {
+					$existingSanction = $this->sanctionStore->findByTarget( $target, true, false );
+					if ( $existingSanction && count( $existingSanction ) > 0 ) {
+						$existingSanction = $existingSanction[0];
 						list(
 							$query['showResult'],
 							$query['errorCode'],
