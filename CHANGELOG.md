@@ -2,10 +2,10 @@
 
 Versions and bullets are arranged chronologically from latest to oldest.
 
-## Unreleased
+## v1.2.0
 
-- The expired sanctions required explicit execution. It doesn't now.
-- The immediately rejected sanctions required explicit execution. It doesn't now.
+- The expired sanctions required explicit execution. It doesn't now. (https://github.com/femiwiki/Sanctions/issues/5)
+- The immediately rejected sanctions required explicit execution. It doesn't now. (https://github.com/femiwiki/Sanctions/issues/164)
 - The notifications which are sent by the sanction bot was blocked, are now enabled.
 - The wikitext format option of StructuredDiscussions is now supported.
 - The images of the templates which are auto generated are removed.
