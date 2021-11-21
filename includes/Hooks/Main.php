@@ -93,7 +93,7 @@ class Main implements
 		/** @var SanctionStore $store */
 		$store = MediaWikiServices::getInstance()->getService( 'SanctionStore' );
 		$sanction = $store->newFromWorkflowId( $uuid );
-		if ( $sanction === false ) {
+		if ( !$sanction ) {
 			return true;
 		}
 		if ( $sanction->isExpired() ) {
