@@ -143,4 +143,40 @@ describe('Sanction', () => {
     const blocks = queryBlocks();
     assert.notEqual(-1, blocks.indexOf(targetName), 'Block list: ' + blocks);
   });
+
+  // This tests https://github.com/femiwiki/Sanctions/issues/223
+  it('should not touch the summary of a expired handled sanction', () => {
+    // Create a sanction
+    const uuid = Sanction.create(targetName);
+    const created = new Date().getTime();
+
+    FlowApi.reply('{{Support|3}}', uuid, voters[0]);
+
+    // Log in as the target user
+    browser.deleteCookies();
+    UserLoginPage.login(targetName, targetPassword);
+
+    const spentTime = new Date().getTime() - created;
+    browser.pause(10000 - spentTime);
+
+    Sanction.open(uuid);
+    browser.refresh();
+    assert.ok(
+      FlowTopic.topicSummary
+        .getText()
+        .includes('Status: Passed to block 3 day(s)'),
+      'The summary does not have expected value:' +
+        FlowTopic.topicSummary.getText()
+    );
+
+    FlowApi.editTopicSummary('Manually touched summary.', uuid, bot);
+    FlowApi.reply('An additional comment.', uuid, bot);
+
+    browser.refresh();
+    assert.ok(
+      FlowTopic.topicSummary.getText().includes('Manually touched summary'),
+      'The summary does not have expected value:' +
+        FlowTopic.topicSummary.getText()
+    );
+  });
 });
