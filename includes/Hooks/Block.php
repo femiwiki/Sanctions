@@ -54,6 +54,11 @@ class Block implements \MediaWiki\Block\Hook\GetUserBlockHook {
 					(int)MWTimestamp::getInstance()->getTimestamp();
 			}
 			$shouldBeExecuted = $store->findByTarget( $user, null, true, false );
+			if ( $shouldBeExecuted ) {
+				// Execution makes a change of the result of query.
+				// https://github.com/femiwiki/Sanctions/issues/223
+				$ttl = WANObjectCache::TTL_UNCACHEABLE;
+			}
 			return $shouldBeExecuted;
 		};
 
