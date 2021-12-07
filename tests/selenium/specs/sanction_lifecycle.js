@@ -100,7 +100,9 @@ describe('Sanction', () => {
     SanctionsPage.open();
 
     new Page().openTitle(`User:${targetName}`);
-    assert.ok($('.warningbox').getText().includes('Sanction passed.'));
+	const warning = $('.warningbox');
+	warning.waitForDisplayed();
+    assert.ok(warning.getText().includes('Sanction passed.'));
   });
 
   it('should block the target user of the passed sanction when logged in', () => {
