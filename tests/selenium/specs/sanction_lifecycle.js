@@ -100,8 +100,8 @@ describe('Sanction', () => {
     SanctionsPage.open();
 
     new Page().openTitle(`User:${targetName}`);
-	const warning = $('.warningbox');
-	warning.waitForDisplayed();
+    const warning = $('.warningbox');
+    warning.waitForDisplayed();
     assert.ok(warning.getText().includes('Sanction passed.'));
   });
 
