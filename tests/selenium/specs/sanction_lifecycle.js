@@ -11,6 +11,14 @@ const SanctionsPage = require('../pageobjects/sanctions.page');
 const UserLoginPage = require('wdio-mediawiki/LoginPage');
 const Util = require('wdio-mediawiki/Util');
 
+function queryBlocks() {
+  return browser.call(() =>
+    Api.bot().then((bot) =>
+      bot.request({ action: 'query', list: 'blocks', bkprop: 'user' })
+    )
+  )['query']['blocks'];
+}
+
 describe('Sanction', () => {
   let targetName, targetPassword;
   const voters = [];
@@ -96,13 +104,11 @@ describe('Sanction', () => {
 
     const spentTime = new Date().getTime() - created;
     browser.pause(10000 - spentTime);
+    browser.refresh();
 
-    SanctionsPage.open();
-
-    new Page().openTitle(`User:${targetName}`);
-    const warning = $('.warningbox');
-    warning.waitForDisplayed();
-    assert.ok(warning.getText().includes('Sanction passed.'));
+    const blocks = queryBlocks();
+    assert.equal(1, blocks.length);
+    assert.equal(targetName, blocks[0]['user']);
   });
 
   it('should block the target user of the passed sanction when logged in', () => {
@@ -131,7 +137,8 @@ describe('Sanction', () => {
 
     UserLoginPage.login(targetName, targetPassword);
 
-    new Page().openTitle(`User:${targetName}`);
-    assert.ok($('.warningbox').getText().includes('Sanction passed.'));
+    const blocks = queryBlocks();
+    assert.equal(1, blocks.length);
+    assert.equal(targetName, blocks[0]['user']);
   });
 });
