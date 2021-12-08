@@ -2,6 +2,10 @@
 
 Versions and bullets are arranged chronologically from latest to oldest.
 
+## v1.2.2
+
+- Fixed the panic of the auto-execution. (https://github.com/femiwiki/Sanctions/issues/223)
+
 ## v1.2.1
 
 - Fixed the bug that topic pages were not opening. (https://github.com/femiwiki/Sanctions/issues/216)
