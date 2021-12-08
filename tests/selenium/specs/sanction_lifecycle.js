@@ -12,11 +12,15 @@ const UserLoginPage = require('wdio-mediawiki/LoginPage');
 const Util = require('wdio-mediawiki/Util');
 
 function queryBlocks() {
-  return browser.call(() =>
+  const blocks = browser.call(() =>
     Api.bot().then((bot) =>
       bot.request({ action: 'query', list: 'blocks', bkprop: 'user' })
     )
   )['query']['blocks'];
+  if (!blocks) {
+    return [];
+  }
+  return blocks.map((e) => e['user']);
 }
 
 describe('Sanction', () => {
@@ -107,8 +111,7 @@ describe('Sanction', () => {
     browser.refresh();
 
     const blocks = queryBlocks();
-    assert.equal(1, blocks.length);
-    assert.equal(targetName, blocks[0]['user']);
+    assert.notEqual(-1, blocks.indexOf(targetName), 'Block list: ' + blocks);
   });
 
   it('should block the target user of the passed sanction when logged in', () => {
@@ -138,7 +141,6 @@ describe('Sanction', () => {
     UserLoginPage.login(targetName, targetPassword);
 
     const blocks = queryBlocks();
-    assert.equal(1, blocks.length);
-    assert.equal(targetName, blocks[0]['user']);
+    assert.notEqual(-1, blocks.indexOf(targetName), 'Block list: ' + blocks);
   });
 });
