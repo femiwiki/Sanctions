@@ -39,27 +39,29 @@ class Block implements \MediaWiki\Block\Hook\GetUserBlockHook {
 		$store = $this->sanctionStore;
 		$callback = static function ( $old, &$ttl, array &$setOpts ) use ( $user, $store ) {
 			$setOpts += Database::getCacheSetOptions( $store->getDBConnectionRef( DB_REPLICA ) );
-			$open = $store->findByTarget( $user, null, false );
-			if ( $open ) {
-				$expiries = array_map(
-					static function ( Sanction $sanction ) {
-						return $sanction->getExpiry();
-					},
-					$open
-				);
-				$earliestExpiry = min( $expiries );
+			$unhandledSanctions = $store->findByTarget( $user, null, null, false );
+			if ( $unhandledSanctions ) {
+				$shouldBeExecuted = [];
+				$earliestExpiry = $unhandledSanctions[0]->getExpiry();
+				foreach ( $unhandledSanctions as $sanction ) {
+					if ( !$sanction->isExpired() ) {
+						$earliestExpiry = min( $sanction->getExpiry(), $earliestExpiry );
+					} elseif ( !$sanction->isHandled() ) {
+						$shouldBeExecuted[] = $sanction;
+					}
+				}
+				if ( $shouldBeExecuted ) {
+					// Execution makes a change of the result of query.
+					// https://github.com/femiwiki/Sanctions/issues/223
+					$ttl = WANObjectCache::TTL_UNCACHEABLE;
+					return $shouldBeExecuted;
+				}
 
 				// Convert to a relative time.
 				$ttl = (int)MWTimestamp::getInstance( $earliestExpiry )->getTimestamp() -
 					(int)MWTimestamp::getInstance()->getTimestamp();
 			}
-			$shouldBeExecuted = $store->findByTarget( $user, null, true, false );
-			if ( $shouldBeExecuted ) {
-				// Execution makes a change of the result of query.
-				// https://github.com/femiwiki/Sanctions/issues/223
-				$ttl = WANObjectCache::TTL_UNCACHEABLE;
-			}
-			return $shouldBeExecuted;
+			return [];
 		};
 
 		/** @var Sanction[] $sanctionsToExecute */
