@@ -301,13 +301,13 @@
     deepmerge "^4.0.0"
     glob "^7.1.2"
 
-"@wdio/dot-reporter@^7.4.2":
-  version "7.16.6"
-  resolved "https://registry.yarnpkg.com/@wdio/dot-reporter/-/dot-reporter-7.16.6.tgz#35b07cd76790d52de534c4375be31f930bf6e81b"
-  integrity sha512-mu5mqns7dX7DUMtNNe6m55rBQqXxgCTnecwrzeZGvM9xE8VShJYs4OJpn0zoz85YjrnAGRSX91xQrFS6FfBi2A==
+"@wdio/dot-reporter@^7.16.11":
+  version "7.16.11"
+  resolved "https://registry.yarnpkg.com/@wdio/dot-reporter/-/dot-reporter-7.16.11.tgz#891fba681cf93d311cfbb2ccca0dcdcef9a73369"
+  integrity sha512-6Ri+kaMFl8iu8d6gVql5WS48geH4xuesTjDyvpJ5Rc34iJi8ecl7PBvJudYrnphBjyhK50fI03WMEP94z/9/2w==
   dependencies:
-    "@wdio/reporter" "7.16.3"
-    "@wdio/types" "7.16.3"
+    "@wdio/reporter" "7.16.11"
+    "@wdio/types" "7.16.11"
     chalk "^4.0.0"
 
 "@wdio/junit-reporter@^7.4.2":
@@ -371,6 +371,22 @@
   dependencies:
     "@wdio/utils" "7.16.3"
 
+"@wdio/reporter@7.16.11":
+  version "7.16.11"
+  resolved "https://registry.yarnpkg.com/@wdio/reporter/-/reporter-7.16.11.tgz#21480cc876a80b75d29cd5886de380c41dba12f3"
+  integrity sha512-dZxR+IoZ2z2q8Z/3TBCuFgNfs8ZvSYNroe/WOD4Ivx9WK+B+N+wtn8U4KfEQF+0HS4TowPQQiEtFacT+F6lPvA==
+  dependencies:
+    "@types/diff" "^5.0.0"
+    "@types/node" "^16.11.1"
+    "@types/object-inspect" "^1.8.0"
+    "@types/supports-color" "^8.1.0"
+    "@types/tmp" "^0.2.0"
+    "@wdio/types" "7.16.11"
+    diff "^5.0.0"
+    fs-extra "^10.0.0"
+    object-inspect "^1.10.3"
+    supports-color "8.1.1"
+
 "@wdio/reporter@7.16.3":
   version "7.16.3"
   resolved "https://registry.yarnpkg.com/@wdio/reporter/-/reporter-7.16.3.tgz#9cd3f62914ca60b5628a5217fdcdf55a445fbcad"
@@ -400,6 +416,14 @@
     gaze "^1.1.2"
     webdriver "7.16.7"
     webdriverio "7.16.8"
+
+"@wdio/types@7.16.11":
+  version "7.16.11"
+  resolved "https://registry.yarnpkg.com/@wdio/types/-/types-7.16.11.tgz#110bf91f17cbdc8be0fa4363581372036ebc7d0c"
+  integrity sha512-OFVTFEB6qdG84Y+cOWIacV0loGMgq2SF/rGGlGxai89V3UQxzCFTYVoAx6odAuSNZ37wmfWCykyAR/lAlMItoQ==
+  dependencies:
+    "@types/node" "^16.11.1"
+    got "^11.8.1"
 
 "@wdio/types@7.16.3":
   version "7.16.3"
