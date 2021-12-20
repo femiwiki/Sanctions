@@ -27,6 +27,7 @@ describe('Special:Sanctions', () => {
 
   afterEach(() => {
     SanctionsPage.open();
+    browser.refresh();
     assert.strictEqual(
       '(sanctions-empty-now)',
       SanctionsPage.sanctions.getText()
@@ -138,14 +139,14 @@ describe('Special:Sanctions', () => {
     // Store the number of voted mark
     UserLoginPage.loginAdmin();
     SanctionsPage.open();
-    const voted = SanctionsPage.votedSanctions.length;
+    assert.equal(0, SanctionsPage.votedSanctions.length);
 
     // Vote
     FlowApi.reply('{{Oppose}}', uuid, bot);
-    SanctionsPage.open();
+    browser.pause(500);
+    browser.refresh();
 
-    const newVoted = SanctionsPage.votedSanctions.length;
-    assert.equal(1, newVoted - voted);
+    assert.equal(1, SanctionsPage.votedSanctions.length);
 
     // Cancel the sanction
     for (let count = 0; count < 2; count++) {

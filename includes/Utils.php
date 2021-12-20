@@ -344,7 +344,6 @@ class Utils {
 	 */
 	public static function unblock( $target, $withLog = false, $reason = null, $user = null, $block = null ) {
 		$blockStore = MediaWikiServices::getInstance()->getDatabaseBlockStore();
-		$block = $block ?: $target->getBlock();
 
 		if ( $block != null ) {
 			if ( $block instanceof CompositeBlock ) {

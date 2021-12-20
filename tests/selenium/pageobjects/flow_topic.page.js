@@ -15,6 +15,9 @@ class FlowTopic extends Page {
   get topicSummary() {
     return $('.flow-topic-summary-content');
   }
+  get topicSummaryText() {
+    return this.topicSummary.getText();
+  }
 
   reply(msg) {
     this.replyButton.waitForDisplayed();

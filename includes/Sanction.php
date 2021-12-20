@@ -197,13 +197,14 @@ class Sanction {
 			$period = $this->getPeriod();
 			$blockExpiry = wfTimestamp( TS_MW, time() + ( ExpirationAwareness::TTL_DAY * $period ) );
 
-			$oldBlock = $oldBlock ?: $target->getBlock();
 			// If the expiry of the block determined by this sanction is later than the existing expiry,
 			// remove it.
-			if ( $oldBlock && $oldBlock->getExpiry() < $blockExpiry ) {
-				Utils::unblock( $target, false, null, null, $oldBlock );
-			} else {
-				return true;
+			if ( $oldBlock ) {
+				if ( $oldBlock->getExpiry() < $blockExpiry ) {
+					Utils::unblock( $target, false, null, null, $oldBlock );
+				} else {
+					return true;
+				}
 			}
 
 			Utils::doBlock( $target, $blockExpiry, $reason, true );
@@ -214,9 +215,10 @@ class Sanction {
 	/**
 	 * Replace the temporary measure that is created by the emergency process.
 	 *
+	 * @param AbstractBlock|null $oldBlock
 	 * @return bool Return true when success
 	 */
-	public function replaceTemporaryMeasure() {
+	public function replaceTemporaryMeasure( $oldBlock ) {
 		$target = $this->mTarget;
 		$isForInsultingName = $this->isForInsultingName();
 		$reason = wfMessage( 'sanctions-log-take-measure', $this->mWorkflowId->getAlphadecimal() )
@@ -226,10 +228,10 @@ class Sanction {
 			return true;
 		} else {
 			$blockExpiry = wfTimestamp( TS_MW, time() + ( ExpirationAwareness::TTL_DAY * $this->getPeriod() ) );
-			if ( $target->getBlock() !== null ) {
+			if ( $oldBlock ) {
 				// If the expiry of the block determined by this sanction is later than the existing expiry,
 				// remove it.
-				if ( $target->getBlock()->getExpiry() < $blockExpiry ) {
+				if ( $oldBlock->getExpiry() < $blockExpiry ) {
 					Utils::unblock( $target, false );
 				} else {
 					return true;
@@ -310,7 +312,6 @@ class Sanction {
 			// other words, look at the block record and if there is a block record that is not related to
 			// this sanction, compare the time periods and reduce the block period if the expiry
 			// of this sanction is later than the unblock time.
-			$block = $block ?: $target->getBlock();
 			if ( $block && $block->getExpiry() == $this->mExpiry ) {
 				Utils::unblock( $target, true, $reason, $user == null ? Utils::getBot() : $user, $block );
 			}
@@ -372,7 +373,7 @@ class Sanction {
 				)->inContentLanguage()->text();
 			$this->removeTemporaryMeasure( $reason, Utils::getBot(), $oldBlock );
 		} elseif ( $passed && $emergency ) {
-			$this->replaceTemporaryMeasure();
+			$this->replaceTemporaryMeasure( $oldBlock );
 		}
 
 		// Update the topic summary

@@ -381,10 +381,6 @@ class SpacialSanctions extends SpecialPage {
 	 * 결과에 따른 제재안 집행
 	 */
 	protected function executeExpiredSanctions() {
-		if ( !Utils::hasVoteRight( $this->getUser() ) ) {
-			return;
-		}
-
 		$sanctions = $this->sanctionStore->findNotHandledExpired();
 		foreach ( $sanctions as $sanction ) {
 			$sanction->execute();

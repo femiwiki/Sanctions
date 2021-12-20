@@ -5,7 +5,6 @@ const assert = require('assert');
 const Config = require('../config');
 const FlowApi = require('../flow_api');
 const FlowTopic = require('../pageobjects/flow_topic.page');
-const Page = require('wdio-mediawiki/Page');
 const Sanction = require('../sanction');
 const SanctionsPage = require('../pageobjects/sanctions.page');
 const UserLoginPage = require('wdio-mediawiki/LoginPage');
@@ -27,6 +26,36 @@ describe('Sanction', () => {
   let targetName, targetPassword;
   const voters = [];
   let bot;
+
+  function createPassedSanction(support = 3, logout = false) {
+    // Create a sanction
+    const uuid = Sanction.create(targetName);
+    const created = new Date().getTime();
+
+    for (let count = 0; count < support; count++) {
+      FlowApi.reply('{{Support}}', uuid, voters[count]);
+    }
+
+    browser.refresh();
+    // Wait for topic summary is updated by the bot.
+    browser.pause(500);
+
+    Sanction.open(uuid);
+    assert.ok(
+      FlowTopic.topicSummaryText.includes(
+        'Status: Passed to block 1 day(s) (prediction)'
+      ),
+      FlowTopic.topicSummaryText
+    );
+
+    if (logout) {
+      browser.deleteCookies();
+    }
+
+    const spentTime = new Date().getTime() - created;
+    browser.pause(10000 - spentTime);
+    return uuid;
+  }
 
   before(async () => {
     bot = await Api.bot();
@@ -59,15 +88,13 @@ describe('Sanction', () => {
     const uuid = Sanction.create(targetName);
     Sanction.open(uuid);
 
-    FlowTopic.reply('{{Oppose}}');
+    FlowApi.reply('{{Oppose}}', uuid, bot);
 
-    browser.refresh();
     browser.pause(500);
     browser.refresh();
-
     assert.strictEqual(
       "Status: Rejected (Canceled by the sanction's author.)",
-      FlowTopic.topicSummary.getText()
+      FlowTopic.topicSummaryText
     );
   });
 
@@ -78,36 +105,16 @@ describe('Sanction', () => {
       FlowApi.reply('{{Oppose}}', uuid, voters[count]);
     }
 
+    browser.pause(500);
     Sanction.open(uuid);
     assert.strictEqual(
       'Status: Immediately rejected (Rejected by first three participants.)',
-      FlowTopic.topicSummary.getText()
+      FlowTopic.topicSummaryText
     );
   });
 
   it('should be passed if three users support before expired', () => {
-    // Create a sanction
-    const uuid = Sanction.create(targetName);
-    const created = new Date().getTime();
-
-    for (let count = 0; count < 3; count++) {
-      FlowApi.reply('{{Support}}', uuid, voters[count]);
-    }
-
-    browser.refresh();
-    // Wait for topic summary is updated by the bot.
-    browser.pause(500);
-
-    Sanction.open(uuid);
-    assert.ok(
-      FlowTopic.topicSummary
-        .getText()
-        .includes('Status: Passed to block 1 day(s) (prediction)'),
-      FlowTopic.topicSummary.getText()
-    );
-
-    const spentTime = new Date().getTime() - created;
-    browser.pause(10000 - spentTime);
+    createPassedSanction();
     browser.refresh();
 
     const blocks = queryBlocks();
@@ -115,29 +122,7 @@ describe('Sanction', () => {
   });
 
   it('should block the target user of the passed sanction when logged in', () => {
-    // Create a sanction
-    const uuid = Sanction.create(targetName);
-    const created = new Date().getTime();
-
-    for (let count = 0; count < 3; count++) {
-      FlowApi.reply('{{Support}}', uuid, voters[count]);
-    }
-
-    browser.refresh();
-    // Wait for topic summary is updated by the bot.
-    browser.pause(500);
-
-    Sanction.open(uuid);
-    assert.ok(
-      FlowTopic.topicSummary
-        .getText()
-        .includes('Status: Passed to block 1 day(s) (prediction)'),
-      FlowTopic.topicSummary.getText()
-    );
-
-    const spentTime = new Date().getTime() - created;
-    browser.pause(10000 - spentTime);
-
+    createPassedSanction();
     UserLoginPage.login(targetName, targetPassword);
 
     const blocks = queryBlocks();
@@ -147,26 +132,15 @@ describe('Sanction', () => {
   // This tests https://github.com/femiwiki/Sanctions/issues/223
   it('should not touch the summary of a expired handled sanction', () => {
     // Create a sanction
-    const uuid = Sanction.create(targetName);
-    const created = new Date().getTime();
-
-    FlowApi.reply('{{Support|3}}', uuid, voters[0]);
+    const uuid = createPassedSanction(1, true);
 
     // Log in as the target user
-    browser.deleteCookies();
     UserLoginPage.login(targetName, targetPassword);
 
-    const spentTime = new Date().getTime() - created;
-    browser.pause(10000 - spentTime);
-
     Sanction.open(uuid);
-    browser.refresh();
     assert.ok(
-      FlowTopic.topicSummary
-        .getText()
-        .includes('Status: Passed to block 3 day(s)'),
-      'The summary does not have expected value:' +
-        FlowTopic.topicSummary.getText()
+      FlowTopic.topicSummaryText.includes('Status: Passed to block 1 day(s)'),
+      'The summary does not have expected value: ' + FlowTopic.topicSummaryText
     );
 
     FlowApi.editTopicSummary('Manually touched summary.', uuid, bot);
@@ -174,9 +148,8 @@ describe('Sanction', () => {
 
     browser.refresh();
     assert.ok(
-      FlowTopic.topicSummary.getText().includes('Manually touched summary'),
-      'The summary does not have expected value:' +
-        FlowTopic.topicSummary.getText()
+      FlowTopic.topicSummaryText.includes('Manually touched summary'),
+      'The summary does not have expected value: ' + FlowTopic.topicSummaryText
     );
   });
 });
