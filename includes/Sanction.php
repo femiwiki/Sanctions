@@ -162,10 +162,10 @@ class Sanction {
 
 	/**
 	 * Block the user or rename the username by result of the sanction.
-	 * @param AbstractBlock|bool $oldBlock
+	 * @param AbstractBlock|null $oldBlock
 	 * @return bool true when success.
 	 */
-	public function justTakeMeasure( $oldBlock = false ) {
+	public function justTakeMeasure( $oldBlock = null ) {
 		$target = $this->mTarget;
 		$isForInsultingName = $this->isForInsultingName();
 		$reason = wfMessage(
@@ -350,10 +350,10 @@ class Sanction {
 	/**
 	 * @todo Return false on failure
 	 * @param bool $force Execute anyway even if not expired.
-	 * @param AbstractBlock|bool $oldBlock
+	 * @param AbstractBlock|null $oldBlock
 	 * @return bool
 	 */
-	public function execute( bool $force = false, $oldBlock = false ) {
+	public function execute( bool $force = false, $oldBlock = null ) {
 		if ( !$force && ( !$this->isExpired() || $this->mIsHandled ) ) {
 			return false;
 		}
