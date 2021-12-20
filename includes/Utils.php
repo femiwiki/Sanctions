@@ -3,6 +3,7 @@
 namespace MediaWiki\Extension\Sanctions;
 
 use ManualLogEntry;
+use MediaWiki\Block\AbstractBlock;
 use MediaWiki\Block\CompositeBlock;
 use MediaWiki\Block\DatabaseBlock;
 use MediaWiki\Extension\Sanctions\Hooks\SanctionsHookRunner;
@@ -338,11 +339,12 @@ class Utils {
 	 * @param bool $withLog
 	 * @param string|null $reason
 	 * @param User|null $user
+	 * @param AbstractBlock|null $block
 	 * @return bool
 	 */
-	public static function unblock( $target, $withLog = false, $reason = null, $user = null ) {
+	public static function unblock( $target, $withLog = false, $reason = null, $user = null, $block = null ) {
 		$blockStore = MediaWikiServices::getInstance()->getDatabaseBlockStore();
-		$block = $target->getBlock();
+		$block = $block ?: $target->getBlock();
 
 		if ( $block != null ) {
 			if ( $block instanceof CompositeBlock ) {
