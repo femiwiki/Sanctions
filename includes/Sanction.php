@@ -197,18 +197,13 @@ class Sanction {
 			$period = $this->getPeriod();
 			$blockExpiry = wfTimestamp( TS_MW, time() + ( ExpirationAwareness::TTL_DAY * $period ) );
 
-			$block = $oldBlock;
-			if ( $block === false ) {
-				$block = $target->getBlock();
-			}
-			if ( $block !== null ) {
-				// If the expiry of the block determined by this sanction is later than the existing expiry,
-				// remove it.
-				if ( $block->getExpiry() < $blockExpiry ) {
-					Utils::unblock( $target, false );
-				} else {
-					return true;
-				}
+			$oldBlock = $oldBlock ?: $target->getBlock();
+			// If the expiry of the block determined by this sanction is later than the existing expiry,
+			// remove it.
+			if ( $oldBlock && $oldBlock->getExpiry() < $blockExpiry ) {
+				Utils::unblock( $target, false, null, null, $oldBlock );
+			} else {
+				return true;
 			}
 
 			Utils::doBlock( $target, $blockExpiry, $reason, true );
@@ -289,10 +284,11 @@ class Sanction {
 	/**
 	 * @param string $reason
 	 * @param User|null $user
+	 * @param AbstractBlock|null $block
 	 *
 	 * @return bool
 	 */
-	public function removeTemporaryMeasure( $reason, $user = null ) {
+	public function removeTemporaryMeasure( $reason, $user = null, $block = null ) {
 		$target = $this->mTarget;
 		$isForInsultingName = $this->isForInsultingName();
 
@@ -314,8 +310,9 @@ class Sanction {
 			// other words, look at the block record and if there is a block record that is not related to
 			// this sanction, compare the time periods and reduce the block period if the expiry
 			// of this sanction is later than the unblock time.
-			if ( $target->getBlock() !== null && $target->getBlock()->getExpiry() == $this->mExpiry ) {
-				Utils::unblock( $target, true, $reason, $user == null ? Utils::getBot() : $user );
+			$block = $block ?: $target->getBlock();
+			if ( $block && $block->getExpiry() == $this->mExpiry ) {
+				Utils::unblock( $target, true, $reason, $user == null ? Utils::getBot() : $user, $block );
 			}
 			return true;
 		}
@@ -373,7 +370,7 @@ class Sanction {
 					'sanctions-log-immediate-rejection',
 					$this->getWorkflowId()->getAlphadecimal()
 				)->inContentLanguage()->text();
-			$this->removeTemporaryMeasure( $reason, Utils::getBot() );
+			$this->removeTemporaryMeasure( $reason, Utils::getBot(), $oldBlock );
 		} elseif ( $passed && $emergency ) {
 			$this->replaceTemporaryMeasure();
 		}
