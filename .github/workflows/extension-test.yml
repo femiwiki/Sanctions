@@ -160,6 +160,7 @@ jobs:
           # Composer install
           if [ "${{ matrix.stage }}" == 'phan' ] || [ "${{ matrix.stage }}" == 'coverage' ]; then
             docker run \
+              --entrypoint quibble-with-supervisord \
               -e ZUUL_PROJECT=mediawiki/extensions/"${{ github.event.repository.name }}" \
               -v "$(pwd)"/cache:/cache \
               -v "$(pwd)"/src:/workspace/src \
@@ -181,6 +182,7 @@ jobs:
             # MW1.35 requires PHP7.3 but quibble-coverage is not.
             if [ "${MEDIAWIKI_VERSION}" == master ]; then
               docker run \
+                --entrypoint quibble-with-supervisord \
                 -e ZUUL_PROJECT=mediawiki/extensions/"${{ github.event.repository.name }}" \
                 -v "$(pwd)"/cache:/cache \
                 -v "$(pwd)"/src:/workspace/src \
@@ -192,6 +194,7 @@ jobs:
             fi
           else
             docker run \
+              --entrypoint quibble-with-supervisord \
               -e ZUUL_PROJECT=mediawiki/extensions/"${{ github.event.repository.name }}" \
               -v "$(pwd)"/cache:/cache \
               -v "$(pwd)"/src:/workspace/src \
