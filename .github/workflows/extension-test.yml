@@ -179,10 +179,9 @@ jobs:
               "${DOCKER_REGISTRY}/${DOCKER_ORG}/${DOCKER_IMAGE}:${DOCKER_LATEST_TAG}" \
               --color
           elif [ "${{ matrix.stage }}" == 'coverage' ]; then
-            # MW1.35 requires PHP7.3 but quibble-coverage is not.
+            # MW1.35+ requires PHP7.3 but quibble-coverage is not.
             if [ "${MEDIAWIKI_VERSION}" == master ]; then
               docker run \
-                --entrypoint quibble-with-supervisord \
                 -e ZUUL_PROJECT=mediawiki/extensions/"${{ github.event.repository.name }}" \
                 -v "$(pwd)"/cache:/cache \
                 -v "$(pwd)"/src:/workspace/src \
