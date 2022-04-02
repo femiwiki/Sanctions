@@ -18,7 +18,8 @@ env:
   DOCKER_REGISTRY: docker-registry.wikimedia.org
   DOCKER_ORG: releng
   QUIBBLE_DOCKER_IMAGE: quibble-buster-php74
-  COVERAGE_DOCKER_IMAGE: quibble-coverage
+  # There is no quibble-buster-php74-coverage yet
+  COVERAGE_DOCKER_IMAGE: quibble-buster-php73-coverage
   PHAN_DOCKER_IMAGE: mediawiki-phan-php74
 
 jobs:
@@ -118,7 +119,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: /home/runner/src
-          key: ${{ runner.os }}-${{ env.MEDIAWIKI_VERSION }}-b42e1abf-${{ hashFiles('.github/workflows/dependencies') }}
+          key: ${{ runner.os }}-${{ env.MEDIAWIKI_VERSION }}-${{ hashFiles('.github/workflows/dependencies') }}
       - name: Download MediaWiki and extensions
         run: |
           cd /home/runner
@@ -159,6 +160,7 @@ jobs:
           # Composer install
           if [ "${{ matrix.stage }}" == 'phan' ] || [ "${{ matrix.stage }}" == 'coverage' ]; then
             docker run \
+              --entrypoint quibble-with-supervisord \
               -e ZUUL_PROJECT=mediawiki/extensions/"${{ github.event.repository.name }}" \
               -v "$(pwd)"/cache:/cache \
               -v "$(pwd)"/src:/workspace/src \
@@ -178,8 +180,9 @@ jobs:
               --color
           elif [ "${{ matrix.stage }}" == 'coverage' ]; then
             # MW1.35+ requires PHP7.3 but quibble-coverage is not.
-            if [ "${MEDIAWIKI_VERSION}" == master ]; then
+            if [ "${MEDIAWIKI_VERSION}" == 'master' ]; then
               docker run \
+                --entrypoint quibble-with-supervisord \
                 -e ZUUL_PROJECT=mediawiki/extensions/"${{ github.event.repository.name }}" \
                 -v "$(pwd)"/cache:/cache \
                 -v "$(pwd)"/src:/workspace/src \
