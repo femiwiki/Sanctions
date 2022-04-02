@@ -24,5 +24,5 @@ jobs:
         uses: repo-sync/pull-request@v2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          title: Update extension test workflow
+          title: Update extension test workflow on ${{ env.CREATE_PR_BASE }} branch
           destination_branch: ${{ env.CREATE_PR_BASE }}
