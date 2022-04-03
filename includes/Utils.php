@@ -14,7 +14,7 @@ use Message;
 use MovePage;
 use MWTimestamp;
 use Psr\Log\LoggerInterface;
-use RenameuserSQL;
+use MediaWiki\Extension\Renameuser\RenameuserSQL;
 use Title;
 use TitleValue;
 use User;
