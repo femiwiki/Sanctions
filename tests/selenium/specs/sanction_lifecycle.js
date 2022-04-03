@@ -61,9 +61,9 @@ describe('Sanction', () => {
 
   before(async () => {
     bot = await Api.bot();
-    Config.verificationPeriod = 0;
-    Config.verificationEdits = 0;
-    Config.votingPeriod = 10 /* seconds */ / (24 * 60 * 60);
+    await Config.setVerificationPeriod(0);
+    await Config.setVerificationEdits(0);
+    await Config.setVotingPeriod(10 /* seconds */ / (24 * 60 * 60));
     targetName = Util.getTestString('Sanction-target-');
     targetPassword = Util.getTestString();
     await Api.createAccount(bot, targetName, targetPassword);
