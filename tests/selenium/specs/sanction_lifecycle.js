@@ -141,7 +141,7 @@ describe('Sanction', () => {
     await UserLoginPage.login(targetName, targetPassword);
 
     await Sanction.open(uuid);
-    const summary = await FlowTopic.topicSummary.getText();
+    let summary = await FlowTopic.topicSummary.getText();
     assert.ok(
       summary.includes('Status: Passed to block 1 day(s)'),
       'The summary does not have expected value: ' + summary
