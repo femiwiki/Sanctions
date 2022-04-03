@@ -104,10 +104,11 @@ describe('Special:Sanctions', () => {
     await user.edit('Sanctions-dummy-edit', Util.getTestString());
 
     await SanctionsPage.open();
-    assert.strictEqual(
+	const warning = await SanctionsPage.reasonsDisabledParticipation.getText()
+    assert.equal(
       '',
-      await SanctionsPage.reasonsDisabledParticipation.getText(),
-      'There should be no warnings'
+      warning,
+      'There should be no warnings, but: ' + warning
     );
   });
 
@@ -135,14 +136,14 @@ describe('Special:Sanctions', () => {
     // Store the number of voted mark
     await UserLoginPage.loginAdmin();
     await SanctionsPage.open();
-    assert.equal(0, await SanctionsPage.votedSanctions.length);
+    assert.equal(0, SanctionsPage.votedSanctions.length);
 
     // Vote
     await FlowApi.reply('{{Oppose}}', uuid, bot);
     browser.pause(500);
     browser.refresh();
 
-    assert.equal(1, await SanctionsPage.votedSanctions.length);
+    assert.equal(1, SanctionsPage.votedSanctions.length);
 
     // Cancel the sanction
     for (let count = 0; count < 2; count++) {
