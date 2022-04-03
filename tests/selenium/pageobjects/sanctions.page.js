@@ -31,7 +31,7 @@ class SanctionsPage extends Page {
   async waitUntilUserIsNotNew() {
     let text;
     do {
-      text = this.reasonsDisabledParticipation.getText();
+      text = await this.reasonsDisabledParticipation.getText();
 
       // Wait
       await browser.pause(1000);
