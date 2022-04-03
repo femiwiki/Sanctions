@@ -24,11 +24,11 @@ class SanctionsPage extends Page {
     return $$('.sanction.voted');
   }
 
-  open(subpage) {
-    super.openTitle('Special:Sanctions/' + subpage, { uselang: 'qqx' });
+  async open(subpage) {
+    await super.openTitle('Special:Sanctions/' + subpage, { uselang: 'qqx' });
   }
 
-  waitUntilUserIsNotNew() {
+  async waitUntilUserIsNotNew() {
     let text;
     do {
       text = this.reasonsDisabledParticipation.getText();
@@ -39,13 +39,13 @@ class SanctionsPage extends Page {
     } while (/sanctions-reason-unsatisfying-verification-period/.test(text));
   }
 
-  submit(target, isForInsultingName = false) {
-    this.target.waitForDisplayed();
-    this.target.setValue(target);
+  async submit(target, isForInsultingName = false) {
+    await this.target.waitForDisplayed();
+    await this.target.setValue(target);
     if (isForInsultingName) {
-      this.forInsultingName.click();
+      await this.forInsultingName.click();
     }
-    this.submitButton.click();
+    await this.submitButton.click();
   }
 }
 module.exports = new SanctionsPage();

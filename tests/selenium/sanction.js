@@ -7,29 +7,29 @@ const Config = require('./config');
 const Api = require('wdio-mediawiki/Api');
 
 class Sanction {
-  create(target = null, username = null, password = null) {
+  async create(target = null, username = null, password = null) {
     target = target ? target : browser.config.mwUser;
-    Config.verificationPeriod = 0;
-    Config.verificationEdits = 0;
+    await Config.setVerificationPeriod ( 0);
+    await Config.setVerificationEdits ( 0);
     if (username && password) {
-      UserLoginPage.login(username, password);
+      await UserLoginPage.login(username, password);
     } else {
-      UserLoginPage.loginAdmin();
+		await UserLoginPage.loginAdmin();
     }
-    SanctionsPage.open();
-    SanctionsPage.submit(target);
+    await SanctionsPage.open();
+    await SanctionsPage.submit(target);
 
     const result = $('.sanction-execute-result a');
-    result.waitForDisplayed();
-    let uuid = result.getText();
+    await result.waitForDisplayed();
+    let uuid = await result.getText();
     if (uuid.includes(':')) {
       uuid = uuid.split(':')[1];
     }
     return uuid.toLowerCase();
   }
 
-  open(uuid) {
-    new Page().openTitle('Topic:' + uuid);
+  async open(uuid) {
+    await new Page().openTitle('Topic:' + uuid);
   }
 }
 

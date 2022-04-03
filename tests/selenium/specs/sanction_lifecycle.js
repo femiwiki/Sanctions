@@ -33,14 +33,14 @@ describe('Sanction', () => {
     const created = new Date().getTime();
 
     for (let count = 0; count < support; count++) {
-      FlowApi.reply('{{Support}}', uuid, voters[count]);
+      await FlowApi.reply('{{Support}}', uuid, voters[count]);
     }
 
     browser.refresh();
     // Wait for topic summary is updated by the bot.
     browser.pause(500);
 
-    Sanction.open(uuid);
+    await Sanction.open(uuid);
     assert.ok(
       FlowTopic.topicSummaryText.includes(
         'Status: Passed to block 1 day(s) (prediction)'
@@ -75,20 +75,20 @@ describe('Sanction', () => {
     }
   });
 
-  afterEach(() => {
-    SanctionsPage.open();
+  afterEach(async () => {
+    await SanctionsPage.open();
     assert.strictEqual(
       '(sanctions-empty-now)',
-      SanctionsPage.sanctions.getText()
+      await SanctionsPage.sanctions.getText()
     );
-    Api.unblockUser(bot, targetName);
+    await Api.unblockUser(bot, targetName);
   });
 
   it('should be canceled by the author', () => {
     const uuid = Sanction.create(targetName);
-    Sanction.open(uuid);
+    await Sanction.open(uuid);
 
-    FlowApi.reply('{{Oppose}}', uuid, bot);
+    await FlowApi.reply('{{Oppose}}', uuid, bot);
 
     browser.pause(500);
     browser.refresh();
@@ -102,11 +102,11 @@ describe('Sanction', () => {
     const uuid = Sanction.create(targetName);
 
     for (let count = 0; count < 3; count++) {
-      FlowApi.reply('{{Oppose}}', uuid, voters[count]);
+      await FlowApi.reply('{{Oppose}}', uuid, voters[count]);
     }
 
     browser.pause(500);
-    Sanction.open(uuid);
+    await Sanction.open(uuid);
     assert.strictEqual(
       'Status: Immediately rejected (Rejected by first three participants.)',
       FlowTopic.topicSummaryText
@@ -137,14 +137,14 @@ describe('Sanction', () => {
     // Log in as the target user
     UserLoginPage.login(targetName, targetPassword);
 
-    Sanction.open(uuid);
+    await Sanction.open(uuid);
     assert.ok(
       FlowTopic.topicSummaryText.includes('Status: Passed to block 1 day(s)'),
       'The summary does not have expected value: ' + FlowTopic.topicSummaryText
     );
 
-    FlowApi.editTopicSummary('Manually touched summary.', uuid, bot);
-    FlowApi.reply('An additional comment.', uuid, bot);
+    await FlowApi.editTopicSummary('Manually touched summary.', uuid, bot);
+    await FlowApi.reply('An additional comment.', uuid, bot);
 
     browser.refresh();
     assert.ok(
