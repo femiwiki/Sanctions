@@ -104,12 +104,8 @@ describe('Special:Sanctions', () => {
     await user.edit('Sanctions-dummy-edit', Util.getTestString());
 
     await SanctionsPage.open();
-	const warning = await SanctionsPage.reasonsDisabledParticipation.getText()
-    assert.equal(
-      '',
-      warning,
-      'There should be no warnings, but: ' + warning
-    );
+    const warning = await SanctionsPage.reasonsDisabledParticipation.getText();
+    assert.equal('', warning, 'There should be no warnings, but: ' + warning);
   });
 
   it('should not show any warning user matches all conditions', async () => {
