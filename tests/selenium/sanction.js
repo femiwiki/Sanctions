@@ -9,12 +9,12 @@ const Api = require('wdio-mediawiki/Api');
 class Sanction {
   async create(target = null, username = null, password = null) {
     target = target ? target : browser.config.mwUser;
-    await Config.setVerificationPeriod ( 0);
-    await Config.setVerificationEdits ( 0);
+    await Config.setVerificationPeriod(0);
+    await Config.setVerificationEdits(0);
     if (username && password) {
       await UserLoginPage.login(username, password);
     } else {
-		await UserLoginPage.loginAdmin();
+      await UserLoginPage.loginAdmin();
     }
     await SanctionsPage.open();
     await SanctionsPage.submit(target);
