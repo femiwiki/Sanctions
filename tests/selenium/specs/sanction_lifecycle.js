@@ -138,27 +138,23 @@ describe('Sanction', () => {
     const uuid = await createPassedSanction(1, true);
 
     // Log in as the target user
-    UserLoginPage.login(targetName, targetPassword);
+    await UserLoginPage.login(targetName, targetPassword);
 
     await Sanction.open(uuid);
+    const summary = await FlowTopic.topicSummary.getText();
     assert.ok(
-      (await FlowTopic.topicSummary.getText()).includes(
-        'Status: Passed to block 1 day(s)'
-      ),
-      'The summary does not have expected value: ' +
-        (await FlowTopic.topicSummary.getText())
+      summary.includes('Status: Passed to block 1 day(s)'),
+      'The summary does not have expected value: ' + summary
     );
 
     await FlowApi.editTopicSummary('Manually touched summary.', uuid, bot);
     await FlowApi.reply('An additional comment.', uuid, bot);
 
     browser.refresh();
+    summary = await FlowTopic.topicSummary.getText();
     assert.ok(
-      await FlowTopic.topicSummary
-        .getText()
-        .includes('Manually touched summary'),
-      'The summary does not have expected value: ' +
-        (await FlowTopic.topicSummary.getText())
+      summary.includes('Manually touched summary'),
+      'The summary does not have expected value: ' + summary
     );
     await Api.unblockUser(bot, targetName);
   });
