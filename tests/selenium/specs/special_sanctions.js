@@ -68,27 +68,25 @@ describe('Special:Sanctions', () => {
     assert.ok(warning === '', 'There should be no warnings, but: ' + warning);
   });
 
-  it('should remove voted tag on a sanction', async () => {
-    // Create a Sanction
-    const username = Util.getTestString('Sanction-other-');
+  it('should add voted tag on a sanction', async () => {
+    // Creates a sanction
+    const username = Util.getTestString('Sanction-another-');
     const password = Util.getTestString();
     Api.createAccount(bot, username, password);
     const uuid = await Sanction.create(username, username, password);
 
-    // Store the number of voted mark
     await UserLoginPage.loginAdmin();
     await SanctionsPage.open();
-    const votedSanctions = await SanctionsPage.votedSanctions.length;
+    assert.ok(await $(`#sanction-${uuid}`).isExisting());
 
-    // Vote
+    // Votes
     await FlowApi.reply('{{Oppose}}', uuid, bot);
     browser.pause(500);
     browser.refresh();
 
-    const newVotedSanctions = await SanctionsPage.votedSanctions.length;
-    assert.equal(votedSanctions - 1, newVotedSanctions);
+    assert.ok(await $(`#sanction-${uuid}.voted`).isExisting());
 
-    // Cancel the sanction
+    // Closes the sanction
     for (let count = 0; count < 2; count++) {
       await FlowApi.reply('{{Oppose}}', uuid, voters[count]);
     }

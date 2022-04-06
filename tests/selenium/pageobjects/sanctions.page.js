@@ -20,9 +20,6 @@ class SanctionsPage extends Page {
   get sanctionLink() {
     return $('.sanction a.sanction-type');
   }
-  get votedSanctions() {
-    return $$('.sanction.voted');
-  }
 
   async open(subpage) {
     await super.openTitle('Special:Sanctions/' + subpage, { uselang: 'qqx' });

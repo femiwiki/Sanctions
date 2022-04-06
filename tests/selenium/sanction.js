@@ -8,6 +8,12 @@ const SanctionsPage = require('./pageobjects/sanctions.page');
 const Config = require('./config');
 
 class Sanction {
+  /**
+   * @param string target
+   * @param string username
+   * @param string password
+   * @returns string lower-cased uuid of the workflow for the sanction.
+   */
   async create(
     target = browser.config.mwUser,
     username = browser.config.mwUser,
