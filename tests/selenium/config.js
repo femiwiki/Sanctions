@@ -38,7 +38,7 @@ class Config {
         VOTING_PERIOD / SECONDS_IN_DAY
       );
     } catch (e) {
-      console.log(e);
+      // Ignore Error: edit-already-exists
     }
   }
 }
