@@ -6,7 +6,6 @@ const Config = require('../config');
 const FlowApi = require('../flow_api');
 const FlowTopic = require('../pageobjects/flow_topic.page');
 const Sanction = require('../sanction');
-const SanctionsPage = require('../pageobjects/sanctions.page');
 const UserLoginPage = require('wdio-mediawiki/LoginPage');
 const Util = require('wdio-mediawiki/Util');
 
@@ -24,9 +23,17 @@ async function queryBlocks() {
 }
 
 describe('Sanction', () => {
-  let targetName, targetPassword;
-  const voters = [];
+  const targetName = Util.getTestString('Sanction-target-');
+  const targetPassword = Util.getTestString();
+  let voters;
   let bot;
+
+  before(async () => {
+    await new Config().setup();
+    bot = await Api.bot();
+    await Api.createAccount(bot, targetName, targetPassword);
+    voters = await Sanction.createVoters(bot);
+  });
 
   async function createPassedSanction(support = 3, logout = false) {
     // Create a sanction
@@ -37,7 +44,6 @@ describe('Sanction', () => {
       await FlowApi.reply('{{Support}}', uuid, voters[count]);
     }
 
-    browser.refresh();
     // Wait for topic summary is updated by the bot.
     await browser.pause(500);
 
@@ -51,47 +57,21 @@ describe('Sanction', () => {
     );
 
     if (logout) {
-      browser.deleteCookies();
+      await browser.deleteAllCookies();
     }
 
     const spentTime = new Date().getTime() - created;
-    await browser.pause(10000 - spentTime);
+    // Wait until expired
+    await browser.pause(Config.VOTING_PERIOD * 1000 - spentTime);
     return uuid;
   }
-
-  before(async () => {
-    bot = await Api.bot();
-    await Config.setVerificationPeriod(0);
-    await Config.setVerificationEdits(0);
-    await Config.setVotingPeriod(10 /* seconds */ / (24 * 60 * 60));
-    targetName = Util.getTestString('Sanction-target-');
-    targetPassword = Util.getTestString();
-    await Api.createAccount(bot, targetName, targetPassword);
-
-    // Create voter accounts
-    for (let count = 0; count < 3; count++) {
-      const username = Util.getTestString(`Sanction-voter${count}-`);
-      const password = Util.getTestString();
-      await Api.createAccount(bot, username, password);
-      voters.push(await Api.bot(username, password));
-    }
-  });
-
-  afterEach(async () => {
-    await SanctionsPage.open();
-    assert.strictEqual(
-      '(sanctions-empty-now)',
-      await SanctionsPage.sanctions.getText()
-    );
-  });
 
   it('should be canceled by the author', async () => {
     const uuid = await Sanction.create(targetName);
     await Sanction.open(uuid);
-
     await FlowApi.reply('{{Oppose}}', uuid, bot);
 
-    browser.pause(500);
+    await browser.pause(500);
     browser.refresh();
     assert.strictEqual(
       "Status: Rejected (Canceled by the sanction's author.)",
@@ -106,7 +86,7 @@ describe('Sanction', () => {
       await FlowApi.reply('{{Oppose}}', uuid, voters[count]);
     }
 
-    browser.pause(500);
+    await browser.pause(500);
     await Sanction.open(uuid);
     assert.strictEqual(
       'Status: Immediately rejected (Rejected by first three participants.)',
@@ -119,16 +99,16 @@ describe('Sanction', () => {
     browser.refresh();
 
     const blocks = await queryBlocks();
-    assert.notEqual(-1, blocks.indexOf(targetName), 'Block list: ' + blocks);
+    assert.ok(blocks.indexOf(targetName) !== -1, 'Block list: ' + blocks);
     await Api.unblockUser(bot, targetName);
   });
 
   it('should block the target user of the passed sanction when logged in', async () => {
     await createPassedSanction();
-    UserLoginPage.login(targetName, targetPassword);
+    await UserLoginPage.login(targetName, targetPassword);
 
     const blocks = await queryBlocks();
-    assert.notEqual(-1, blocks.indexOf(targetName), 'Block list: ' + blocks);
+    assert.ok(blocks.indexOf(targetName) !== -1, 'Block list: ' + blocks);
     await Api.unblockUser(bot, targetName);
   });
 
@@ -147,13 +127,14 @@ describe('Sanction', () => {
       'The summary does not have expected value: ' + summary
     );
 
-    await FlowApi.editTopicSummary('Manually touched summary.', uuid, bot);
+    const manualSum = 'Manually touched summary.';
+    await FlowApi.editTopicSummary(manualSum, uuid, bot);
     await FlowApi.reply('An additional comment.', uuid, bot);
 
     browser.refresh();
     summary = await FlowTopic.topicSummary.getText();
     assert.ok(
-      summary.includes('Manually touched summary'),
+      summary.includes(manualSum),
       'The summary does not have expected value: ' + summary
     );
     await Api.unblockUser(bot, targetName);

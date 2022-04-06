@@ -34,7 +34,7 @@ class SanctionsPage extends Page {
       text = await this.reasonsDisabledParticipation.getText();
 
       // Wait
-      await browser.pause(1000);
+      await browser.pause(3000);
       browser.refresh();
     } while (/sanctions-reason-unsatisfying-verification-period/.test(text));
   }
