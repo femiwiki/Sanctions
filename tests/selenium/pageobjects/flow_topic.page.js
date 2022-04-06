@@ -15,20 +15,17 @@ class FlowTopic extends Page {
   get topicSummary() {
     return $('.flow-topic-summary-content');
   }
-  get topicSummaryText() {
-    return this.topicSummary.getText();
+
+  async reply(msg) {
+    await this.replyButton.waitForDisplayed();
+    await this.replyButton.waitForClickable();
+    await this.replyButton.click();
+    await this.replyEditor.waitForDisplayed();
+    await this.replyEditor.setValue(msg);
+    await this.replySaveButton.click();
   }
 
-  reply(msg) {
-    this.replyButton.waitForDisplayed();
-    this.replyButton.waitForClickable();
-    this.replyButton.click();
-    this.replyEditor.waitForDisplayed();
-    this.replyEditor.setValue(msg);
-    this.replySaveButton.click();
-  }
-
-  open(subpage) {
+  async open(subpage) {
     super.openTitle('Special:Sanctions/' + subpage, { uselang: 'qqx' });
   }
 }

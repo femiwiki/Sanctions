@@ -1,41 +1,46 @@
 'use strict';
 
 const Api = require('wdio-mediawiki/Api');
+const SECONDS_IN_DAY = 86400;
+
+/** In seconds */
+const VERIFICATION_PERIOD = 10;
+const VERIFICATION_EDITS = 0;
+/** In seconds */
+const VOTING_PERIOD = 20;
 
 class Config {
-  set verificationPeriod(period) {
-    browser.call(async () => {
-      const bot = await Api.bot();
+  /** In seconds */
+  static get VERIFICATION_PERIOD() {
+    return VERIFICATION_PERIOD;
+  }
+  static get VERIFICATION_EDITS() {
+    return VERIFICATION_EDITS;
+  }
+  /** In seconds */
+  static get VOTING_PERIOD() {
+    return VOTING_PERIOD;
+  }
+
+  async setup() {
+    const bot = await Api.bot();
+    try {
       await bot.edit(
         'MediaWiki:sanctions-voting-right-verification-period',
-        period
+        VERIFICATION_PERIOD / SECONDS_IN_DAY
       );
-    });
-  }
-
-  set verificationEdits(edits) {
-    browser.call(async () => {
-      const bot = await Api.bot();
       await bot.edit(
         'MediaWiki:sanctions-voting-right-verification-edits',
-        edits
+        VERIFICATION_EDITS
       );
-    });
-  }
-
-  set votingPeriod(period) {
-    browser.call(async () => {
-      const bot = await Api.bot();
-      await bot.edit('MediaWiki:sanctions-voting-period', period);
-    });
-  }
-
-  set discussionPage(name) {
-    browser.call(async () => {
-      const bot = await Api.bot();
-      await bot.edit('MediaWiki:sanctions-discussion-page-name', name);
-    });
+      await bot.edit(
+        'MediaWiki:sanctions-voting-period',
+        VOTING_PERIOD / SECONDS_IN_DAY
+      );
+    } catch (e) {
+      // Ignore Error: edit-already-exists
+    }
   }
 }
 
-module.exports = new Config();
+module.exports = Config;

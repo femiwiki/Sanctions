@@ -5,7 +5,7 @@ namespace MediaWiki\Extension\Sanctions\Hooks;
 use MediaWiki\HookContainer\HookContainer;
 
 class SanctionsHookRunner implements
-	\RenameUserAbortHook
+	\MediaWiki\Extension\Renameuser\Hook\RenameUserAbortHook
 {
 	/**
 	 * @var HookContainer
