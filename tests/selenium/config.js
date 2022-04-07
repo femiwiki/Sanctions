@@ -37,6 +37,10 @@ class Config {
         'MediaWiki:sanctions-voting-period',
         VOTING_PERIOD / SECONDS_IN_DAY
       );
+      await bot.edit(
+        'MediaWiki:sanctions-autoblock',
+        '0'
+      );
     } catch (e) {
       // Ignore Error: edit-already-exists
     }
