@@ -20,32 +20,29 @@ class SanctionsPage extends Page {
   get sanctionLink() {
     return $('.sanction a.sanction-type');
   }
-  get votedSanctions() {
-    return $$('.sanction.voted');
+
+  async open(subpage) {
+    await super.openTitle('Special:Sanctions/' + subpage, { uselang: 'qqx' });
   }
 
-  open(subpage) {
-    super.openTitle('Special:Sanctions/' + subpage, { uselang: 'qqx' });
-  }
-
-  waitUntilUserIsNotNew() {
+  async waitUntilUserIsNotNew() {
     let text;
     do {
-      text = this.reasonsDisabledParticipation.getText();
+      text = await this.reasonsDisabledParticipation.getText();
 
       // Wait
-      browser.pause(1000);
+      await browser.pause(3000);
       browser.refresh();
     } while (/sanctions-reason-unsatisfying-verification-period/.test(text));
   }
 
-  submit(target, isForInsultingName = false) {
-    this.target.waitForDisplayed();
-    this.target.setValue(target);
+  async submit(target, isForInsultingName = false) {
+    await this.target.waitForDisplayed();
+    await this.target.setValue(target);
     if (isForInsultingName) {
-      this.forInsultingName.click();
+      await this.forInsultingName.click();
     }
-    this.submitButton.click();
+    await this.submitButton.click();
   }
 }
 module.exports = new SanctionsPage();

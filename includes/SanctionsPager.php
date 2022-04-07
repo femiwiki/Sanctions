@@ -150,6 +150,7 @@ class SanctionsPager extends IndexPager {
 
 		$data = [
 			'class' => implode( ' ', $this->getClasses( $row, $this->getUser() ) ),
+			'id' => 'sanction-' . $sanction->getWorkflowId()->getAlphadecimal(),
 			'is-expired' => $expired,
 			'is-handled' => $handled,
 			'can-vote' => $this->getUserHasVoteRight(),

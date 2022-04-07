@@ -2,6 +2,10 @@
 
 Versions and bullets are arranged chronologically from latest to oldest.
 
+## v1.2.3
+
+- Fixed 50X errors. (https://github.com/femiwiki/Sanctions/issues/235)
+
 ## v1.2.2
 
 - Fixed the panic of the auto-execution. (https://github.com/femiwiki/Sanctions/issues/223)

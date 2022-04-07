@@ -1,6 +1,7 @@
 {
 	"@metadata": {
 		"authors": [
+			"Jdx",
 			"Rail"
 		]
 	},
@@ -11,7 +12,7 @@
 	"sanctions-temporary-username": "tymczasowa_nazwa_$1",
 	"sanctions": "Wszystkie sankcje",
 	"sanctions-empty": "Brak sankcji.",
-	"sanctions-sactions-form-header": "Zgłoś nową sankcję",
+	"sanctions-sactions-form-header": "Utwórz nową sankcję",
 	"sanctions-form-target": "Cel:",
 	"sanctions-content-placeholder": "Wwprowadź zawartość sankcji.",
 	"sanctions-submit": "Wyślij",
