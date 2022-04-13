@@ -15,7 +15,7 @@
   "devDependencies": {
     "@prettier/plugin-xml": "^2.0.1",
     "@wdio/cli": "^7.19.4",
-    "@wdio/dot-reporter": "^7.19.1",
+    "@wdio/dot-reporter": "^7.19.5",
     "@wdio/junit-reporter": "^7.19.1",
     "@wdio/local-runner": "^7.19.5",
     "@wdio/mocha-framework": "^7.19.3",
