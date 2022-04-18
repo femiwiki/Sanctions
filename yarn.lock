@@ -34,10 +34,10 @@
     "@types/yargs" "^16.0.0"
     chalk "^4.0.0"
 
-"@prettier/plugin-xml@^2.0.1":
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/@prettier/plugin-xml/-/plugin-xml-2.0.1.tgz#947d80d2e3bca798ee37130302c99ddd0ce863b6"
-  integrity sha512-zJ2+/J5ujo23oHwaiuo3DEnxnRWSw/52IP7to+XmHiTC/qG17w2ld6FbDfVrsnO2PTPp0HFotPtZFlbrPJnaqA==
+"@prettier/plugin-xml@^2.1.0":
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/@prettier/plugin-xml/-/plugin-xml-2.1.0.tgz#28d82b5599bf36138a863eb5cbb159e5b68958a2"
+  integrity sha512-gmmvjwOh6GcJ4yTr4L0IVWwUrML/P1xHotwAMlY8hTIHYcmaRzeJKou8omvAaYsjMXWXxfBP7ge0meadDStn+g==
   dependencies:
     "@xml-tools/parser" "^1.0.11"
     prettier ">=2.4.0"
@@ -401,14 +401,6 @@
     webdriver "7.19.5"
     webdriverio "7.19.5"
 
-"@wdio/types@7.19.1":
-  version "7.19.1"
-  resolved "https://registry.yarnpkg.com/@wdio/types/-/types-7.19.1.tgz#9e7d67cb7b25876f26e20c7c22a8ce78fb294685"
-  integrity sha512-mOodKlmvYxpj8P5BhjggEGpXuiRSlsyn2ClG8QqJ3lfXgOtOVEzFNfv/Ai7TkHr+lHDQNXLjllCjSqoCHhwlqg==
-  dependencies:
-    "@types/node" "^17.0.4"
-    got "^11.8.1"
-
 "@wdio/types@7.19.5":
   version "7.19.5"
   resolved "https://registry.yarnpkg.com/@wdio/types/-/types-7.19.5.tgz#e05790f61dfab54ee6683ac799cb5f96615d1d0f"
@@ -416,15 +408,6 @@
   dependencies:
     "@types/node" "^17.0.4"
     got "^11.8.1"
-
-"@wdio/utils@7.19.3":
-  version "7.19.3"
-  resolved "https://registry.yarnpkg.com/@wdio/utils/-/utils-7.19.3.tgz#1aa9e740d684bcc5f79d458a752fb738243bbf21"
-  integrity sha512-ZchrBeho8cj3lV6z44yiREJcEBm8Uw2mCX8o+P6YiSOrsnEdB9Oivo+6wkU8g9vI/7ZHIHps3w35P7sH9NryzA==
-  dependencies:
-    "@wdio/logger" "7.19.0"
-    "@wdio/types" "7.19.1"
-    p-iteration "^1.1.8"
 
 "@wdio/utils@7.19.5":
   version "7.19.5"
