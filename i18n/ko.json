@@ -6,11 +6,6 @@
 		]
 	},
 	"sanctions-desc": "사용자가 제재안을 관리할 수 있게 합니다",
-	"sanctions-voting-period": "3",
-	"sanctions-voting-right-verification-period": "20",
-	"sanctions-voting-right-verification-edits": "3",
-	"sanctions-max-block-period": "30",
-	"sanctions-autoblock": "1",
 	"sanctions-discussion-page-name": "Project Talk:제재안에 대한 의결",
 	"sanctions-bot-name": "제재안",
 	"sanctions-type-insulting-name": "사용자명 변경 건의",

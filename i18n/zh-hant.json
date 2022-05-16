@@ -5,11 +5,6 @@
 		]
 	},
 	"sanctions-desc": "讓使用者處理措施",
-	"sanctions-voting-period": "3",
-	"sanctions-voting-right-verification-period": "20",
-	"sanctions-voting-right-verification-edits": "3",
-	"sanctions-max-block-period": "30",
-	"sanctions-autoblock": "1",
 	"sanctions-discussion-page-name": "Project Talk:Sanctions",
 	"sanctions-bot-name": "措施",
 	"sanctions-type-insulting-name": "回報侮辱性的使用者名稱",

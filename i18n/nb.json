@@ -5,11 +5,6 @@
 		]
 	},
 	"sanctions-desc": "La brukere håndtere saksjoner",
-	"sanctions-voting-period": "3",
-	"sanctions-voting-right-verification-period": "20",
-	"sanctions-voting-right-verification-edits": "3",
-	"sanctions-max-block-period": "30",
-	"sanctions-autoblock": "1",
 	"sanctions-discussion-page-name": "Project Talk:Saksjoner",
 	"sanctions-bot-name": "Sanksjon",
 	"sanctions-type-insulting-name": "Rapporter fornærmende brukernavn",

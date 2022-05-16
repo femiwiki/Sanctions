@@ -6,11 +6,6 @@
 		]
 	},
 	"sanctions-desc": "Им овозможува на корисниците да работат со противмерки",
-	"sanctions-voting-period": "3",
-	"sanctions-voting-right-verification-period": "20",
-	"sanctions-voting-right-verification-edits": "3",
-	"sanctions-max-block-period": "30",
-	"sanctions-autoblock": "1",
 	"sanctions-discussion-page-name": "Разговор за проект:Противмерки",
 	"sanctions-bot-name": "Противмерка",
 	"sanctions-type-insulting-name": "Пријава на навредливо корисничко име",

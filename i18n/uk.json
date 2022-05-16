@@ -8,11 +8,6 @@
 		]
 	},
 	"sanctions-desc": "Дає користувачам змогу працювати із санкціями",
-	"sanctions-voting-period": "3",
-	"sanctions-voting-right-verification-period": "20",
-	"sanctions-voting-right-verification-edits": "3",
-	"sanctions-max-block-period": "30",
-	"sanctions-autoblock": "1",
 	"sanctions-discussion-page-name": "Project Talk:Санкції",
 	"sanctions-bot-name": "Санкції",
 	"sanctions-type-insulting-name": "Повідомлення про образливе ім'я користувача",

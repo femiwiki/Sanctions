@@ -6,11 +6,6 @@
 		]
 	},
 	"sanctions-desc": "Permita que os usuários lidem com sanções",
-	"sanctions-voting-period": "3",
-	"sanctions-voting-right-verification-period": "20",
-	"sanctions-voting-right-verification-edits": "3",
-	"sanctions-max-block-period": "30",
-	"sanctions-autoblock": "1",
 	"sanctions-discussion-page-name": "Project Talk:Sanções",
 	"sanctions-bot-name": "Sanção",
 	"sanctions-type-insulting-name": "Denúncia de nome de usuário insultuoso",
