@@ -88,6 +88,10 @@ class ToolLinks implements
 			return true;
 		}
 
+		$user = $revRecord->getUser();
+		if ( !$user ) {
+			return true;
+		}
 		$titleText = $revRecord->getUser()->getName() . '/' . $revRecord->getId();
 		$links[] = $this->linkRenderer->makeLink(
 			SpecialPage::getTitleFor( 'Sanctions', $titleText ),
