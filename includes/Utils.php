@@ -12,7 +12,6 @@ use MediaWiki\Logger\LoggerFactory;
 use MediaWiki\MediaWikiServices;
 use MediaWiki\User\UserIdentity;
 use Message;
-use MovePage;
 use MWTimestamp;
 use Psr\Log\LoggerInterface;
 use Title;
@@ -28,8 +27,6 @@ class Utils {
 	 * @return bool
 	 */
 	public static function hasVoteRight( UserIdentity $user, &$reasons = false, $contentLang = false ) {
-		global $wgActorTableSchemaMigrationStage;
-
 		$userFactory = MediaWikiServices::getInstance()->getUserFactory();
 		$user = $userFactory->newFromUserIdentity( $user );
 
@@ -84,38 +81,24 @@ class Utils {
 
 		// There have been more than three contribution histories within the last 20 days (currently
 		// active)
-		$count = 0;
-		if ( $wgActorTableSchemaMigrationStage & SCHEMA_COMPAT_READ_OLD ) {
-			$count = $db->selectRowCount(
+		$count = $db->selectRowCount(
+			[
 				'revision',
-				'*',
-				[
-					'rev_user' => $user->getId(),
-					'rev_timestamp > ' . $twentyDaysAgo
-				]
-			);
-		} else {
-			$count = $db->selectRowCount(
-				[
-					'revision',
-					'revision_actor_temp',
-					'actor',
-					'user',
-				],
-				'user_id',
-				[
-					'user_id' => $user->getId(),
-					'rev_timestamp > ' . $twentyDaysAgo
-				],
-				__METHOD__,
-				[],
-				[
-					'revision_actor_temp' => [ 'LEFT JOIN', [ 'rev_id = revactor_rev' ] ],
-					'actor' => [ 'LEFT JOIN', [ 'revactor_actor = actor_id ' ] ],
-					'user' => [ 'LEFT JOIN', [ 'actor_user = user_id ' ] ],
-				]
-			);
-		}
+				'actor',
+				'user',
+			],
+			'user_id',
+			[
+				'user_id' => $user->getId(),
+				'rev_timestamp > ' . $twentyDaysAgo
+			],
+			__METHOD__,
+			[],
+			[
+				'actor' => [ 'LEFT JOIN', [ 'rev_actor = actor_id ' ] ],
+				'user' => [ 'LEFT JOIN', [ 'actor_user = user_id ' ] ],
+			]
+		);
 		if ( $count < $verificationEdits ) {
 			if ( $reasons !== false ) {
 				self::addReason( wfMessage( 'sanctions-reason-unsatisfying-verification-edits', [
@@ -243,6 +226,7 @@ class Utils {
 				],
 				__METHOD__
 			);
+			$movePageFactory = MediaWikiServices::getInstance()->getMovePageFactory();
 			foreach ( $pages as $row ) {
 				$oldPage = Title::makeTitleSafe( $row->page_namespace, $row->page_title );
 				$newPage = Title::makeTitleSafe(
@@ -250,7 +234,7 @@ class Utils {
 					preg_replace( '!^[^/]+!', $newUserPageTitle->getDBkey(), $row->page_title )
 				);
 
-				$movePage = new MovePage( $oldPage, $newPage );
+				$movePage = $movePageFactory->newMovePage( $oldPage, $newPage );
 
 				if ( !$movePage->isValidMove() ) {
 					return false;
