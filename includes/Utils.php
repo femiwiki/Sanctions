@@ -27,8 +27,6 @@ class Utils {
 	 * @return bool
 	 */
 	public static function hasVoteRight( UserIdentity $user, &$reasons = false, $contentLang = false ) {
-		global $wgActorTableSchemaMigrationStage;
-
 		$userFactory = MediaWikiServices::getInstance()->getUserFactory();
 		$user = $userFactory->newFromUserIdentity( $user );
 
