@@ -12,7 +12,6 @@ use MediaWiki\Logger\LoggerFactory;
 use MediaWiki\MediaWikiServices;
 use MediaWiki\User\UserIdentity;
 use Message;
-use MovePage;
 use MWTimestamp;
 use Psr\Log\LoggerInterface;
 use Title;
@@ -243,6 +242,7 @@ class Utils {
 				],
 				__METHOD__
 			);
+			$movePageFactory = MediaWikiServices::getInstance()->getMovePageFactory();
 			foreach ( $pages as $row ) {
 				$oldPage = Title::makeTitleSafe( $row->page_namespace, $row->page_title );
 				$newPage = Title::makeTitleSafe(
@@ -250,7 +250,7 @@ class Utils {
 					preg_replace( '!^[^/]+!', $newUserPageTitle->getDBkey(), $row->page_title )
 				);
 
-				$movePage = new MovePage( $oldPage, $newPage );
+				$movePage = $movePageFactory->newMovePage( $oldPage, $newPage );
 
 				if ( !$movePage->isValidMove() ) {
 					return false;
