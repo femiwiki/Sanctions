@@ -317,13 +317,13 @@
     deepmerge "^4.0.0"
     glob "^8.0.3"
 
-"@wdio/dot-reporter@^7.19.5":
-  version "7.19.5"
-  resolved "https://registry.yarnpkg.com/@wdio/dot-reporter/-/dot-reporter-7.19.5.tgz#542f2fd0b165dba1a7b0257c29387d754ab20105"
-  integrity sha512-mNOzxv3s3JM00ahu3/K64RFqqZVLW7KQeURlp86Z5NiHMyL/57W1+YUBaQhm7qCfwC/KoivzixOQXePaOKDXJw==
+"@wdio/dot-reporter@^7.20.7":
+  version "7.20.7"
+  resolved "https://registry.yarnpkg.com/@wdio/dot-reporter/-/dot-reporter-7.20.7.tgz#63728efd4fa44ce5f6d4b787fee99024731a0333"
+  integrity sha512-oGJvwGf9Nlnfl6EvNRLcrrb68JB2kolYjLvNuQ12ogqWr3Iv23PsLZYf307fu4RN0UYuNkR9+pfeceycBVDISQ==
   dependencies:
-    "@wdio/reporter" "7.19.5"
-    "@wdio/types" "7.19.5"
+    "@wdio/reporter" "7.20.7"
+    "@wdio/types" "7.20.7"
     chalk "^4.0.0"
 
 "@wdio/junit-reporter@^7.20.7":
@@ -398,22 +398,6 @@
   integrity sha512-9FXLyRWX7arYScEf9wFqkDuttVAPMJ91WA3C0FDf3vqbTxv1/4V5etkds/b7nH6SHq1FHdlcN4LCZ7lIfbu72Q==
   dependencies:
     "@wdio/utils" "7.20.7"
-
-"@wdio/reporter@7.19.5":
-  version "7.19.5"
-  resolved "https://registry.yarnpkg.com/@wdio/reporter/-/reporter-7.19.5.tgz#2099bd46df6ed4af753d9f56f4bb6c8f66131c54"
-  integrity sha512-1h2IM+xF1Oc483HZElhOVgKrgSxI8erMQJ8fTgPo17aeWQFU2rl5HsdY49+LRU5YEmSHNm3HbNn8fs1nkpSnIA==
-  dependencies:
-    "@types/diff" "^5.0.0"
-    "@types/node" "^17.0.4"
-    "@types/object-inspect" "^1.8.0"
-    "@types/supports-color" "^8.1.0"
-    "@types/tmp" "^0.2.0"
-    "@wdio/types" "7.19.5"
-    diff "^5.0.0"
-    fs-extra "^10.0.0"
-    object-inspect "^1.10.3"
-    supports-color "8.1.1"
 
 "@wdio/reporter@7.20.7":
   version "7.20.7"
