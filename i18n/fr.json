@@ -34,7 +34,7 @@
 	"sanctions-submit-error-failed-to-toggle-process": "Échec à changer le type de la sanction.",
 	"sanctions-submit-error-failed-to-execute": "Échec à exécuter la sanction.",
 	"sanctions-submit-error-no-username": "Le nom d’utilisateur est vide.",
-	"sanctions-submit-error-invaild-username": "L’utilisateur $1 n’existe pas.",
+	"sanctions-submit-error-invaild-username": "L’utilisateur ou l’utilisatrice « $1 » n’existe pas.",
 	"sanctions-submit-error-insulting-report-already-exist": "Il y a déjà une sanction ($2) concernant $1.",
 	"sanctions-submit-error-other": "Code d’erreur $1",
 	"sanctions-submit-massage-added-topic": "La sanction a été créée. ($1)",
