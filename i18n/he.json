@@ -10,6 +10,7 @@
 	"sanctions-bot-name": "עיצום",
 	"sanctions-type-insulting-name": "דיווח שם משתמש פוגעני",
 	"sanctions-type-block": "בקשת חסימה",
+	"sanctions-temporary-username": "שם_זמני_$1",
 	"sanctions": "כל העיצומים",
 	"sanctions-empty": "אין עיצום.",
 	"sanctions-empty-now": "אין עיצום עכשיו.",

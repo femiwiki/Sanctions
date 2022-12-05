@@ -2,6 +2,7 @@
 	"@metadata": {
 		"authors": [
 			"Meno25",
+			"Michel Bakni",
 			"ديفيد"
 		]
 	},
@@ -47,7 +48,7 @@
 	"sanctions-row-label-rejected": "مرفوضة",
 	"sanctions-row-label-pending": "قيد الانتظار",
 	"sanctions-row-label-my-sanction": "جزائي",
-	"sanctions-row-label-voted": "تم التصويت عليها",
+	"sanctions-row-label-voted": "صَوَّت",
 	"sanctions-row-label-not-voted": "لم يتم التصويت عليها",
 	"sanctions-row-label-expiry": "متبقي $1",
 	"sanctions-row-button-execute": "نفذ",
