@@ -1,7 +1,8 @@
 {
 	"@metadata": {
 		"authors": [
-			"Kly"
+			"Kly",
+			"捍粵者"
 		]
 	},
 	"sanctions-desc": "讓使用者處理措施",
@@ -51,7 +52,7 @@
 	"sanctions-row-label-expiry": "剩下$1",
 	"sanctions-row-button-execute": "執行",
 	"sanctions-row-button-toggle-emergency": "更改優先次序",
-	"sanctions-topic-title": "$1的$2",
+	"sanctions-topic-title": "$1之$2",
 	"sanctions-topic-summary-status-label": "狀態：$1",
 	"sanctions-topic-summary-status-passed": "通過",
 	"sanctions-topic-summary-status-rejected": "拒絕",
@@ -77,7 +78,7 @@
 	"sanctions-reason-no-edit-permission": "沒有編輯權限。",
 	"sanctions-reason-unsatisfying-verification-period": "$1自創建帳號後尚未消逝（創建於$2）",
 	"sanctions-reason-unsatisfying-verification-edits": "最近 $1 天的編輯數量為 $2，小於 $3。",
-	"sanctions-reason-blocked": "被封鎖",
+	"sanctions-reason-blocked": "已封鎖",
 	"sanctions-reason-recently-blocked": "自$1未封鎖以來尚有 $2 天",
 	"sanctions-link-on-user-tool": "措施",
 	"sanctions-link-on-diff": "提出一個新措施基於此",
