@@ -3109,10 +3109,10 @@ wcwidth@^1.0.1:
   dependencies:
     defaults "^1.0.3"
 
-wdio-mediawiki@^2.1.0:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/wdio-mediawiki/-/wdio-mediawiki-2.1.0.tgz#74030ad7bbaec48e092bc10f7b20a768c5f07cd0"
-  integrity sha512-gbC05sQR8lWgYUfl4Zeghl2Axa7b0IFv/FAWMmqDPEK/SRMEUXc5I9J6/Iowa8Bo5sRc7pGuQi4p34fLbivl8g==
+wdio-mediawiki@^2.2.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/wdio-mediawiki/-/wdio-mediawiki-2.2.0.tgz#1b0d2293627e17d361ca578f4375b09a58a19dd1"
+  integrity sha512-TvuEMWXd8/E4WzQSRXfmBeuPvXIXixNTAdUPcC3h+fjRYS8u0X6rAO2AfeOqT+yHs7+6LdQTfnz5oDW0jDH+Nw==
   dependencies:
     mwbot "2.0.0"
 
