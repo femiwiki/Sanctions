@@ -94,5 +94,9 @@
 	"sanctions-ve-vote-disagree-tool-title": "反對",
 	"sanctions-ve-agree-days-inspector-title": "期限",
 	"sanctions-ve-agree-days-inspector-remove-label": "移除",
-	"sanctions-ve-agree-days-inspector-invalid-value": "「$1」無效。"
+	"sanctions-ve-agree-days-inspector-invalid-value": "「$1」無效。",
+	"echo-category-title-sanctions-against-me": "對我做出的措施",
+	"sanctions-pref-tooltip-sanctions-against-me": "當有提議或是發布針對我的措施時通知我。",
+	"notification-header-sanctions-proposed-against-insulting-name": "有一個針對{{GENDER:$2|您的}}使用者名稱措施已被提議。",
+	"notification-header-sanctions-proposed": "有一個針對{{GENDER:$2|您的}}後續編輯措施已被提議。"
 }
