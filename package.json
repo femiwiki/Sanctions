@@ -18,7 +18,7 @@
     "@wdio/dot-reporter": "^7.25.1",
     "@wdio/junit-reporter": "^7.26.0",
     "@wdio/local-runner": "^7.20.9",
-    "@wdio/mocha-framework": "^7.24.1",
+    "@wdio/mocha-framework": "^8.8.7",
     "grunt-banana-checker": "^0.10.0",
     "prettier": "^2.8.1",
     "svgo": "^2.3.1",
