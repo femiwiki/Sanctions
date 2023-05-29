@@ -3,7 +3,8 @@
 		"authors": [
 			"DannyS712",
 			"Fitoschido",
-			"MarcoAurelio"
+			"MarcoAurelio",
+			"No se"
 		]
 	},
 	"sanctions-desc": "Permite a los usuarios imponer sanciones",
@@ -52,5 +53,6 @@
 	"sanctions-ve-vote-disagree-tool-title": "En contra",
 	"sanctions-ve-agree-days-inspector-title": "Caducidad",
 	"sanctions-ve-agree-days-inspector-remove-label": "Eliminar",
-	"sanctions-ve-agree-days-inspector-invalid-value": "\"$1\" no es válido."
+	"sanctions-ve-agree-days-inspector-invalid-value": "\"$1\" no es válido.",
+	"echo-category-title-sanctions-against-me": "Sanción en mi contra"
 }
