@@ -93,5 +93,9 @@
 	"sanctions-ve-vote-disagree-tool-title": "Mot",
 	"sanctions-ve-agree-days-inspector-title": "Utløp",
 	"sanctions-ve-agree-days-inspector-remove-label": "Fjern",
-	"sanctions-ve-agree-days-inspector-invalid-value": "«$1» er ikke gyldig."
+	"sanctions-ve-agree-days-inspector-invalid-value": "«$1» er ikke gyldig.",
+	"echo-category-title-sanctions-against-me": "Sanksjon mot meg",
+	"sanctions-pref-tooltip-sanctions-against-me": "Varsle meg når det foreslås eller utstedes en sanksjon mot meg.",
+	"notification-header-sanctions-proposed-against-insulting-name": "En sanksjon mot brukernanet {{GENDER:$2|ditt}} har blitt foreslått.",
+	"notification-header-sanctions-proposed": "En sanksjon mot framtidig redigering av {{GENDER:$2|deg}} har blitt foreslått."
 }
