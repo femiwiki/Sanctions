@@ -2,6 +2,7 @@
 	"@metadata": {
 		"authors": [
 			"Kly",
+			"Winston Sung",
 			"捍粵者"
 		]
 	},
@@ -31,7 +32,7 @@
 	"sanctions-submit-error-failed-to-toggle-process": "更改措施的類型失敗。",
 	"sanctions-submit-error-failed-to-execute": "執行措施失敗。",
 	"sanctions-submit-error-no-username": "使用者名稱為空白。",
-	"sanctions-submit-error-invaild-username": "使用者$1不存在。",
+	"sanctions-submit-error-invaild-username": "使用者「$1」不存在。",
 	"sanctions-submit-error-insulting-report-already-exist": "對於$1的措施（$2）已準備。",
 	"sanctions-submit-error-other": "錯誤代碼：$1",
 	"sanctions-submit-massage-added-topic": "措施已建立。（$1）",
