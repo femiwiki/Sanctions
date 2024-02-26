@@ -16,7 +16,7 @@
 	"sanctions-empty": "沒有措施。",
 	"sanctions-empty-now": "現在沒有措施。",
 	"sanctions-empty-about-now": "現在沒有關於$1的措施。",
-	"sanctions-sactions-form-header": "建立一個新措施",
+	"sanctions-sactions-form-header": "新增措施",
 	"sanctions-unable-create-new": "出於以下因素您無法參與措施處理，請參訪[[Project:Block]]來獲得更多詳情。",
 	"sanctions-unable-create-new-logged-in": "出於以下因素您無法參與措施處理，請參訪[[Project:Block]]來獲得更多詳情。",
 	"sanctions-form-target": "目標：",
