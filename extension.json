@@ -2,7 +2,7 @@
 	"name": "Sanctions",
 	"version": "1.2.3",
 	"author": "[https://femiwiki.com/ Femiwiki Team]",
-	"url": "https://github.com/femiwiki/sanctions",
+	"url": "https://www.mediawiki.org/wiki/Extension:Sanctions",
 	"descriptionmsg": "sanctions-desc",
 	"license-name": "AGPL-3.0-or-later",
 	"type": "specialpage",
