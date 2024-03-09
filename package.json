@@ -3,11 +3,7 @@
   "description": "Let users handle sanctions.",
   "private": true,
   "scripts": {
-    "test": "npm -s run lint",
-    "lint": "npm -s run lint:prettier && npm -s run lint:i18n",
-    "lint:prettier": "prettier '**/*.{js,json,css,less,md,yml}' --check",
-    "lint:i18n": "banana-checker --requireLowerCase=0 i18n/",
-    "fix": "prettier '**/*.{js,json,css,less,md,yml}' --write",
+    "test": "grunt test",
     "minify-svg": "svgo --config=.svgo.config.js -q -r -f modules/visualeditor/ui/images/",
     "selenium-daily": "npm run selenium-test",
     "selenium-test": "wdio tests/selenium/wdio.conf.js"
