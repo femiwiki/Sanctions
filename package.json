@@ -9,7 +9,6 @@
 		"selenium-test": "wdio tests/selenium/wdio.conf.js"
 	},
 	"devDependencies": {
-		"@prettier/plugin-xml": "^2.2.0",
 		"@wdio/cli": "7.16.13",
 		"@wdio/dot-reporter": "7.16.13",
 		"@wdio/junit-reporter": "7.16.13",
