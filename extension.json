@@ -1,153 +1,153 @@
 {
-  "name": "Sanctions",
-  "version": "1.2.3",
-  "author": "[https://femiwiki.com/ Femiwiki Team]",
-  "url": "https://github.com/femiwiki/sanctions",
-  "descriptionmsg": "sanctions-desc",
-  "license-name": "AGPL-3.0-or-later",
-  "type": "specialpage",
-  "requires": {
-    "MediaWiki": ">= 1.35.0",
-    "extensions": {
-      "Echo": "*",
-      "Flow": "*",
-      "Renameuser": "*"
-    }
-  },
-  "AutoloadNamespaces": {
-    "MediaWiki\\Extension\\Sanctions\\": "includes/"
-  },
-  "AutoloadClasses": {
-    "SanctionsCreateTemplates": "maintenance/SanctionsCreateTemplates.php"
-  },
-  "ServiceWiringFiles": ["includes/ServiceWiring.php"],
-  "ResourceModules": {
-    "ext.sanctions.special.sanctions.styles": {
-      "styles": ["styles/spacial-sanctions.less"]
-    },
-    "ext.sanctions.special.sanctions": {
-      "scripts": ["ext.sanctions.specialSanctions.js"]
-    },
-    "ext.sanctions.flow-board": {
-      "scripts": ["ext.flowBoard.js"],
-      "styles": ["styles/flow-board.less"],
-      "dependencies": ["ext.sanctions.visualEditor"]
-    },
-    "ext.sanctions.flow-topic": {
-      "scripts": ["ext.flowTopic.js"],
-      "dependencies": ["ext.sanctions.visualEditor"]
-    },
-    "ext.sanctions": {
-      "scripts": ["sanctions/mw.sanctions.js"]
-    },
-    "ext.sanctions.visualEditor": {
-      "scripts": [
-        "visualeditor/mw.sanctions.ve.js",
-        "visualeditor/ui/mw.sanctions.ve.ui.js",
-        "visualeditor/ui/inspectors/mw.sanctions.ve.ui.AgreeInspector.js",
-        "visualeditor/ui/tools/mw.sanctions.ve.ui.AgreeWithDaysTool.js",
-        "visualeditor/ui/commands/mw.sanctions.ve.ui.AgreeCommand.js",
-        "visualeditor/ui/commands/mw.sanctions.ve.ui.DisagreeCommand.js",
-        "visualeditor/ui/tools/mw.sanctions.ve.ui.AgreeTool.js",
-        "visualeditor/ui/tools/mw.sanctions.ve.ui.DisagreeTool.js"
-      ],
-      "messages": [
-        "sanctions-ve-vote-agree-tool-title",
-        "sanctions-ve-vote-disagree-tool-title",
-        "sanctions-ve-agree-days-inspector-title",
-        "sanctions-ve-agree-days-inspector-remove-label",
-        "sanctions-ve-agree-days-inspector-invalid-value"
-      ],
-      "dependencies": [
-        "ext.visualEditor.core",
-        "ext.flow.visualEditor",
-        "ext.sanctions",
-        "ext.sanctions.visualEditor.icons"
-      ]
-    },
-    "ext.sanctions.visualEditor.icons": {
-      "class": "ResourceLoaderImageModule",
-      "selectorWithoutVariant": ".oo-ui-icon-{name}",
-      "selectorWithVariant": ".oo-ui-image-{variant}.oo-ui-icon-{name}",
-      "variants": {
-        "progressive": {
-          "color": "#36c"
-        }
-      },
-      "images": {
-        "support": {
-          "file": "visualeditor/ui/images/support.svg",
-          "variants": ["progressive"]
-        },
-        "oppose": {
-          "file": "visualeditor/ui/images/oppose.svg",
-          "variants": ["progressive"]
-        }
-      }
-    }
-  },
-  "ResourceFileModulePaths": {
-    "localBasePath": "modules",
-    "remoteExtPath": "Sanctions/modules"
-  },
-  "Hooks": {
-    "BeforeCreateEchoEvent": "MediaWiki\\Extension\\Sanctions\\Hooks\\Notification::onBeforeCreateEchoEvent",
-    "ContributionsToolLinks": "ToolLinks",
-    "DiffTools": "ToolLinks",
-    "EmailConfirmed": "Notification",
-    "GetUserBlock": "Block",
-    "FlowAddModules": "main",
-    "HistoryTools": "ToolLinks",
-    "LoadExtensionSchemaUpdates": "SchemaChanges",
-    "RecentChange_save": "main",
-    "ResourceLoaderGetConfigVars": "main",
-    "SidebarBeforeOutput": "ToolLinks",
-    "UserToolLinksEdit": "ToolLinks"
-  },
-  "HookHandlers": {
-    "main": {
-      "class": "MediaWiki\\Extension\\Sanctions\\Hooks\\Main",
-      "services": ["SanctionStore", "VoteStore", "UserFactory"]
-    },
-    "SchemaChanges": {
-      "class": "MediaWiki\\Extension\\Sanctions\\Hooks\\SchemaChanges"
-    },
-    "Block": {
-      "class": "MediaWiki\\Extension\\Sanctions\\Hooks\\Block",
-      "services": ["SanctionStore", "MainWANObjectCache"]
-    },
-    "Notification": {
-      "class": "MediaWiki\\Extension\\Sanctions\\Hooks\\Notification"
-    },
-    "ToolLinks": {
-      "class": "MediaWiki\\Extension\\Sanctions\\Hooks\\ToolLinks",
-      "services": ["UserFactory", "LinkRenderer"]
-    }
-  },
-  "SpecialPages": {
-    "Sanctions": {
-      "class": "MediaWiki\\Extension\\Sanctions\\SpacialSanctions",
-      "services": [
-        "SanctionStore",
-        "UserFactory",
-        "RevisionLookup",
-        "LinkRenderer"
-      ]
-    }
-  },
-  "DefaultUserOptions": {
-    "echo-subscriptions-web-sanctions-against-me": true,
-    "echo-subscriptions-email-sanctions-against-me": true
-  },
-  "MessagesDirs": {
-    "Sanctions": ["i18n"]
-  },
-  "ExtensionMessagesFiles": {
-    "SanctionsAlias": "Sanctions.alias.php"
-  },
-  "TestAutoloadNamespaces": {
-    "MediaWiki\\Extension\\Sanctions\\Tests\\Integration\\": "tests/phpunit/integration/",
-    "MediaWiki\\Extension\\Sanctions\\Tests\\Unit\\": "tests/phpunit/unit/"
-  },
-  "manifest_version": 1
+	"name": "Sanctions",
+	"version": "1.2.3",
+	"author": "[https://femiwiki.com/ Femiwiki Team]",
+	"url": "https://github.com/femiwiki/sanctions",
+	"descriptionmsg": "sanctions-desc",
+	"license-name": "AGPL-3.0-or-later",
+	"type": "specialpage",
+	"requires": {
+		"MediaWiki": ">= 1.35.0",
+		"extensions": {
+			"Echo": "*",
+			"Flow": "*",
+			"Renameuser": "*"
+		}
+	},
+	"AutoloadNamespaces": {
+		"MediaWiki\\Extension\\Sanctions\\": "includes/"
+	},
+	"AutoloadClasses": {
+		"SanctionsCreateTemplates": "maintenance/SanctionsCreateTemplates.php"
+	},
+	"ServiceWiringFiles": [ "includes/ServiceWiring.php" ],
+	"ResourceModules": {
+		"ext.sanctions.special.sanctions.styles": {
+			"styles": [ "styles/spacial-sanctions.less" ]
+		},
+		"ext.sanctions.special.sanctions": {
+			"scripts": [ "ext.sanctions.specialSanctions.js" ]
+		},
+		"ext.sanctions.flow-board": {
+			"scripts": [ "ext.flowBoard.js" ],
+			"styles": [ "styles/flow-board.less" ],
+			"dependencies": [ "ext.sanctions.visualEditor" ]
+		},
+		"ext.sanctions.flow-topic": {
+			"scripts": [ "ext.flowTopic.js" ],
+			"dependencies": [ "ext.sanctions.visualEditor" ]
+		},
+		"ext.sanctions": {
+			"scripts": [ "sanctions/mw.sanctions.js" ]
+		},
+		"ext.sanctions.visualEditor": {
+			"scripts": [
+				"visualeditor/mw.sanctions.ve.js",
+				"visualeditor/ui/mw.sanctions.ve.ui.js",
+				"visualeditor/ui/inspectors/mw.sanctions.ve.ui.AgreeInspector.js",
+				"visualeditor/ui/tools/mw.sanctions.ve.ui.AgreeWithDaysTool.js",
+				"visualeditor/ui/commands/mw.sanctions.ve.ui.AgreeCommand.js",
+				"visualeditor/ui/commands/mw.sanctions.ve.ui.DisagreeCommand.js",
+				"visualeditor/ui/tools/mw.sanctions.ve.ui.AgreeTool.js",
+				"visualeditor/ui/tools/mw.sanctions.ve.ui.DisagreeTool.js"
+			],
+			"messages": [
+				"sanctions-ve-vote-agree-tool-title",
+				"sanctions-ve-vote-disagree-tool-title",
+				"sanctions-ve-agree-days-inspector-title",
+				"sanctions-ve-agree-days-inspector-remove-label",
+				"sanctions-ve-agree-days-inspector-invalid-value"
+			],
+			"dependencies": [
+				"ext.visualEditor.core",
+				"ext.flow.visualEditor",
+				"ext.sanctions",
+				"ext.sanctions.visualEditor.icons"
+			]
+		},
+		"ext.sanctions.visualEditor.icons": {
+			"class": "ResourceLoaderImageModule",
+			"selectorWithoutVariant": ".oo-ui-icon-{name}",
+			"selectorWithVariant": ".oo-ui-image-{variant}.oo-ui-icon-{name}",
+			"variants": {
+				"progressive": {
+					"color": "#36c"
+				}
+			},
+			"images": {
+				"support": {
+					"file": "visualeditor/ui/images/support.svg",
+					"variants": [ "progressive" ]
+				},
+				"oppose": {
+					"file": "visualeditor/ui/images/oppose.svg",
+					"variants": [ "progressive" ]
+				}
+			}
+		}
+	},
+	"ResourceFileModulePaths": {
+		"localBasePath": "modules",
+		"remoteExtPath": "Sanctions/modules"
+	},
+	"Hooks": {
+		"BeforeCreateEchoEvent": "MediaWiki\\Extension\\Sanctions\\Hooks\\Notification::onBeforeCreateEchoEvent",
+		"ContributionsToolLinks": "ToolLinks",
+		"DiffTools": "ToolLinks",
+		"EmailConfirmed": "Notification",
+		"GetUserBlock": "Block",
+		"FlowAddModules": "main",
+		"HistoryTools": "ToolLinks",
+		"LoadExtensionSchemaUpdates": "SchemaChanges",
+		"RecentChange_save": "main",
+		"ResourceLoaderGetConfigVars": "main",
+		"SidebarBeforeOutput": "ToolLinks",
+		"UserToolLinksEdit": "ToolLinks"
+	},
+	"HookHandlers": {
+		"main": {
+			"class": "MediaWiki\\Extension\\Sanctions\\Hooks\\Main",
+			"services": [ "SanctionStore", "VoteStore", "UserFactory" ]
+		},
+		"SchemaChanges": {
+			"class": "MediaWiki\\Extension\\Sanctions\\Hooks\\SchemaChanges"
+		},
+		"Block": {
+			"class": "MediaWiki\\Extension\\Sanctions\\Hooks\\Block",
+			"services": [ "SanctionStore", "MainWANObjectCache" ]
+		},
+		"Notification": {
+			"class": "MediaWiki\\Extension\\Sanctions\\Hooks\\Notification"
+		},
+		"ToolLinks": {
+			"class": "MediaWiki\\Extension\\Sanctions\\Hooks\\ToolLinks",
+			"services": [ "UserFactory", "LinkRenderer" ]
+		}
+	},
+	"SpecialPages": {
+		"Sanctions": {
+			"class": "MediaWiki\\Extension\\Sanctions\\SpacialSanctions",
+			"services": [
+				"SanctionStore",
+				"UserFactory",
+				"RevisionLookup",
+				"LinkRenderer"
+			]
+		}
+	},
+	"DefaultUserOptions": {
+		"echo-subscriptions-web-sanctions-against-me": true,
+		"echo-subscriptions-email-sanctions-against-me": true
+	},
+	"MessagesDirs": {
+		"Sanctions": [ "i18n" ]
+	},
+	"ExtensionMessagesFiles": {
+		"SanctionsAlias": "Sanctions.alias.php"
+	},
+	"TestAutoloadNamespaces": {
+		"MediaWiki\\Extension\\Sanctions\\Tests\\Integration\\": "tests/phpunit/integration/",
+		"MediaWiki\\Extension\\Sanctions\\Tests\\Unit\\": "tests/phpunit/unit/"
+	},
+	"manifest_version": 1
 }
